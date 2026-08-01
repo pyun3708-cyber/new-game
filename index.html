@@ -1,10 +1,2140 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
-    <title>我的小游戏</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>深渊低语 - 克苏鲁跑团</title>
+    <style>
+        /* ========== 整体页面样式 ========== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0f;
+            color: #c0b8a0;
+            font-family: 'Georgia', serif;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        /* ========== 游戏主容器 ========== */
+        #game-container {
+            width: 100%;
+            max-width: 900px;
+            background: #15151c;
+            border: 2px solid #3a3a4a;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(80, 20, 80, 0.3);
+        }
+        /* ========== 顶部标题栏 ========== */
+        #header {
+            background: linear-gradient(180deg, #2a1a2e, #1a1020);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 2px solid #4a2a5a;
+        }
+        #header h1 {
+            color: #9a7ab0;
+            font-size: 28px;
+            letter-spacing: 4px;
+            text-shadow: 0 0 10px rgba(150, 100, 180, 0.5);
+        }
+        /* ========== 角色创建界面 ========== */
+        #character-creation {
+            padding: 30px;
+            display: none;
+        }
+        #character-creation.active { display: block; }
+        .creation-section {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #1c1c28;
+            border-radius: 6px;
+            border: 1px solid #333344;
+        }
+        .creation-section h3 {
+            color: #b08ad0;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f18;
+            border: 1px solid #444455;
+            color: #d0c8b0;
+            border-radius: 4px;
+            font-size: 16px;
+            font-family: inherit;
+        }
+        .profession-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        .profession-btn {
+            padding: 12px;
+            background: #222233;
+            border: 2px solid #444455;
+            color: #b0a890;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            font-size: 14px;
+        }
+        .profession-btn:hover {
+            background: #332244;
+            border-color: #7755aa;
+        }
+        .profession-btn.selected {
+            background: #3a2a50;
+            border-color: #9966cc;
+            color: #e0d0f0;
+        }
+        /* ========== 属性显示 ========== */
+        .attributes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .attr-item {
+            background: #0f0f18;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+            border: 1px solid #333344;
+        }
+        .attr-name { font-size: 12px; color: #888; margin-bottom: 5px; }
+        .attr-value { font-size: 24px; color: #d0c090; font-weight: bold; }
+        /* ========== 按钮通用样式 ========== */
+        .btn {
+            padding: 12px 24px;
+            background: linear-gradient(180deg, #4a3060, #3a2050);
+            border: 2px solid #6a4080;
+            color: #e0d0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .btn:hover {
+            background: linear-gradient(180deg, #5a4070, #4a3060);
+            box-shadow: 0 0 15px rgba(120, 60, 160, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-center { display: block; margin: 20px auto; }
+        /* ========== 游戏主界面 ========== */
+        #game-screen { display: none; }
+        #game-screen.active { display: block; }
+        /* 角色状态面板 */
+        #status-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px 20px;
+            background: #1a1a25;
+            border-bottom: 1px solid #333344;
+            font-size: 14px;
+        }
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-label { color: #888; }
+        .status-value { color: #d0c090; font-weight: bold; }
+        .bar-container {
+            width: 80px;
+            height: 10px;
+            background: #222;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .bar-hp { background: linear-gradient(90deg, #aa3333, #cc5555); height: 100%; transition: width 0.3s; }
+        .bar-san { background: linear-gradient(90deg, #3366aa, #5588cc); height: 100%; transition: width 0.3s; }
+        /* 剧情文本区域 */
+        #story-area {
+            padding: 25px;
+            min-height: 300px;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.8;
+            font-size: 16px;
+        }
+        .story-text {
+            margin-bottom: 15px;
+            animation: fadeIn 0.5s;
+        }
+        .story-text.narration { color: #b0a890; font-style: italic; }
+        .story-text.dialogue { color: #d0c8a0; padding-left: 15px; border-left: 3px solid #554466; }
+        .story-text.system { color: #7a9aaa; font-size: 14px; }
+        .story-text.dice { color: #ccaa66; font-weight: bold; }
+        .story-text.danger { color: #cc5555; }
+        .story-text.good { color: #66aa66; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* 选项按钮区域 */
+        #choices-area {
+            padding: 20px;
+            border-top: 1px solid #333344;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .choice-btn {
+            padding: 15px;
+            background: #1c1c28;
+            border: 2px solid #444455;
+            color: #c0b8a0;
+            border-radius: 4px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+        }
+        .choice-btn:hover {
+            background: #2a2a40;
+            border-color: #7755aa;
+            padding-left: 20px;
+        }
+        .choice-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        /* 物品栏 */
+        #inventory-panel {
+            padding: 15px 20px;
+            background: #1a1a25;
+            border-top: 1px solid #333344;
+            font-size: 14px;
+        }
+        #inventory-panel h4 { color: #888; margin-bottom: 8px; }
+        .inventory-items { display: flex; flex-wrap: wrap; gap: 8px; }
+        .item-tag {
+            padding: 4px 10px;
+            background: #2a2a3a;
+            border: 1px solid #444455;
+            border-radius: 12px;
+            font-size: 12px;
+            color: #a09880;
+        }
+        /* 滚动条美化 */
+        #story-area::-webkit-scrollbar { width: 8px; }
+        #story-area::-webkit-scrollbar-track { background: #111; }
+        #story-area::-webkit-scrollbar-thumb { background: #444; border-radius: 4px; }
+    </style>
 </head>
 <body>
-    <h1>测试页面成功！</h1>
+    <div id="game-container">
+        <!-- 顶部标题 -->
+        <div id="header">
+            <h1>✦ 深 渊 低 语 ✦</h1>
+        </div>
+
+        <!-- ====== 第一页：角色创建 ====== -->
+        <div id="character-creation" class="active">
+            <div class="creation-section">
+                <h3>📝 调查员姓名</h3>
+                <input type="text" id="char-name" placeholder="输入你的名字..." maxlength="20">
+            </div>
+
+            <div class="creation-section">
+                <h3>🎭 选择职业</h3>
+                <div class="profession-list" id="profession-list">
+                    <!-- 职业按钮由JS动态生成 -->
+                </div>
+            </div>
+
+            <div class="creation-section">
+                <h3>📊 角色属性（点击骰子重新随机）</h3>
+                <div class="attributes-grid" id="attr-display">
+                    <!-- 属性由JS动态生成 -->
+                </div>
+                <button class="btn btn-center" onclick="rollAttributes()">🎲 重新骰点</button>
+            </div>
+
+            <button class="btn btn-center" onclick="startGame()" style="font-size: 18px; padding: 15px 40px;">
+                开始调查 →
+            </button>
+        </div>
+
+        <!-- ====== 第二页：游戏主界面 ====== -->
+        <div id="game-screen">
+            <!-- 顶部状态栏 -->
+            <div id="status-panel">
+                <div class="status-item">
+                    <span class="status-label">姓名:</span>
+                    <span class="status-value" id="display-name">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">职业:</span>
+                    <span class="status-value" id="display-profession">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">HP:</span>
+                    <div class="bar-container"><div class="bar-hp" id="bar-hp"></div></div>
+                    <span class="status-value" id="display-hp">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">SAN:</span>
+                    <div class="bar-container"><div class="bar-san" id="bar-san"></div></div>
+                    <span class="status-value" id="display-san">-</span>
+                </div>
+            </div>
+
+            <!-- 剧情文本区 -->
+            <div id="story-area"></div>
+
+            <!-- 选项按钮区 -->
+            <div id="choices-area"></div>
+
+            <!-- 物品栏 -->
+            <div id="inventory-panel">
+                <h4>🎒 物品栏</h4>
+                <div class="inventory-items" id="inventory-items">
+                    <span style="color: #555;">（空）</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // ============================================================
+    // 【第一部分：游戏数据定义】
+    // 这里存放所有游戏的基础数据：职业、属性、剧情节点
+    // ============================================================
+
+    // ---------- 职业数据 ----------
+    // 每个职业有：名字、描述、属性加成、初始技能、初始物品
+    const professions = {
+        doctor: {
+            name: "医生",
+            desc: "精通医术，急救和药学技能很高",
+            bonus: { 急救: 40, 药学: 30, 心理学: 20 },
+            startItems: ["医疗包", "手术刀"]
+        },
+        detective: {
+            name: "私家侦探",
+            desc: "善于观察和推理，侦查技能出众",
+            bonus: { 侦查: 50, 聆听: 30, 心理学: 25 },
+            startItems: ["左轮手枪", "笔记本"]
+        },
+        professor: {
+            name: "大学教授",
+            desc: "知识渊博，图书馆使用和学术技能强",
+            bonus: { 图书馆使用: 50, 历史学: 40, 外语: 30 },
+            startItems: ["古籍残页", "钢笔"]
+        },
+        journalist: {
+            name: "记者",
+            desc: "善于沟通和挖掘信息，说服和摄影强",
+            bonus: { 说服: 40, 摄影: 35, 侦查: 25 },
+            startItems: ["相机", "录音笔"]
+        },
+        criminal: {
+            name: "亡命之徒",
+            desc: "身手矫健，格斗和潜行精通",
+            bonus: { 格斗: 50, 潜行: 40, 开锁: 30 },
+            startItems: ["匕首", "撬锁工具"]
+        }
+    };
+
+    // ---------- 角色属性 ----------
+    // COC标准八大属性：力量、体质、体型、敏捷、外貌、智力、意志、教育
+    // 7版规则：大部分属性是3D6×5（15-90），体型/智力/教育是2D6+6再×5（40-90）
+    const attrNames = {
+        STR: "力量", CON: "体质", SIZ: "体型", DEX: "敏捷",
+        APP: "外貌", INT: "智力", POW: "意志", EDU: "教育"
+    };
+
+    // ---------- 基础技能列表 ----------
+    // 每个人都有的基础技能值（默认很低，职业会加值）
+    const baseSkills = {
+        侦查: 25, 聆听: 20, 心理学: 10, 急救: 30,
+        图书馆使用: 20, 说服: 15, 潜行: 20, 格斗: 25,
+        射击: 20, 历史学: 5, 外语: 10, 药学: 5,
+        摄影: 10, 开锁: 10, 神秘学: 5
+    };
+
+    // ---------- 玩家角色对象 ----------
+    // 这是游戏中最重要的变量，存储当前玩家的所有数据
+    let player = {
+        name: "",
+        profession: "",
+        attributes: {},  // 存放八大属性
+        skills: {},      // 存放所有技能
+        hp: 0,           // 生命值
+        maxHp: 0,
+        san: 0,          // 理智值
+        maxSan: 0,
+        inventory: [],   // 物品栏
+        flags: {}        // 剧情标记（记录玩家做过的选择）
+    };
+
+    // ============================================================
+    // 【第二部分：骰子系统】
+    // COC核心机制：D100骰子，投出的数 ≤ 技能值 = 成功
+    // 越小越好！1是极难成功，99+是大失败
+    // ============================================================
+
+    /**
+     * 投一个D100骰子（1-100）
+     * @returns {number} 1到100之间的随机整数
+     */
+    function rollD100() {
+        return Math.floor(Math.random() * 100) + 1;
+    }
+
+    /**
+     * 投多个D6骰子（用于生成属性）
+     * @param {number} count - 骰子数量
+     * @returns {number} 骰子总和
+     */
+    function rollD6(count) {
+        let total = 0;
+        for (let i = 0; i < count; i++) {
+            total += Math.floor(Math.random() * 6) + 1;
+        }
+        return total;
+    }
+
+    /**
+     * 技能判定函数（COC核心）
+     * @param {string} skillName - 技能名称
+     * @param {number} difficulty - 难度倍率（1=普通，0.5=困难，0.2=极难）
+     * @returns {object} 判定结果
+     */
+    function skillCheck(skillName, difficulty = 1) {
+        const skillValue = player.skills[skillName] || 0;
+        const target = Math.floor(skillValue * difficulty);
+        const roll = rollD100();
+        let result, level;
+
+        // COC判定规则：
+        // 1 = 极难成功（大成功）
+        // ≤ 技能值×0.2 = 极难成功
+        // ≤ 技能值×0.5 = 困难成功
+        // ≤ 技能值 = 普通成功
+        // > 技能值 = 失败
+        // 96-100（如果技能≤50）或 100 = 大失败
+        if (roll === 1) {
+            result = "success"; level = "critical";
+        } else if (roll <= target * 0.2) {
+            result = "success"; level = "extreme";
+        } else if (roll <= target * 0.5) {
+            result = "success"; level = "hard";
+        } else if (roll <= target) {
+            result = "success"; level = "normal";
+        } else if (roll >= 96 && skillValue <= 50) {
+            result = "fumble"; level = "fumble";
+        } else if (roll === 100) {
+            result = "fumble"; level = "fumble";
+        } else {
+            result = "failure"; level = "normal";
+        }
+
+        return { roll, target, result, level, skillValue };
+    }
+
+    /**
+     * 理智检定（SAN Check）
+     * 遇到恐怖事物时调用，成功掉少，失败掉多
+     * @param {number} minLoss - 成功时掉的SAN
+     * @param {number} maxLoss - 失败时掉的SAN
+     */
+    function sanCheck(minLoss, maxLoss) {
+        const check = skillCheck("意志", 1);
+        // 注意：SAN检定用的是POW意志值
+        const powValue = player.attributes.POW;
+        const roll = rollD100();
+        let loss, result;
+
+        if (roll <= powValue) {
+            loss = minLoss;
+            result = "success";
+        } else {
+            loss = maxLoss;
+            result = "failure";
+        }
+
+        player.san = Math.max(0, player.san - loss);
+        updateStatusDisplay();
+
+        return { roll, powValue, loss, result };
+    }
+
+    // ============================================================
+    // 【第三部分：角色创建系统】
+    // 处理角色创建页面的所有逻辑
+    // ============================================================
+
+    // 当前选中的职业
+    let selectedProfession = null;
+
+    /**
+     * 初始化职业选择按钮
+     * 页面加载时调用，把professions对象里的职业变成按钮
+     */
+    function initProfessionList() {
+        const list = document.getElementById("profession-list");
+        list.innerHTML = "";
+        for (let key in professions) {
+            const prof = professions[key];
+            const btn = document.createElement("button");
+            btn.className = "profession-btn";
+            btn.innerHTML = `<strong>${prof.name}</strong><br><small>${prof.desc}</small>`;
+            btn.onclick = () => selectProfession(key);
+            list.appendChild(btn);
+        }
+    }
+
+    /**
+     * 选择职业
+     * @param {string} key - 职业的key（如"doctor"）
+     */
+    function selectProfession(key) {
+        selectedProfession = key;
+        // 取消所有选中状态
+        document.querySelectorAll(".profession-btn").forEach(b => b.classList.remove("selected"));
+        // 给选中的加样式
+        event.target.closest(".profession-btn").classList.add("selected");
+    }
+
+    /**
+     * 随机生成角色属性
+     * 按照COC规则：大部分属性3D6×5，体型/智力/教育2D6+6再×5
+     */
+    function rollAttributes() {
+        const attrs = {};
+        // 普通属性：3D6 × 5
+        attrs.STR = rollD6(3) * 5;  // 力量
+        attrs.CON = rollD6(3) * 5;  // 体质
+        attrs.DEX = rollD6(3) * 5;  // 敏捷
+        attrs.APP = rollD6(3) * 5;  // 外貌
+        attrs.POW = rollD6(3) * 5;  // 意志
+        // 特殊属性：(2D6+6) × 5
+        attrs.SIZ = (rollD6(2) + 6) * 5;  // 体型
+        attrs.INT = (rollD6(2) + 6) * 5;  // 智力
+        attrs.EDU = (rollD6(2) + 6) * 5;  // 教育
+
+        displayAttributes(attrs);
+        return attrs;
+    }
+
+    /**
+     * 在页面上显示属性
+     */
+    function displayAttributes(attrs) {
+        const container = document.getElementById("attr-display");
+        container.innerHTML = "";
+        for (let key in attrs) {
+            const div = document.createElement("div");
+            div.className = "attr-item";
+            div.innerHTML = `
+                <div class="attr-name">${attrNames[key]} (${key})</div>
+                <div class="attr-value">${attrs[key]}</div>
+            `;
+            container.appendChild(div);
+        }
+    }
+
+    // 存储当前随机出来的属性
+    let currentAttributes = null;
+
+    // ============================================================
+    // 【第四部分：游戏主逻辑】
+    // 开始游戏、显示剧情、处理选项
+    // ============================================================
+
+    /**
+     * 开始游戏
+     * 读取玩家输入的名字、选择的职业，初始化角色数据
+     */
+    function startGame() {
+        const name = document.getElementById("char-name").value.trim();
+        
+        // 检查输入
+        if (!name) { alert("请输入你的名字！"); return; }
+        if (!selectedProfession) { alert("请选择一个职业！"); return; }
+        if (!currentAttributes) { alert("请先骰点生成属性！"); return; }
+
+        // 初始化玩家数据
+        player.name = name;
+        player.profession = selectedProfession;
+        player.attributes = { ...currentAttributes };
+        
+        // 初始化技能（基础值 + 职业加成）
+        player.skills = { ...baseSkills };
+        const profBonus = professions[selectedProfession].bonus;
+        for (let skill in profBonus) {
+            player.skills[skill] = (player.skills[skill] || 0) + profBonus[skill];
+        }
+
+        // 计算HP和SAN
+        // HP = (体质 + 体型) / 10
+        player.maxHp = Math.floor((player.attributes.CON + player.attributes.SIZ) / 10);
+        player.hp = player.maxHp;
+        // SAN = 意志值
+        player.maxSan = player.attributes.POW;
+        player.san = player.maxSan;
+
+        // 初始物品
+        player.inventory = [...professions[selectedProfession].startItems];
+
+        // 切换到游戏界面
+        document.getElementById("character-creation").classList.remove("active");
+        document.getElementById("game-screen").classList.add("active");
+
+        // 更新显示
+        updateStatusDisplay();
+        updateInventoryDisplay();
+
+        // 开始剧情（从第一个节点开始）
+        showNode("start");
+    }
+
+    /**
+     * 更新顶部状态栏显示
+     */
+    function updateStatusDisplay() {
+        document.getElementById("display-name").textContent = player.name;
+        document.getElementById("display-profession").textContent = professions[player.profession].name;
+        document.getElementById("display-hp").textContent = `${player.hp}/${player.maxHp}`;
+        document.getElementById("display-san").textContent = `${player.san}/${player.maxSan}`;
+        document.getElementById("bar-hp").style.width = (player.hp / player.maxHp * 100) + "%";
+        document.getElementById("bar-san").style.width = (player.san / player.maxSan * 100) + "%";
+    }
+
+    /**
+     * 更新物品栏显示
+     */
+    function updateInventoryDisplay() {
+        const container = document.getElementById("inventory-items");
+        if (player.inventory.length === 0) {
+            container.innerHTML = '<span style="color: #555;">（空）</span>';
+            return;
+        }
+        container.innerHTML = "";
+        player.inventory.forEach(item => {
+            const span = document.createElement("span");
+            span.className = "item-tag";
+            span.textContent = item;
+            container.appendChild(span);
+        });
+    }
+
+    /**
+     * 向剧情区添加一段文字
+     * @param {string} text - 文字内容
+     * @param {string} type - 类型：narration/dialogue/system/dice/danger/good
+     */
+    function addStoryText(text, type = "narration") {
+        const area = document.getElementById("story-area");
+        const p = document.createElement("p");
+        p.className = `story-text ${type}`;
+        p.innerHTML = text;
+        area.appendChild(p);
+        // 自动滚动到底部
+        area.scrollTop = area.scrollHeight;
+    }
+
+    /**
+     * 清空剧情区和选项区
+     */
+    function clearStory() {
+        document.getElementById("story-area").innerHTML = "";
+        document.getElementById("choices-area").innerHTML = "";
+    }
+
+    /**
+     * 显示选项按钮
+     * @param {Array} choices - 选项数组，每个选项有text和next属性
+     */
+    function showChoices(choices) {
+        const area = document.getElementById("choices-area");
+        area.innerHTML = "";
+        choices.forEach(choice => {
+            const btn = document.createElement("button");
+            btn.className = "choice-btn";
+            btn.textContent = choice.text;
+            btn.onclick = () => {
+                // 点击后禁用所有按钮，防止连点
+                document.querySelectorAll(".choice-btn").forEach(b => b.disabled = true);
+                // 执行选项的动作
+                if (choice.action) choice.action();
+                // 跳转到下一个剧情节点
+                if (choice.next) showNode(choice.next);
+            };
+            area.appendChild(btn);
+        });
+    }
+
+    // ============================================================
+    // 【第五部分：剧情节点系统】
+    // 这是游戏的核心！每个节点就是一段剧情 + 一组选项
+    // 想加新剧情，就在storyNodes里加新节点就行
+    // ============================================================
+
+    const storyNodes = {
+        // ===== 开局 =====
+        start: {
+            text: [
+                { type: "narration", text: "1928年，深秋。波士顿以北的小镇——印斯茅斯。" },
+                { type: "narration", text: "你收到了一封来自老友哈维的信，字迹潦草得几乎认不出来。" },
+                { type: "dialogue", text: `"如果你看到这封信，说明我可能已经……请来印斯茅斯找我。<br>别相信任何人，尤其是那些戴着鱼形徽章的人。<br>——哈维"` },
+                { type: "narration", text: "你坐了一整天的长途汽车，终于在黄昏时分抵达了这个弥漫着腥臭味的海滨小镇。" },
+                { type: "narration", text: "车站空无一人，只有一盏忽明忽暗的路灯在风中摇晃。远处，传来海浪拍岸的声音，以及……某种难以形容的低沉嗡鸣。" }
+            ],
+            choices: [
+                { text: "🔍 先在车站周围侦查一下", action: () => doSkillCheck("侦查", "start_investigate") },
+                { text: "🚶 直接往镇中心走，找旅馆住下", next: "go_to_town" },
+                { text: "📝 拿出哈维的信再仔细看看", next: "read_letter" }
+            ]
+        },
+
+        // ===== 侦查车站 =====
+        start_investigate_success: {
+            text: [
+                { type: "dice", text: "🎲 【侦查】判定成功！" },
+                { type: "narration", text: "你敏锐的目光扫过车站角落，在长椅下面发现了一些奇怪的东西——" },
+                { type: "narration", text: "几片闪着奇异光泽的鳞片，不是你见过的任何鱼类的鳞片。旁边还有一串湿漉漉的脚印，脚趾之间似乎有……蹼？" },
+                { type: "system", text: "获得物品：奇异鳞片" }
+            ],
+            onEnter: () => { addItem("奇异鳞片"); },
+            choices: [
+                { text: "把鳞片收起来，往镇中心走", next: "go_to_town" },
+                { text: "沿着脚印追踪", action: () => doSkillCheck("潜行", "track_prints") }
+            ]
+        },
+        start_investigate_failure: {
+            text: [
+                { type: "dice", text: "🎲 【侦查】判定失败……" },
+                { type: "narration", text: "车站里又黑又脏，你什么特别的都没发现。也许是你想多了。" }
+            ],
+            choices: [
+                { text: "往镇中心走", next: "go_to_town" }
+            ]
+        },
+
+        // ===== 仔细看信 =====
+        read_letter: {
+            text: [
+                { type: "narration", text: "你掏出信，借着昏暗的路灯仔细端详。" },
+                { type: "narration", text: "信纸边缘有些水渍，散发着一股淡淡的海腥味。在信纸背面，你发现了之前没注意到的、用铅笔写的一行小字：" },
+                { type: "dialogue", text: `"大衮教会……海蚀洞……午夜……"` }
+            ],
+            choices: [
+                { text: "记住这些信息，往镇中心走", next: "go_to_town" }
+            ]
+        },
+
+        // ===== 前往镇中心 =====
+        go_to_town: {
+            text: [
+                { type: "narration", text: "你沿着唯一的一条土路往镇中心走去。" },
+                { type: "narration", text: "沿途的房屋破旧不堪，窗户里透出昏暗的灯光。你注意到街上几乎没有行人，偶尔有人从窗帘缝隙里窥视你，目光说不出的怪异。" },
+                { type: "narration", text: "走到镇中心的广场，你看到三个地方：一家破旧的旅馆、一间挂着「大衮教会」牌子的奇怪建筑、以及一个正在打烊的杂货铺。" }
+            ],
+            choices: [
+                { text: "🏨 去旅馆投宿", next: "inn" },
+                { text: "⛪ 去大衮教会看看", action: () => sanCheckWrapper(1, 3, "church_outside") },
+                { text: "🏪 去杂货铺买点东西", next: "shop" }
+            ]
+        },
+
+        // ===== 旅馆 =====
+        inn: {
+            text: [
+                { type: "narration", text: "旅馆的老板是个驼背的老头，皮肤呈现出一种不健康的灰绿色。他用浑浊的眼睛打量了你很久，才用沙哑的声音说：" },
+                { type: "dialogue", text: `"外地人？……住一晚，一块钱。"` },
+                { type: "narration", text: "你注意到他脖子上挂着一个鱼形的徽章，和哈维信里描述的一样。" }
+            ],
+            choices: [
+                { text: "💬 假装闲聊，打听哈维的消息", action: () => doSkillCheck("说服", "inn_ask") },
+                { text: "🗣️ 直接问他大衮教会的事", action: () => doSkillCheck("心理学", "inn_church") },
+                { text: "🚪 付钱住下，先休息再说", next: "inn_rest" },
+                { text: "🏃 觉得不对劲，离开旅馆", next: "go_to_town" }
+            ]
+        },
+
+        inn_ask_success: {
+            text: [
+                { type: "dice", text: "🎲 【说服】判定成功！" },
+                { type: "narration", text: "你装作是哈维的远房亲戚，说他欠了你钱。老板的表情变了一下，压低声音说：" },
+                { type: "dialogue", text: `"那个外乡人……他问了太多不该问的问题。教会的人把他带走了……你最好别再打听了。"` },
+                { type: "narration", text: "他指了指镇外悬崖的方向：" },
+                { type: "dialogue", text: `"海蚀洞……他们都在那里。但你最好别去，去了的人……就再也不是人了。"` }
+            ],
+            choices: [
+                { text: "追问更多细节", next: "inn_more" },
+                { text: "道谢，回房间休息", next: "inn_rest" },
+                { text: "立刻去海蚀洞", next: "cave_entrance" }
+            ]
+        },
+        inn_ask_failure: {
+            text: [
+                { type: "dice", text: "🎲 【说服】判定失败……" },
+                { type: "narration", text: "老板狐疑地看了你一眼，冷冷地说：" },
+                { type: "dialogue", text: `"不知道。快走，我要打烊了。"` },
+                { type: "narration", text: "他不再理你，转身走进了里屋。" }
+            ],
+            choices: [
+                { text: "偷偷潜入里屋看看", action: () => doSkillCheck("潜行", "inn_sneak") },
+                { text: "离开旅馆", next: "go_to_town" }
+            ]
+        },
+
+        inn_sneak_success: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定成功！" },
+                { type: "narration", text: "你悄无声息地溜进里屋。这是一间狭小的卧室，墙上挂着一幅奇怪的画——画中是一个半人半鱼的怪物，正从海中升起。" },
+                { type: "narration", text: "床头柜上放着一本日记，还有一把生锈的钥匙。" },
+                { type: "system", text: "获得物品：老板的日记、生锈的钥匙" }
+            ],
+            onEnter: () => { addItem("老板的日记"); addItem("生锈的钥匙"); },
+            choices: [
+                { text: "翻看日记", next: "read_diary" },
+                { text: "拿了钥匙就走", next: "go_to_town" }
+            ]
+        },
+        inn_sneak_failure: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定失败！" },
+                { type: "danger", text: "你不小心碰倒了一个瓶子，「砰」的一声碎了！" },
+                { type: "narration", text: "老板怒吼着冲出来，手里拿着一根木棍：" },
+                { type: "dialogue", text: `"小偷！我打死你！"` },
+                { type: "danger", text: "你被打中了肩膀，受到 2 点伤害！" }
+            ],
+            onEnter: () => { damagePlayer(2); },
+            choices: [
+                { text: "⚔️ 反击！", action: () => doCombat("inn_fight") },
+                { text: "🏃 赶紧跑！", next: "go_to_town" }
+            ]
+        },
+
+        // ===== 海蚀洞（最终场景） =====
+        cave_entrance: {
+            text: [
+                { type: "narration", text: "你沿着悬崖边的小路走了大约半小时，终于找到了海蚀洞的入口。" },
+                { type: "narration", text: "洞口很大，黑漆漆的，里面传来海浪的回声和……某种低沉的、有节奏的吟唱声。" },
+                { type: "narration", text: "洞口两侧的岩壁上刻满了奇怪的符号，你从未见过这样的文字。只是看了一眼，你就感到一阵眩晕。" }
+            ],
+            choices: [
+                { text: "🤫 悄悄摸进去", action: () => doSkillCheck("潜行", "cave_sneak") },
+                { text: "🔍 先研究一下洞口的符号", action: () => doSkillCheck("神秘学", "cave_symbols") },
+                { text: "💪 直接冲进去救人", next: "cave_charge" }
+            ]
+        },
+
+        cave_sneak_success: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定成功！" },
+                { type: "narration", text: "你贴着岩壁，悄无声息地深入洞穴。" },
+                { type: "narration", text: "洞越来越宽，前方出现了一片巨大的地下空间。几十个穿着深绿色长袍的人围成一圈，正在向一个巨大的、湿漉漉的祭坛跪拜。" },
+                { type: "narration", text: "祭坛上绑着一个人——是哈维！他还活着，但看起来非常虚弱。" },
+                { type: "narration", text: "而在祭坛旁边的水里……有什么东西在动。一个巨大的、长满鳞片的轮廓，正缓缓升起……" }
+            ],
+            onEnter: () => { player.flags.sneakedIn = true; },
+            choices: [
+                { text: "趁他们不注意，偷偷救哈维", action: () => doSkillCheck("潜行", "rescue_sneak") },
+                { text: "大喊一声，制造混乱再救人", next: "rescue_shout" },
+                { text: "先看看那个水里的东西到底是什么", action: () => sanCheckWrapper(2, 6, "see_monster") }
+            ]
+        },
+        cave_sneak_failure: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定失败！" },
+                { type: "danger", text: "你踩到了一块松动的石头，发出了清脆的响声。" },
+                { type: "narration", text: "所有吟唱声戛然而止。几十双眼睛同时转向了你。" },
+                { type: "dialogue", text: `"……又一个祭品。"` }
+            ],
+            choices: [
+                { text: "⚔️ 战斗！", action: () => doCombat("cave_fight") },
+                { text: "🏃 转身就跑", action: () => doSkillCheck("敏捷", "cave_run", 1) }
+            ]
+        },
+
+        // ===== 救人成功（好结局） =====
+        rescue_sneak_success: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定成功！" },
+                { type: "good", text: "你像影子一样摸到祭坛后面，用匕首割断了绑着哈维的绳子。" },
+                { type: "narration", text: "哈维虚弱地睁开眼，看到是你，露出了难以置信的表情。" },
+                { type: "dialogue", text: `"你……你怎么来了？快走！他们在召唤深潜者！"` },
+                { type: "narration", text: "你搀扶着哈维，趁着教徒们还沉浸在仪式中，悄悄从原路撤退。" },
+                { type: "good", text: "你们成功逃出了海蚀洞，在黎明前离开了印斯茅斯。" },
+                { type: "narration", text: "哈维活了下来，但他再也不愿提起那个小镇发生的事。而你，也时常在噩梦中梦见那个从海里升起的巨大身影……" }
+            ],
+            choices: [
+                { text: "✦ 游戏结束 - 生还者结局 ✦", action: () => endGame("生还者") }
+            ]
+        },
+        rescue_sneak_failure: {
+            text: [
+                { type: "dice", text: "🎲 【潜行】判定失败！" },
+                { type: "danger", text: "你的手在发抖，绳子割到一半就被发现了。" },
+                { type: "narration", text: "一个教徒尖叫着指向你，所有人都围了过来。" }
+            ],
+            choices: [
+                { text: "⚔️ 拼死一战！", action: () => doCombat("final_fight") }
+            ]
+        },
+
+        // ===== 看到怪物 =====
+        see_monster: {
+            text: [
+                { type: "danger", text: "你定睛看去——" },
+                { type: "danger", text: "那是一个无法用语言描述的存在。它有着人类的躯干，却覆盖着绿色的鳞片，头部是巨大的鱼脸，鼓胀的眼睛没有瞳孔，嘴里长满了层层叠叠的尖牙。" },
+                { type: "danger", text: "它的爪子……不，它的手……有七根手指，指间有蹼，指甲是黑色的、锋利的、长长的……" },
+                { type: "danger", text: "你的大脑在尖叫着拒绝接受眼前的景象。这不可能存在。这不该存在。" }
+            ],
+            onEnter: () => { player.flags.seenMonster = true; },
+            choices: [
+                { text: "……", next: "after_monster" }
+            ]
+        },
+        after_monster: {
+            text: [
+                { type: "narration", text: "你深吸一口气，强迫自己冷静下来。" },
+                { type: "system", text: "你获得了「神话见闻」——对克苏鲁神话的认知增加了。" }
+            ],
+            onEnter: () => { player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 20; },
+            choices: [
+                { text: "趁他们不注意，偷偷救哈维", action: () => doSkillCheck("潜行", "rescue_sneak") },
+                { text: "大喊一声，制造混乱再救人", next: "rescue_shout" }
+            ]
+        },
+
+        // ===== 战斗系统 =====
+        // （简化版战斗，后面会扩展）
+
+        // ===== 游戏结局 =====
+        end_dead: {
+            text: [
+                { type: "danger", text: "你的视线开始模糊……" },
+                { type: "danger", text: "鲜血染红了地面。你听到远处传来低沉的吟唱声，越来越近……" },
+                { type: "danger", text: "也许，从你踏入印斯茅斯的那一刻起，结局就已经注定了。" },
+                { type: "system", text: "—— 调查员死亡 ——" }
+            ],
+            choices: [
+                { text: "重新开始", action: () => location.reload() }
+            ]
+        },
+
+        end_insane: {
+            text: [
+                { type: "danger", text: "你的意识……碎裂了。" },
+                { type: "danger", text: "那些符号、那些声音、那张脸……它们在你的脑子里，它们无处不在。" },
+                { type: "danger", text: "你开始笑，不停地笑。因为你终于明白了——人类不过是宇宙中微不足道的尘埃。" },
+                { type: "danger", text: "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn." },
+                { type: "system", text: "—— 调查员疯狂 ——" }
+            ],
+            choices: [
+                { text: "重新开始", action: () => location.reload() }
+            ]
+        }
+    };
+
+    // ============================================================
+    // 【第六部分：剧情节点执行系统】
+    // 负责读取节点、显示文字、处理选项
+    // ============================================================
+
+    /**
+     * 显示一个剧情节点
+     * @param {string} nodeId - 节点的ID（在storyNodes里找）
+     */
+    function showNode(nodeId) {
+        const node = storyNodes[nodeId];
+        if (!node) {
+            addStoryText("（剧情错误：找不到节点 " + nodeId + "）", "system");
+            return;
+        }
+
+        // 如果节点有进入时执行的函数，先执行
+        if (node.onEnter) node.onEnter();
+
+        // 逐段显示剧情文字（用setTimeout做出打字机效果的感觉）
+        let i = 0;
+        function showNext() {
+            if (i < node.text.length) {
+                const t = node.text[i];
+                addStoryText(t.text, t.type);
+                i++;
+                setTimeout(showNext, 300); // 每段间隔300毫秒
+            } else {
+                // 文字显示完了，显示选项
+                showChoices(node.choices);
+            }
+        }
+        showNext();
+    }
+
+    // ============================================================
+    // 【第七部分：技能判定包装函数】
+    // 让剧情选项里调用技能判定更方便
+    // ============================================================
+
+    /**
+     * 执行技能判定并跳转到对应结果
+     * @param {string} skill - 技能名
+     * @param {string} baseNode - 基础节点名（会自动加_success或_failure）
+     * @param {number} difficulty - 难度（默认1=普通）
+     */
+    function doSkillCheck(skill, baseNode, difficulty = 1) {
+        const result = skillCheck(skill, difficulty);
+        
+        // 显示骰子结果
+        let levelText = "";
+        if (result.level === "critical") levelText = "（大成功！）";
+        else if (result.level === "extreme") levelText = "（极难成功）";
+        else if (result.level === "hard") levelText = "（困难成功）";
+        else if (result.level === "fumble") levelText = "（大失败！）";
+        
+        addStoryText(
+            `🎲 投骰：${result.roll} / 目标：${result.target}（${skill} ${result.skillValue}）${levelText}`,
+            "dice"
+        );
+
+        // 根据结果跳转
+        setTimeout(() => {
+            if (result.result === "success" || result.level === "critical") {
+                showNode(baseNode + "_success");
+            } else {
+                showNode(baseNode + "_failure");
+            }
+        }, 800);
+    }
+
+    /**
+     * 理智检定包装函数
+     */
+    function sanCheckWrapper(min, max, nextNode) {
+        const result = sanCheck(min, max);
+        addStoryText(
+            `🧠 SAN检定：投出 ${result.roll} / 意志 ${result.powValue} → ${result.result === "success" ? "成功" : "失败"}<br>失去 ${result.loss} 点理智（当前 ${player.san}/${player.maxSan}）`,
+            result.result === "success" ? "good" : "danger"
+        );
+
+        // 检查是否疯狂
+        if (player.san <= 0) {
+            setTimeout(() => showNode("end_insane"), 1000);
+            return;
+        }
+
+        setTimeout(() => showNode(nextNode), 1000);
+    }
+
+    // ============================================================
+    // 【第八部分：战斗系统（简化版）】
+    // 以后可以扩展得更复杂
+    // ============================================================
+
+    function doCombat(resultNode) {
+        // 简化版：直接用格斗技能判定
+        const result = skillCheck("格斗", 1);
+        addStoryText(`⚔️ 战斗！投骰：${result.roll} / 格斗 ${result.skillValue}`, "dice");
+
+        setTimeout(() => {
+            if (result.result === "success") {
+                addStoryText("你成功击倒了敌人！", "good");
+                damagePlayer(1); // 即使赢了也受点伤
+            } else {
+                addStoryText("你被击中了！", "danger");
+                damagePlayer(3);
+            }
+
+            setTimeout(() => {
+                if (player.hp <= 0) {
+                    showNode("end_dead");
+                } else {
+                    // 战斗后根据场景跳转
+                    if (resultNode === "inn_fight") {
+                        showNode("inn_after_fight");
+                    } else if (resultNode === "cave_fight" || resultNode === "final_fight") {
+                        showNode("after_fight");
+                    } else {
+                        showNode("go_to_town");
+                    }
+                }
+            }, 1000);
+        }, 800);
+    }
+
+    // 补充一些战斗后节点
+    storyNodes.inn_after_fight = {
+        text: [
+            { type: "narration", text: "你打倒了老板，从他身上搜出了一把钥匙和一些零钱。" },
+            { type: "system", text: "获得物品：旅馆钥匙" }
+        ],
+        onEnter: () => { addItem("旅馆钥匙"); },
+        choices: [
+            { text: "趁夜离开旅馆", next: "go_to_town" },
+            { text: "搜一下里屋", next: "inn_sneak_success" }
+        ]
+    };
+
+    storyNodes.after_fight = {
+        text: [
+            { type: "narration", text: "你击退了围上来的教徒，他们暂时退缩了。" },
+            { type: "narration", text: "但你知道，这只是暂时的。更多的人正在赶来……还有水里那个东西。" }
+        ],
+        choices: [
+            { text: "趁间隙救哈维然后跑", action: () => doSkillCheck("敏捷", "rescue_sneak") },
+            { text: "直接转身逃跑", next: "cave_escape" }
+        ]
+    };
+
+    storyNodes.cave_escape = {
+        text: [
+            { type: "narration", text: "你转身狂奔，身后传来怒吼声和水花飞溅的声音。" },
+            { type: "narration", text: "你不敢回头，拼尽全力跑出了海蚀洞，一直跑到悬崖边的小路上才敢停下来喘气。" },
+            { type: "danger", text: "哈维……你没能救出来。" },
+            { type: "narration", text: "你带着愧疚和恐惧，在天亮前离开了印斯茅斯。这个小镇的秘密，你永远也不会知道了。" }
+        ],
+        choices: [
+            { text: "✦ 游戏结束 - 逃亡者结局 ✦", action: () => endGame("逃亡者") }
+        ]
+    };
+
+    storyNodes.rescue_shout = {
+        text: [
+            { type: "narration", text: "你大喊一声，捡起一块石头砸向祭坛。" },
+            { type: "narration", text: "教徒们被突如其来的动静吓了一跳，场面陷入混乱。" },
+            { type: "narration", text: "你趁机冲到祭坛前，用匕首割断绳子，拉起哈维就跑。" }
+        ],
+        choices: [
+            { text: "往洞口冲！", action: () => doSkillCheck("敏捷", "escape_run") }
+        ]
+    };
+
+    storyNodes.escape_run_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "good", text: "你拉着哈维，在混乱中冲出了海蚀洞。" },
+            { type: "narration", text: "身后传来愤怒的咆哮声和巨大的水花声，但你们头也不回地跑了。" },
+            { type: "narration", text: "黎明时分，你们搭上了一辆离开印斯茅斯的货车。哈维活了下来，但他再也不是以前那个哈维了。" },
+            { type: "narration", text: "而你，也将在余生中反复做着那个关于海底深渊的噩梦……" }
+        ],
+        choices: [
+            { text: "✦ 游戏结束 - 生还者结局 ✦", action: () => endGame("生还者") }
+        ]
+    };
+    storyNodes.escape_run_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你被一块石头绊倒了！" },
+            { type: "narration", text: "教徒们追了上来，把你和哈维团团围住。" }
+        ],
+        choices: [
+            { text: "拼死反抗！", action: () => doCombat("final_fight") }
+        ]
+    };
+
+    // 补充一些缺失的节点
+    storyNodes.track_prints_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "narration", text: "你沿着脚印悄悄跟踪，发现它们一直延伸到海边的礁石区。" },
+            { type: "narration", text: "在礁石后面，你看到了一个通往地下的洞口。空气中弥漫着浓重的腥臭味。" },
+            { type: "system", text: "你发现了海蚀洞的另一个入口！" }
+        ],
+        onEnter: () => { player.flags.secretEntrance = true; },
+        choices: [
+            { text: "进去看看", next: "cave_entrance" },
+            { text: "先回镇上准备一下", next: "go_to_town" }
+        ]
+    };
+    storyNodes.track_prints_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败……" },
+            { type: "narration", text: "脚印在一片湿地里消失了，你跟丢了。" }
+        ],
+        choices: [
+            { text: "往镇中心走", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_outside = {
+        text: [
+            { type: "narration", text: "你走到那座挂着「大衮教会」牌子的建筑前。" },
+            { type: "narration", text: "建筑很旧，墙上长满了青苔。窗户是彩色玻璃，描绘的不是任何你认识的宗教场景——而是巨大的海洋生物和……半人半鱼的怪物。" },
+            { type: "narration", text: "门虚掩着，里面传来低沉的吟唱声。" }
+        ],
+        choices: [
+            { text: "推门进去", action: () => sanCheckWrapper(1, 4, "church_inside") },
+            { text: "从窗户往里偷看", action: () => doSkillCheck("侦查", "church_peek") },
+            { text: "算了，先去别的地方", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_inside = {
+        text: [
+            { type: "narration", text: "你推开门，走了进去。" },
+            { type: "narration", text: "教堂里很暗，只有几支蜡烛在燃烧。祭坛上供着一尊雕像——那是一个有着章鱼脑袋、龙的身体、覆盖着鳞片的怪物雕像。" },
+            { type: "danger", text: "你盯着雕像看了几秒，感到一阵强烈的恶心和眩晕。那些触手……它们好像在动……" }
+        ],
+        onEnter: () => { player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 10; },
+        choices: [
+            { text: "赶紧离开", next: "go_to_town" },
+            { text: "仔细研究雕像", action: () => doSkillCheck("神秘学", "church_study") }
+        ]
+    };
+
+    storyNodes.church_peek_success = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定成功！" },
+            { type: "narration", text: "你小心翼翼地凑到窗边往里看。" },
+            { type: "narration", text: "教堂里有十几个穿着绿色长袍的人，正围着一个祭坛跪着吟唱。祭坛上放着一本巨大的、封皮是某种皮革的书。" },
+            { type: "narration", text: "你注意到祭坛后面的墙上，挂着一幅巨大的画——画中是一个从海里升起的巨大怪物，它的脸……" },
+            { type: "danger", text: "你赶紧移开视线，心脏狂跳不止。" }
+        ],
+        choices: [
+            { text: "悄悄离开", next: "go_to_town" },
+            { text: "试着溜进去偷那本书", action: () => doSkillCheck("潜行", "church_steal") }
+        ]
+    };
+    storyNodes.church_peek_failure = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定失败……" },
+            { type: "narration", text: "窗户太脏了，什么都看不清。" }
+        ],
+        choices: [
+            { text: "推门进去看看", action: () => sanCheckWrapper(1, 4, "church_inside") },
+            { text: "去别的地方", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_study_success = {
+        text: [
+            { type: "dice", text: "🎲 【神秘学】判定成功！" },
+            { type: "narration", text: "你强迫自己仔细观察雕像。虽然感到极度不适，但你注意到了一些细节。" },
+            { type: "narration", text: "雕像底座上刻着一些文字，是某种你从未见过的语言。但奇怪的是，你似乎能……看懂一点？" },
+            { type: "dialogue", text: `"……大衮……父神……深渊……沉睡……"` },
+            { type: "system", text: "神秘学技能提升！" }
+        ],
+        onEnter: () => { player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 15; },
+        choices: [
+            { text: "赶紧离开", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_study_failure = {
+        text: [
+            { type: "dice", text: "🎲 【神秘学】判定失败……" },
+            { type: "danger", text: "你越看越觉得头晕目眩，胃里翻江倒海。" },
+            { type: "danger", text: "你不得不移开视线，扶着墙大口喘气。" }
+        ],
+        onEnter: () => { damagePlayer(1); },
+        choices: [
+            { text: "赶紧离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_steal_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "good", text: "你悄无声息地从侧门溜进去，趁教徒们不注意，一把抓起祭坛上的那本书。" },
+            { type: "narration", text: "书的封皮是某种湿漉漉的、皮革质感的东西，摸起来让人很不舒服。" },
+            { type: "system", text: "获得物品：死灵之书（残卷）" }
+        ],
+        onEnter: () => { addItem("死灵之书（残卷）"); },
+        choices: [
+            { text: "赶紧溜走", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_steal_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "danger", text: "你的脚碰到了一个烛台，发出了清脆的响声！" },
+            { type: "narration", text: "所有吟唱声都停了。十几颗脑袋同时转向你。" },
+            { type: "dialogue", text: `"入侵者！抓住他！献给大衮！"` }
+        ],
+        choices: [
+            { text: "⚔️ 战斗！", action: () => doCombat("church_fight") },
+            { text: "🏃 跑！", action: () => doSkillCheck("敏捷", "church_run", 1) }
+        ]
+    };
+
+    storyNodes.church_run_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "narration", text: "你转身就跑，速度快得连自己都惊讶。" },
+            { type: "narration", text: "教徒们在后面追，但你对地形的利用让你很快甩掉了他们。" }
+        ],
+        choices: [
+            { text: "躲起来喘口气", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_run_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你被门槛绊倒了！" },
+            { type: "narration", text: "教徒们围了上来……" }
+        ],
+        choices: [
+            { text: "拼死反抗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.shop = {
+        text: [
+            { type: "narration", text: "杂货铺的老板是个看起来稍微正常一点的老太太，但她看你的眼神同样带着警惕。" },
+            { type: "dialogue", text: `"外地人？这么晚了还在外面晃悠……小心点。"` },
+            { type: "narration", text: "货架上摆着一些日常用品，还有一些奇怪的、看起来像是风干海草的东西。" }
+        ],
+        choices: [
+            { text: "买一些补给品", next: "shop_buy" },
+            { text: "打听一下哈维的事", action: () => doSkillCheck("说服", "shop_ask") },
+            { text: "问问大衮教会是什么", action: () => doSkillCheck("心理学", "shop_church") },
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.shop_buy = {
+        text: [
+            { type: "narration", text: "你买了一些有用的东西。" },
+            { type: "system", text: "获得物品：手电筒、绷带、打火机" }
+        ],
+        onEnter: () => { addItem("手电筒"); addItem("绷带"); addItem("打火机"); },
+        choices: [
+            { text: "离开杂货铺", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.shop_ask_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功！" },
+            { type: "narration", text: "老太太犹豫了一下，压低声音说：" },
+            { type: "dialogue", text: `"那个外乡人……他来打听教会的事。我劝过他，让他赶紧走，他不听……"` },
+            { type: "dialogue", text: `"后来教会的人找过他，再之后……就没人见过他了。"` },
+            { type: "dialogue", text: `"孩子，听我一句劝，今晚就离开这个镇。这里……不是外人该来的地方。"` }
+        ],
+        choices: [
+            { text: "谢谢提醒，我会小心的", next: "go_to_town" }
+        ]
+    };
+    storyNodes.shop_ask_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败……" },
+            { type: "narration", text: "老太太的表情立刻变了，冷冷地说：" },
+            { type: "dialogue", text: `"不认识。你走吧，我要关门了。"` },
+            { type: "narration", text: "她开始收拾东西，明显不想再跟你说话。" }
+        ],
+        choices: [
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.shop_church_success = {
+        text: [
+            { type: "dice", text: "🎲 【心理学】判定成功！" },
+            { type: "narration", text: "你注意到老太太提到「教会」时，眼神里闪过一丝恐惧，而不是虔诚。" },
+            { type: "dialogue", text: `"教会？……那不是什么好地方。他们信的东西……不对劲。"` },
+            { type: "dialogue", text: `"每个月的满月，他们都会去海边的洞里……说是迎接什么父神。回来的人……都变了。"` },
+            { type: "dialogue", text: `"我老了，走不了了。你还年轻，赶紧走吧。"` }
+        ],
+        choices: [
+            { text: "谢谢，我知道了", next: "go_to_town" }
+        ]
+    };
+    storyNodes.shop_church_failure = {
+        text: [
+            { type: "dice", text: "🎲 【心理学】判定失败……" },
+            { type: "narration", text: "老太太的表情变得很僵硬，你读不出她的想法。" },
+            { type: "dialogue", text: `"教会是好的，大衮会保佑我们……你快走！"` },
+            { type: "narration", text: "她几乎是把你推出了门。" }
+        ],
+        choices: [
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.inn_rest = {
+        text: [
+            { type: "narration", text: "你付了钱，上了二楼的房间。" },
+            { type: "narration", text: "房间很小，窗户对着后院。床上的被褥有一股霉味和淡淡的腥味。" },
+            { type: "narration", text: "你锁上门，躺在床上。窗外传来海浪的声音，还有远处隐约的吟唱声。" }
+        ],
+        choices: [
+            { text: "睡觉休息，恢复体力", next: "inn_sleep" },
+            { text: "从窗户偷偷溜出去探查", action: () => doSkillCheck("潜行", "inn_escape") },
+            { text: "仔细检查房间", action: () => doSkillCheck("侦查", "inn_search") }
+        ]
+    };
+
+    storyNodes.inn_sleep = {
+        text: [
+            { type: "narration", text: "你闭上眼，试图入睡。" },
+            { type: "narration", text: "但你做了一个噩梦。你梦见自己在海底，周围是无尽的黑暗。远处有一双巨大的眼睛正在睁开……" },
+            { type: "danger", text: "你惊醒了，浑身冷汗。看了看表，才凌晨两点。" },
+            { type: "system", text: "恢复了 2 点HP，但失去了 1 点SAN" }
+        ],
+        onEnter: () => { 
+            healPlayer(2); 
+            player.san = Math.max(0, player.san - 1);
+            updateStatusDisplay();
+        },
+        choices: [
+            { text: "继续睡", next: "inn_sleep_more" },
+            { text: "不睡了，出去探查", action: () => doSkillCheck("潜行", "inn_escape") }
+        ]
+    };
+
+    storyNodes.inn_sleep_more = {
+        text: [
+            { type: "narration", text: "你强迫自己再次入睡。" },
+            { type: "narration", text: "这一次，梦更清晰了。你看到了那个东西——巨大的、长着触手的、从深渊中升起的……" },
+            { type: "danger", text: "你尖叫着醒来。天快亮了，但你感觉比睡前更累。" },
+            { type: "system", text: "又失去了 2 点SAN" }
+        ],
+        onEnter: () => { 
+            player.san = Math.max(0, player.san - 2);
+            updateStatusDisplay();
+            if (player.san <= 0) {
+                setTimeout(() => showNode("end_insane"), 1000);
+            }
+        },
+        choices: [
+            { text: "天亮了，离开旅馆", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.inn_search_success = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定成功！" },
+            { type: "narration", text: "你仔细检查了房间。在床底下，你发现了一些东西——" },
+            { type: "narration", text: "一本被藏起来的笔记本，看起来是之前住在这里的某个人留下的。" },
+            { type: "system", text: "获得物品：前住客的笔记本" }
+        ],
+        onEnter: () => { addItem("前住客的笔记本"); },
+        choices: [
+            { text: "翻看笔记本", next: "read_notebook" },
+            { text: "先休息", next: "inn_rest" }
+        ]
+    };
+    storyNodes.inn_search_failure = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定失败……" },
+            { type: "narration", text: "房间里又脏又乱，你什么特别的都没发现。" }
+        ],
+        choices: [
+            { text: "休息吧", next: "inn_rest" }
+        ]
+    };
+
+    storyNodes.inn_escape_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "narration", text: "你悄悄从窗户翻出去，沿着后院的围墙溜走了。" },
+            { type: "narration", text: "夜色中的小镇格外诡异，路灯昏暗，街上空无一人。远处的海边似乎有火光在闪烁。" }
+        ],
+        choices: [
+            { text: "去海边看看", next: "beach_night" },
+            { text: "去教会看看", action: () => sanCheckWrapper(1, 3, "church_night") },
+            { text: "去海蚀洞", next: "cave_entrance" }
+        ]
+    };
+    storyNodes.inn_escape_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "narration", text: "你踩到了一个空罐子，发出很大的声响。" },
+            { type: "narration", text: "楼下传来老板的怒吼声：" },
+            { type: "dialogue", text: `"谁在外面？！"` }
+        ],
+        choices: [
+            { text: "赶紧翻回去假装睡觉", action: () => doSkillCheck("敏捷", "inn_backtobed", 1) },
+            { text: "干脆直接跑", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.inn_backtobed_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "narration", text: "你敏捷地翻回房间，跳上床假装睡觉。" },
+            { type: "narration", text: "老板在门外听了一会儿，嘟囔了几句就走了。" }
+        ],
+        choices: [
+            { text: "继续休息", next: "inn_rest" }
+        ]
+    };
+    storyNodes.inn_backtobed_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你在翻窗户的时候被窗帘勾住了，摔在了地上！" },
+            { type: "narration", text: "老板冲了进来，手里拿着一根木棍。" }
+        ],
+        choices: [
+            { text: "⚔️ 战斗！", action: () => doCombat("inn_fight") },
+            { text: "解释一下", action: () => doSkillCheck("说服", "inn_explain") }
+        ]
+    };
+
+    storyNodes.inn_explain_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功！" },
+            { type: "narration", text: "你赶紧说自己是想透气，不小心摔了。" },
+            { type: "narration", text: "老板狐疑地看了你半天，最终还是放下了木棍。" },
+            { type: "dialogue", text: `"……老实点。别到处乱看。"` },
+            { type: "narration", text: "他嘟囔着走了出去，把门重重关上。" }
+        ],
+        choices: [
+            { text: "老实睡觉吧", next: "inn_rest" }
+        ]
+    };
+    storyNodes.inn_explain_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败！" },
+            { type: "danger", text: "老板根本不信，举起木棍就打！" }
+        ],
+        choices: [
+            { text: "⚔️ 战斗！", action: () => doCombat("inn_fight") }
+        ]
+    };
+
+    storyNodes.beach_night = {
+        text: [
+            { type: "narration", text: "你来到了海边。" },
+            { type: "narration", text: "月光下的海滩泛着诡异的银光。海浪有节奏地拍打着礁石，发出低沉的声响。" },
+            { type: "narration", text: "你注意到沙滩上有很多奇怪的脚印——很大，有蹼，一直延伸到海里。" }
+        ],
+        choices: [
+            { text: "沿着脚印往海里走", action: () => sanCheckWrapper(1, 3, "beach_walk") },
+            { text: "在沙滩上找找别的线索", action: () => doSkillCheck("侦查", "beach_search") },
+            { text: "离开海滩", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.beach_walk = {
+        text: [
+            { type: "narration", text: "你沿着脚印往海水里走。水很冷，刺骨的冷。" },
+            { type: "narration", text: "走到齐腰深的时候，你停了下来。前方一片漆黑，什么都看不见。" },
+            { type: "danger", text: "但你感觉到……有什么东西在水下看着你。" },
+            { type: "danger", text: "你的脚碰到了什么滑溜溜的东西……是手吗？" }
+        ],
+        choices: [
+            { text: "赶紧往回跑", action: () => doSkillCheck("敏捷", "beach_run", 1) },
+            { text: "低头看看水里有什么", action: () => sanCheckWrapper(2, 5, "beach_look") }
+        ]
+    };
+
+    storyNodes.beach_look = {
+        text: [
+            { type: "danger", text: "你低头看向水面——" },
+            { type: "danger", text: "一张脸正从水下盯着你。那是一张人脸，但又不完全是。皮肤是绿色的，眼睛很大，没有眼皮，嘴里是密密麻麻的尖牙。" },
+            { type: "danger", text: "它在笑。" }
+        ],
+        choices: [
+            { text: "尖叫着逃跑", action: () => doSkillCheck("敏捷", "beach_run", 1) }
+        ]
+    };
+
+    storyNodes.beach_run_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "narration", text: "你连滚带爬地跑回了岸上，浑身发抖。" },
+            { type: "narration", text: "回头看去，海面上什么都没有。也许……是你看错了？" }
+        ],
+        choices: [
+            { text: "回镇上", next: "go_to_town" }
+        ]
+    };
+    storyNodes.beach_run_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你被什么东西抓住了脚踝！一股巨大的力量把你往水里拖！" },
+            { type: "danger", text: "你拼命挣扎，但那东西的力气大得惊人……" }
+        ],
+        onEnter: () => { damagePlayer(3); },
+        choices: [
+            { text: "⚔️ 用脚踹！", action: () => doSkillCheck("格斗", "beach_kick") },
+            { text: "大声呼救", next: "beach_scream" }
+        ]
+    };
+
+    storyNodes.beach_kick_success = {
+        text: [
+            { type: "dice", text: "🎲 【格斗】判定成功！" },
+            { type: "good", text: "你另一只脚狠狠地踹了下去，正中那东西的脸！" },
+            { type: "narration", text: "它发出一声尖锐的嘶鸣，松开了手。你趁机连滚带爬地逃上了岸。" }
+        ],
+        choices: [
+            { text: "赶紧回镇上", next: "go_to_town" }
+        ]
+    };
+    storyNodes.beach_kick_failure = {
+        text: [
+            { type: "dice", text: "🎲 【格斗】判定失败！" },
+            { type: "danger", text: "你没踹中，反而被拖得更深了！" },
+            { type: "danger", text: "海水灌进了你的嘴里、鼻子里……" }
+        ],
+        onEnter: () => { damagePlayer(2); },
+        choices: [
+            { text: "继续挣扎", action: () => doSkillCheck("力量", "beach_struggle", 1) }
+        ]
+    };
+
+    storyNodes.beach_struggle_success = {
+        text: [
+            { type: "dice", text: "🎲 【力量】判定成功！" },
+            { type: "good", text: "你爆发出最后的力气，猛地一挣，居然挣脱了！" },
+            { type: "narration", text: "你拼命游回岸边，瘫倒在沙滩上，大口喘着气。" }
+        ],
+        choices: [
+            { text: "回镇上", next: "go_to_town" }
+        ]
+    };
+    storyNodes.beach_struggle_failure = {
+        text: [
+            { type: "dice", text: "🎲 【力量】判定失败……" },
+            { type: "danger", text: "你再也没有力气了……" },
+            { type: "danger", text: "冰冷的海水吞噬了你。最后你看到的，是月光下那张诡异的笑脸……" }
+        ],
+        choices: [
+            { text: "—— 调查员溺亡 ——", action: () => endGame("溺亡") }
+        ]
+    };
+
+    storyNodes.beach_scream = {
+        text: [
+            { type: "narration", text: "你大声呼救，但周围一个人都没有。" },
+            { type: "danger", text: "那东西把你越拖越深……" }
+        ],
+        onEnter: () => { damagePlayer(2); },
+        choices: [
+            { text: "继续挣扎", action: () => doSkillCheck("力量", "beach_struggle", 1) }
+        ]
+    };
+
+    storyNodes.beach_search_success = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定成功！" },
+            { type: "narration", text: "你在沙滩上仔细搜索，发现了一些奇怪的东西。" },
+            { type: "narration", text: "一块刻着奇怪符号的金属牌，看起来很古老。还有一些……鳞片？" },
+            { type: "system", text: "获得物品：神秘金属牌" }
+        ],
+        onEnter: () => { addItem("神秘金属牌"); },
+        choices: [
+            { text: "回镇上", next: "go_to_town" },
+            { text: "往海蚀洞方向走", next: "cave_entrance" }
+        ]
+    };
+    storyNodes.beach_search_failure = {
+        text: [
+            { type: "dice", text: "🎲 【侦查】判定失败……" },
+            { type: "narration", text: "沙滩上除了沙子和贝壳，什么都没有。" }
+        ],
+        choices: [
+            { text: "回镇上", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_night = {
+        text: [
+            { type: "narration", text: "你来到了大衮教会门前。" },
+            { type: "narration", text: "夜里的教堂比白天更诡异。窗户里透出暗绿色的光，里面传来低沉的吟唱声。" },
+            { type: "narration", text: "门口站着两个穿着绿色长袍的守卫。" }
+        ],
+        choices: [
+            { text: "悄悄绕到后面看看", action: () => doSkillCheck("潜行", "church_back") },
+            { text: "直接敲门进去", next: "church_knock" },
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_back_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "narration", text: "你悄悄绕到教堂后面，发现了一扇小窗户。" },
+            { type: "narration", text: "透过窗户，你看到里面正在举行某种仪式。十几个教徒围着祭坛跪拜，祭坛上放着一个……活的东西？" },
+            { type: "danger", text: "你看不清那是什么，但光是轮廓就让你头皮发麻。" }
+        ],
+        choices: [
+            { text: "再仔细看看", action: () => sanCheckWrapper(2, 5, "church_peek_deep") },
+            { text: "悄悄离开", next: "go_to_town" },
+            { text: "翻窗进去", action: () => doSkillCheck("潜行", "church_enter_back") }
+        ]
+    };
+    storyNodes.church_back_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "narration", text: "你踩到了一根树枝，发出了声响。" },
+            { type: "narration", text: "一个守卫转过头来，朝你这边看。" }
+        ],
+        choices: [
+            { text: "赶紧躲起来", action: () => doSkillCheck("潜行", "church_hide", 1) },
+            { text: "转身就跑", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_hide_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "narration", text: "你迅速躲到了一堵墙后面。" },
+            { type: "narration", text: "守卫看了一会儿，没发现什么，又转了回去。" }
+        ],
+        choices: [
+            { text: "继续绕到后面", action: () => doSkillCheck("潜行", "church_back") },
+            { text: "算了，离开", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_hide_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "danger", text: "你被发现了！" },
+            { type: "dialogue", text: `"谁在那里？！抓住他！"` }
+        ],
+        choices: [
+            { text: "跑！", action: () => doSkillCheck("敏捷", "church_run", 1) },
+            { text: "战斗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_peek_deep = {
+        text: [
+            { type: "danger", text: "你强迫自己看得更清楚——" },
+            { type: "danger", text: "祭坛上的东西……它有很多触手，很多眼睛，很多嘴。它在动，它在生长，它在……呼吸？" },
+            { type: "danger", text: "你的大脑在尖叫着让你移开视线，但你做不到。你被它吸引住了，就像被蛇盯住的青蛙……" }
+        ],
+        onEnter: () => { player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 15; },
+        choices: [
+            { text: "……", next: "church_peek_after" }
+        ]
+    };
+
+    storyNodes.church_peek_after = {
+        text: [
+            { type: "narration", text: "你猛地移开视线，大口喘着气。" },
+            { type: "system", text: "你感觉自己的世界观……改变了。" }
+        ],
+        choices: [
+            { text: "赶紧离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_enter_back_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "narration", text: "你悄无声息地翻窗进入了教堂，躲在一排长椅后面。" },
+            { type: "narration", text: "仪式正在进行。教徒们吟唱着，声音越来越大。祭坛上的那个东西……也在跟着膨胀。" },
+            { type: "narration", text: "你注意到祭坛旁边的桌子上，放着一本巨大的书，还有一把银色的匕首。" }
+        ],
+        choices: [
+            { text: "偷那本书", action: () => doSkillCheck("潜行", "church_steal_book") },
+            { text: "偷那把匕首", action: () => doSkillCheck("潜行", "church_steal_dagger") },
+            { text: "悄悄离开", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_enter_back_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "danger", text: "你翻窗的时候弄出了声音！" },
+            { type: "narration", text: "所有教徒都转过头来看着你。" }
+        ],
+        choices: [
+            { text: "跑！", action: () => doSkillCheck("敏捷", "church_run", 1) },
+            { text: "战斗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_steal_book_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "good", text: "你趁教徒们全神贯注于仪式，悄悄摸到桌子边，拿起了那本书。" },
+            { type: "narration", text: "书的封皮是某种奇怪的皮革，摸起来冰凉滑腻。封面上用金色的墨水写着几个你不认识的字，但你 somehow 知道那是什么意思——" },
+            { type: "dialogue", text: `"死灵之书"` },
+            { type: "system", text: "获得物品：死灵之书" }
+        ],
+        onEnter: () => { addItem("死灵之书"); },
+        choices: [
+            { text: "赶紧溜走", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_steal_book_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "danger", text: "你的手碰到了旁边的烛台，蜡烛倒了！" },
+            { type: "narration", text: "教徒们发现了你！" }
+        ],
+        choices: [
+            { text: "拿着书跑！", action: () => doSkillCheck("敏捷", "church_run_book", 1) },
+            { text: "战斗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_run_book_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "good", text: "你抱着书，冲出窗户，一路狂奔。" },
+            { type: "narration", text: "教徒们在后面追，但你对地形的熟悉（和恐惧带来的速度）让你甩掉了他们。" }
+        ],
+        choices: [
+            { text: "找个地方躲起来", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_run_book_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你被绊倒了！书飞了出去。" },
+            { type: "narration", text: "教徒们围了上来……" }
+        ],
+        choices: [
+            { text: "拼死反抗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_steal_dagger_success = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定成功！" },
+            { type: "good", text: "你悄悄拿起了那把匕首。" },
+            { type: "narration", text: "匕首是银色的，刀柄上刻着奇怪的符文。刀刃非常锋利，闪着诡异的光。" },
+            { type: "system", text: "获得物品：仪式匕首" }
+        ],
+        onEnter: () => { addItem("仪式匕首"); },
+        choices: [
+            { text: "赶紧溜走", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_steal_dagger_failure = {
+        text: [
+            { type: "dice", text: "🎲 【潜行】判定失败！" },
+            { type: "danger", text: "你被发现了！" }
+        ],
+        choices: [
+            { text: "拿着匕首冲出去！", action: () => doCombat("church_fight") },
+            { text: "把匕首放回去道歉", action: () => doSkillCheck("说服", "church_apologize") }
+        ]
+    };
+
+    storyNodes.church_apologize_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功！" },
+            { type: "narration", text: "你赶紧放下匕首，假装自己是迷路了，不小心闯进来的。" },
+            { type: "narration", text: "教徒们对视了一眼。一个看起来是首领的人走过来，用沙哑的声音说：" },
+            { type: "dialogue", text: `"……既然来了，不如留下来参加我们的仪式？大衮会欢迎新的信徒。"` },
+            { type: "narration", text: "他的笑容让你后背发凉。" }
+        ],
+        choices: [
+            { text: "假装答应，找机会跑", action: () => doSkillCheck("心理学", "church_fake_join") },
+            { text: "拒绝，然后跑", action: () => doSkillCheck("敏捷", "church_run", 1) },
+            { text: "真的加入看看", action: () => sanCheckWrapper(3, 8, "church_join") }
+        ]
+    };
+    storyNodes.church_apologize_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败！" },
+            { type: "narration", text: "他们根本不信你。" },
+            { type: "dialogue", text: `"又是一个来打探的……把他抓起来！"` }
+        ],
+        choices: [
+            { text: "战斗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_fake_join_success = {
+        text: [
+            { type: "dice", text: "🎲 【心理学】判定成功！" },
+            { type: "narration", text: "你装作很感兴趣的样子，跟着他们一起跪拜。" },
+            { type: "narration", text: "首领满意地点点头，继续主持仪式。你趁他们不注意，慢慢往门口挪……" },
+            { type: "good", text: "你成功溜了出来！" }
+        ],
+        choices: [
+            { text: "赶紧离开", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_fake_join_failure = {
+        text: [
+            { type: "dice", text: "🎲 【心理学】判定失败！" },
+            { type: "narration", text: "首领看了你一眼，突然笑了：" },
+            { type: "dialogue", text: `"你在撒谎。你的眼睛里……没有信仰。"` },
+            { type: "dialogue", text: `"没关系。等仪式结束，你就会有了。"` }
+        ],
+        choices: [
+            { text: "跑！", action: () => doSkillCheck("敏捷", "church_run", 1) },
+            { text: "拼死反抗！", action: () => doCombat("church_fight") }
+        ]
+    };
+
+    storyNodes.church_join = {
+        text: [
+            { type: "danger", text: "你跟着他们一起跪拜，一起吟唱。" },
+            { type: "danger", text: "那些奇怪的音节从你嘴里冒出来，你甚至不知道自己在说什么。但你感觉……很好？" },
+            { type: "danger", text: "祭坛上的东西在膨胀，在蠕动，在……微笑？" },
+            { type: "danger", text: "你感到自己的意识在融化，在融入某种更伟大的存在……" },
+            { type: "danger", text: "Ph'nglui mglw'nafh Cthulhu R'lyeh wgah'nagl fhtagn." }
+        ],
+        choices: [
+            { text: "—— 调查员堕落 ——", action: () => endGame("堕落") }
+        ]
+    };
+
+    storyNodes.church_knock = {
+        text: [
+            { type: "narration", text: "你敲了敲门。" },
+            { type: "narration", text: "门开了一条缝，一只眼睛从里面看着你。" },
+            { type: "dialogue", text: `"……什么事？"` }
+        ],
+        choices: [
+            { text: "说你想了解一下他们的信仰", action: () => doSkillCheck("说服", "church_enter_ask") },
+            { text: "说你迷路了，想问问路", action: () => doSkillCheck("说服", "church_ask_dir") },
+            { text: "直接推门进去", next: "church_inside" }
+        ]
+    };
+
+    storyNodes.church_enter_ask_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功！" },
+            { type: "narration", text: "那人看了你一会儿，打开了门。" },
+            { type: "dialogue", text: `"……进来吧。大衮欢迎所有寻求真理的人。"` },
+            { type: "narration", text: "你走进了教堂。" }
+        ],
+        choices: [
+            { text: "继续", next: "church_inside" }
+        ]
+    };
+    storyNodes.church_enter_ask_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败……" },
+            { type: "narration", text: "那人冷冷地看着你：" },
+            { type: "dialogue", text: `"走开。这里不欢迎外人。"` },
+            { type: "narration", text: "门「砰」地关上了。" }
+        ],
+        choices: [
+            { text: "绕到后面看看", action: () => doSkillCheck("潜行", "church_back") },
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.church_ask_dir_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功！" },
+            { type: "narration", text: "那人狐疑地看了你一眼，还是给你指了路。" },
+            { type: "dialogue", text: `"……沿着这条路一直走就是镇中心。快走吧，晚上别在外面晃悠。"` },
+            { type: "narration", text: "门关上了。" }
+        ],
+        choices: [
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+    storyNodes.church_ask_dir_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败……" },
+            { type: "narration", text: "那人根本不信，冷冷地说：" },
+            { type: "dialogue", text: `"滚。"` },
+            { type: "narration", text: "门重重地关上了。" }
+        ],
+        choices: [
+            { text: "绕到后面看看", action: () => doSkillCheck("潜行", "church_back") },
+            { text: "离开", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.read_diary = {
+        text: [
+            { type: "narration", text: "你翻开日记。字迹歪歪扭扭，越往后越潦草。" },
+            { type: "dialogue", text: `"1925年3月：我来到印斯茅斯当旅馆老板。这里的人都很奇怪，但生意还不错。"` },
+            { type: "dialogue", text: `"1925年6月：他们让我加入教会。我拒绝了。但他们说，不加入的人……会消失。"` },
+            { type: "dialogue", text: `"1925年12月：我加入了。我不想消失。仪式很奇怪，但大衮会保佑我们。"` },
+            { type: "dialogue", text: `"1926年6月：我的皮肤变绿了。我的手指间……长出了蹼。他们说这是大衮的祝福。"` },
+            { type: "dialogue", text: `"1927年1月：我已经不记得自己曾经是人类了。大衮父神，我将回归大海……"` },
+            { type: "danger", text: "日记到这里就结束了。最后几页画满了奇怪的符号，还有一张……自画像？画中的人已经完全变成了怪物的样子。" }
+        ],
+        onEnter: () => { 
+            player.san = Math.max(0, player.san - 1);
+            updateStatusDisplay();
+        },
+        choices: [
+            { text: "放下日记", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.read_notebook = {
+        text: [
+            { type: "narration", text: "你翻开笔记本。这是一个记者的调查笔记。" },
+            { type: "dialogue", text: `"印斯茅斯的大衮教会——表面上是宗教组织，实际上在进行某种……人体改造？"` },
+            { type: "dialogue", text: `"镇上的人都在慢慢变成某种半人半鱼的生物。他们称之为「大衮的祝福」。"` },
+            { type: "dialogue", text: `"海蚀洞里有一个祭坛，他们在那里举行仪式，召唤某种来自深海的存在。"` },
+            { type: "dialogue", text: `"我必须找到证据。明天晚上我就去海蚀洞……"` },
+            { type: "narration", text: "笔记到这里就断了。最后一页只有一行潦草的字：" },
+            { type: "danger", text: `"它们来了。它们从海里来了。"` }
+        ],
+        onEnter: () => { 
+            player.san = Math.max(0, player.san - 1);
+            player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 10;
+            updateStatusDisplay();
+        },
+        choices: [
+            { text: "放下笔记本", next: "inn_rest" }
+        ]
+    };
+
+    storyNodes.inn_more = {
+        text: [
+            { type: "narration", text: "你想再追问，但老板摇了摇头：" },
+            { type: "dialogue", text: `"我不能再说了。你走吧，别再来问我。"` },
+            { type: "narration", text: "他转身走进了里屋，不再出来。" }
+        ],
+        choices: [
+            { text: "回房间休息", next: "inn_rest" },
+            { text: "偷偷跟上去", action: () => doSkillCheck("潜行", "inn_sneak") }
+        ]
+    };
+
+    storyNodes.cave_symbols_success = {
+        text: [
+            { type: "dice", text: "🎲 【神秘学】判定成功！" },
+            { type: "narration", text: "你仔细研究洞口的符号。虽然你从未见过这种文字，但你的大脑似乎……能够理解？" },
+            { type: "dialogue", text: `"……大衮之穴……父神沉睡之所……凡人止步……"` },
+            { type: "narration", text: "你感到一阵寒意。这些符号似乎在散发着某种……能量？" },
+            { type: "system", text: "神秘学技能提升！" }
+        ],
+        onEnter: () => { player.skills["神秘学"] = (player.skills["神秘学"] || 0) + 10; },
+        choices: [
+            { text: "进去", next: "cave_entrance" },
+            { text: "还是先回去准备一下", next: "go_to_town" }
+        ]
+    };
+    storyNodes.cave_symbols_failure = {
+        text: [
+            { type: "dice", text: "🎲 【神秘学】判定失败……" },
+            { type: "narration", text: "这些符号完全看不懂。你看了一会儿，感到头晕目眩。" }
+        ],
+        choices: [
+            { text: "不管了，进去", next: "cave_entrance" },
+            { text: "先回去", next: "go_to_town" }
+        ]
+    };
+
+    storyNodes.cave_charge = {
+        text: [
+            { type: "narration", text: "你深吸一口气，冲进了海蚀洞！" },
+            { type: "narration", text: "洞里很黑，你只能摸索着前进。走了大约几分钟，前方出现了光亮和声音。" },
+            { type: "narration", text: "你来到了一个巨大的地下空间，几十个教徒围着祭坛正在举行仪式。祭坛上绑着一个人——哈维！" },
+            { type: "danger", text: "但你冲进来的动静太大了，所有人都转过头来看着你。" }
+        ],
+        choices: [
+            { text: "⚔️ 冲上去救人！", action: () => doCombat("final_fight") },
+            { text: "大喊让他们住手", action: () => doSkillCheck("说服", "cave_shout") }
+        ]
+    };
+
+    storyNodes.cave_shout_success = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定成功？……不。" },
+            { type: "narration", text: "你大喊着让他们住手，但他们只是看着你，露出了诡异的笑容。" },
+            { type: "dialogue", text: `"又一个祭品。太好了，大衮会很高兴的。"` },
+            { type: "narration", text: "他们开始向你走来。" }
+        ],
+        choices: [
+            { text: "战斗！", action: () => doCombat("final_fight") },
+            { text: "转身就跑", action: () => doSkillCheck("敏捷", "cave_run", 1) }
+        ]
+    };
+    storyNodes.cave_shout_failure = {
+        text: [
+            { type: "dice", text: "🎲 【说服】判定失败……" },
+            { type: "narration", text: "你的声音在洞穴里回荡，但没有人理你。" },
+            { type: "narration", text: "教徒们继续他们的仪式，只有几个人站起来，朝你走来。" }
+        ],
+        choices: [
+            { text: "战斗！", action: () => doCombat("cave_fight") },
+            { text: "跑！", action: () => doSkillCheck("敏捷", "cave_run", 1) }
+        ]
+    };
+
+    storyNodes.cave_run_success = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定成功！" },
+            { type: "narration", text: "你转身就跑，速度快得惊人。" },
+            { type: "narration", text: "教徒们在后面追，但你对地形的利用让你很快甩掉了他们。" },
+            { type: "narration", text: "你冲出了海蚀洞，一直跑到悬崖边才停下来。" },
+            { type: "danger", text: "但哈维……你没能救出来。" }
+        ],
+        choices: [
+            { text: "离开印斯茅斯", next: "cave_escape" }
+        ]
+    };
+    storyNodes.cave_run_failure = {
+        text: [
+            { type: "dice", text: "🎲 【敏捷】判定失败！" },
+            { type: "danger", text: "你在黑暗中撞到了岩壁！" },
+            { type: "narration", text: "教徒们追了上来，把你团团围住。" }
+        ],
+        choices: [
+            { text: "拼死反抗！", action: () => doCombat("final_fight") }
+        ]
+    };
+
+    // ============================================================
+    // 【第九部分：辅助函数】
+    // 物品管理、伤害治疗、游戏结束等
+    // ============================================================
+
+    /**
+     * 添加物品到背包
+     */
+    function addItem(item) {
+        if (!player.inventory.includes(item)) {
+            player.inventory.push(item);
+            updateInventoryDisplay();
+        }
+    }
+
+    /**
+     * 移除物品
+     */
+    function removeItem(item) {
+        const index = player.inventory.indexOf(item);
+        if (index > -1) {
+            player.inventory.splice(index, 1);
+            updateInventoryDisplay();
+        }
+    }
+
+    /**
+     * 玩家受到伤害
+     */
+    function damagePlayer(amount) {
+        player.hp = Math.max(0, player.hp - amount);
+        updateStatusDisplay();
+        if (player.hp <= 0) {
+            setTimeout(() => showNode("end_dead"), 1000);
+        }
+    }
+
+    /**
+     * 玩家恢复生命
+     */
+    function healPlayer(amount) {
+        player.hp = Math.min(player.maxHp, player.hp + amount);
+        updateStatusDisplay();
+    }
+
+    /**
+     * 游戏结束
+     */
+    function endGame(ending) {
+        addStoryText(`<br>━━━━━━━━━━━━━━━━━━<br>结局：${ending}<br>━━━━━━━━━━━━━━━━━━`, "system");
+        addStoryText(`<br>调查员：${player.name}<br>职业：${professions[player.profession].name}<br>最终HP：${player.hp}/${player.maxHp}<br>最终SAN：${player.san}/${player.maxSan}<br>物品：${player.inventory.join("、") || "无"}`, "system");
+    }
+
+    // ============================================================
+    // 【第十部分：初始化】
+    // 页面加载完成后执行
+    // ============================================================
+
+    window.onload = function() {
+        initProfessionList();
+        currentAttributes = rollAttributes();
+    };
+    </script>
 </body>
 </html>
-
