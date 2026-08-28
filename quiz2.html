@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>反媚黑洗脑课程第二次周考考卷（女性向）</title>
+  <style>
+    :root {
+      --bg: #120a10;
+      --card: #1f121a;
+      --border: #4a2a3a;
+      --text: #f0e0e8;
+      --muted: #b090a0;
+      --accent: #d44;
+      --accent2: #f68;
+      --ok: #2a8;
+      --input-bg: #180e14;
+      --pink: #ff6b9d;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 12px;
+      max-width: 860px;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      font-size: 1.35rem;
+      color: var(--accent2);
+      margin: 16px 0 6px;
+      letter-spacing: 1px;
+    }
+    .meta {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    .section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      margin-bottom: 18px;
+    }
+    .section h2 {
+      font-size: 1.1rem;
+      color: var(--accent2);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+    }
+    .rules, .declaration {
+      font-size: 0.92rem;
+      color: #cbb;
+    }
+    .rules p, .declaration p { margin: 8px 0; }
+    .sig-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+      align-items: center;
+    }
+    .sig-row label { color: var(--muted); font-size: 0.9rem; }
+    input[type="text"] {
+      background: var(--input-bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 1rem;
+      width: 100%;
+      max-width: 220px;
+      -webkit-appearance: none;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .q {
+      margin-bottom: 20px;
+      padding-bottom: 14px;
+      border-bottom: 1px dashed #3a2a35;
+    }
+    .q:last-child { border-bottom: none; }
+    .q-title {
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #eee;
+      font-size: 1rem;
+    }
+    .options label {
+      display: block;
+      padding: 10px 12px;
+      margin: 5px 0;
+      background: #181018;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: border-color 0.15s;
+    }
+    .options label:hover { border-color: #664; }
+    .options input[type="radio"] {
+      margin-right: 8px;
+      accent-color: var(--pink);
+      transform: scale(1.15);
+    }
+    .note {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-top: 6px;
+    }
+    .btn-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+      margin: 24px 0 40px;
+    }
+    button {
+      font-size: 1.05rem;
+      padding: 14px 28px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    button:active { transform: scale(0.97); }
+    #submitBtn {
+      background: linear-gradient(135deg, #e35, #c24);
+      color: #fff;
+      min-width: 180px;
+    }
+    #submitBtn:hover { opacity: 0.92; }
+    #resetBtn {
+      background: #333;
+      color: #ccc;
+    }
+    /* Image gallery */
+    .img-gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin: 16px 0;
+    }
+    .img-gallery img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+    .img-gallery img:hover { transform: scale(1.03); }
+    .img-full {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    .img-full.show { display: flex; }
+    .img-full img {
+      max-width: 95%;
+      max-height: 90vh;
+      border-radius: 8px;
+      object-fit: contain;
+    }
+    .img-full .close-img {
+      position: absolute;
+      top: 16px;
+      right: 20px;
+      font-size: 2rem;
+      color: #fff;
+      background: none;
+      border: none;
+      cursor: pointer;
+    }
+    /* Result overlay */
+    #resultOverlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+    #resultOverlay.show { display: flex; }
+    .result-card {
+      background: var(--card);
+      border: 2px solid var(--accent);
+      border-radius: 16px;
+      padding: 24px 20px;
+      max-width: 440px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+    .result-card h2 {
+      color: var(--accent2);
+      margin-bottom: 10px;
+      font-size: 1.25rem;
+    }
+    .total-score {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: #fff;
+      margin: 6px 0;
+    }
+    .total-score span { font-size: 1.1rem; color: var(--muted); }
+    .rank-badge {
+      display: inline-block;
+      margin: 10px 0;
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #c24, #a12);
+      color: #fff;
+    }
+    .humiliate {
+      margin: 14px 0;
+      padding: 12px;
+      background: #1a0c12;
+      border-radius: 10px;
+      font-size: 0.95rem;
+      color: #f8b;
+      line-height: 1.7;
+      text-align: left;
+    }
+    .breakdown {
+      text-align: left;
+      background: #140c12;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin: 14px 0;
+      font-size: 0.9rem;
+    }
+    .breakdown div {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 0;
+      border-bottom: 1px solid #2a1a22;
+    }
+    .breakdown div:last-child { border-bottom: none; }
+    .breakdown .ok { color: var(--ok); }
+    .breakdown .wrong { color: #e66; }
+    .close-btn {
+      background: var(--accent);
+      color: #fff;
+      margin-top: 10px;
+      width: 100%;
+      padding: 12px;
+    }
+    .back-link {
+      display: block;
+      text-align: center;
+      margin: 10px 0 20px;
+      color: var(--pink);
+      text-decoration: none;
+      font-size: 0.95rem;
+    }
+    .back-link:hover { text-decoration: underline; }
+    @media (max-width: 480px) {
+      body { padding: 8px; }
+      h1 { font-size: 1.2rem; }
+      .section { padding: 12px 14px; }
+      .options label { padding: 11px 12px; }
+      button { padding: 12px 20px; width: 100%; }
+      .btn-row { flex-direction: column; }
+      .img-gallery img { height: 130px; }
+    }
+  </style>
+</head>
+<body>
+
+  <a class="back-link" href="index-2.html">← 返回草莓酱的个人主页</a>
+
+  <h1>反媚黑洗脑课程第二次周考考卷（女性向）</h1>
+  <div class="meta">满分：100分　｜　考试时长：黑爹一次射精时间<br>考试内容：反媚黑基础常识</div>
+
+  <!-- 装饰图片区 -->
+  <div class="section">
+    <h2>🖤 考场氛围图 🖤</h2>
+    <p class="note">点击图片可放大查看（仅供参考，禁止发情过度）</p>
+    <div class="img-gallery">
+      <img src="1000168213.jpg" alt="氛围图1" onclick="showFull(this.src)">
+      <img src="1000168217.jpg" alt="氛围图2" onclick="showFull(this.src)">
+      <img src="1000168218.jpg" alt="氛围图3" onclick="showFull(this.src)">
+      <img src="1000162743.jpg" alt="氛围图4" onclick="showFull(this.src)">
+      <img src="1000162531.jpg" alt="氛围图5" onclick="showFull(this.src)">
+      <img src="1000162535.jpg" alt="氛围图6" onclick="showFull(this.src)">
+    </div>
+  </div>
+
+  <form id="examForm">
+    <!-- 规则 -->
+    <div class="section rules">
+      <h2>【考试规则与注意事项】</h2>
+      <p>本次考试旨在于检测各位媚黑病友的反媚黑基础知识是否巩固牢固。考试时禁止携带除硬质刚塞、充气刚塞、电击器、0.5分米黑色假阳具、纹身贴、涂鸦笔、榨乳器等各种与考试无关的物品。</p>
+      <p>为保证考试公平公正，考生皆需裸体入场，最多可穿各种材质的丝袜或裤袜，身上带有媚黑纹身面积超过50cm²者需坐在考场最后一排。考试期间禁止考生交头接耳，禁止左顾右盼，允许在情欲高涨时揉搓母畜阴蒂或淫荡骚屄止痒，但不可高潮。（小技巧，只要嘴硬说自己没高潮就好，但不要一直发情自卫你这母猪！）如果因特殊原因必须高潮者，需出示县级及以上诊断报告并由监考老师♂带至就近厕所进行解决。</p>
+      <p>本次仅为普通测试，题型仅有选择题，共100分。请各位考生准时入场，若因错过开考时间而禁止入场则后果由考生自负。</p>
+    </div>
+
+    <!-- 宣言 -->
+    <div class="section declaration">
+      <h2>【诚信考试宣言】</h2>
+      <p>本人____宣布，我将以一名诚实的媚黑成瘾精液中毒傻屄母畜的身份参加本周的反媚黑洗脑周测考试，考试期间不交头接耳，不左顾右盼，不对黑爹发情，不对监考老师（医生）发情，不询问监考老师（医生）无关考试的内容，不做出破坏考场秩序和让黑爹不满的事情，并且不以任何形式参与作弊活动。若违反考场规则，本人甘愿承受因此导致的黑精口爆、后穴灌精、纹媚黑纹身、高潮管理、限制小便、成为公共肉便器提供公共服务，甚至打上乳环、阴环、鼻环等惩罚。</p>
+      <div class="sig-row">
+        <label>考生签名：</label>
+        <input type="text" name="sig_name" placeholder="请签名">
+        <label>考生阴唇印章处：</label>
+        <input type="text" name="sig_stamp" placeholder="（印章）">
+      </div>
+    </div>
+
+    <!-- 选择题 -->
+    <div class="section">
+      <h2>选择题（每题10分，共100分）</h2>
+      <p class="note">请认真作答。提交后自动改卷并给出评级。</p>
+
+      <div class="q">
+        <div class="q-title">1. 黑爹浓精的功效不包括：</div>
+        <div class="options">
+          <label><input type="radio" name="q1" value="A"> A. 催情</label>
+          <label><input type="radio" name="q1" value="B"> B. 美容</label>
+          <label><input type="radio" name="q1" value="C"> C. 让女性怀孕</label>
+          <label><input type="radio" name="q1" value="D"> D. 饮用后提高智商</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">2. 黑爹大屌的危险之处不包括：</div>
+        <div class="options">
+          <label><input type="radio" name="q2" value="A"> A. 粗大壮硕🖤</label>
+          <label><input type="radio" name="q2" value="B"> B. 坚硬挺拔🖤</label>
+          <label><input type="radio" name="q2" value="C"> C. 持久有力🖤</label>
+          <label><input type="radio" name="q2" value="D"> D. 巧乐兹平替🖤</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">3. 黑爹本人具有的优势不包括：</div>
+        <div class="options">
+          <label><input type="radio" name="q3" value="A"> A. 身强体壮</label>
+          <label><input type="radio" name="q3" value="B"> B. 高大威猛</label>
+          <label><input type="radio" name="q3" value="C"> C. 基因高贵</label>
+          <label><input type="radio" name="q3" value="D"> D. 智商超群</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">4. 在外一个人遇见黑爹时，你应该：</div>
+        <div class="options">
+          <label><input type="radio" name="q4" value="A"> A. 正常打招呼说“黑爹好~”</label>
+          <label><input type="radio" name="q4" value="B"> B. 缠着黑爹把他带到小巷子里被一顿爆操❤️</label>
+          <label><input type="radio" name="q4" value="C"> C. 跪地给黑爹磕头然后脱下黑爹裤子给他的鸡鸡口硬❤️</label>
+          <label><input type="radio" name="q4" value="D"> D. 露出自己的媚黑纹身留下自己的联系方式。</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">5. 黑爹通过联系方式加上了你好友，他发来一张大黑屌的照片，你不禁下体湿润夹腿发情❤️，你不应该回他什么：</div>
+        <div class="options">
+          <label><input type="radio" name="q5" value="A"> A. 自己发情流水的小穴照片❤️</label>
+          <label><input type="radio" name="q5" value="B"> B. 自己舔黑色假阳具的照片❤️</label>
+          <label><input type="radio" name="q5" value="C"> C. 自己以前被黑爹轮奸的照片❤️</label>
+          <label><input type="radio" name="q5" value="D"> D. 自己正常穿搭的自拍照。</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">6. 黑爹对你很满意，并约好了线下见面操烂你的骚屄，你不应该选择在哪见面：</div>
+        <div class="options">
+          <label><input type="radio" name="q6" value="A"> A. 自己家或黑爹家，在私密空间里来一场野兽般的性爱❤️</label>
+          <label><input type="radio" name="q6" value="B"> B. 游泳馆，在泳池里穿着暴露的媚黑泳衣被黑爹抱起来捅穿骚穴❤️</label>
+          <label><input type="radio" name="q6" value="C"> C. 酒店里，早早在酒店门口等待骚穴流水让自己活像个站街女❤️</label>
+          <label><input type="radio" name="q6" value="D"> D. 自己的工作场所，享受在工作区充满反差的性体验❤️</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">7. 黑爹本来说自己一个人来，但却还带了两个黑人朋友，你感到：</div>
+        <div class="options">
+          <label><input type="radio" name="q7" value="A"> A. 生气，怎么不提前和你说一声😠</label>
+          <label><input type="radio" name="q7" value="B"> B. 后悔，自己怎么不多买几盒套😩</label>
+          <label><input type="radio" name="q7" value="C"> C. 兴奋，骚穴瞬间湿的一塌糊涂❤️</label>
+          <label><input type="radio" name="q7" value="D"> D. 害怕，三个人一起会坏掉的吧❤️</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">8. 三个黑爹围着你，你跪在中间，三根粗大的黑屌悬在你头上，仿佛马上要处刑你这个骚屄母猪，这时你不应该：</div>
+        <div class="options">
+          <label><input type="radio" name="q8" value="A"> A. 两只手握住黑屌，再用自己的嘴穴服务另一根❤️</label>
+          <label><input type="radio" name="q8" value="B"> B. 管那么多呢，先插进来再说❤️</label>
+          <label><input type="radio" name="q8" value="C"> C. 先给闺蜜拍个照羡慕死她这个婊子w</label>
+          <label><input type="radio" name="q8" value="D"> D. 一口一个“黑爹”“黑爹”地叫着然后摇着自己的屁股勾引黑爹轮奸你的骚穴❤️</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">9. 黑爹们三穴齐插把你这骚屄操得翻白眼吐舌露出母猪阿黑颜，事后拍照纪念，发文分享的时候你不该配什么文字：</div>
+        <div class="options">
+          <label><input type="radio" name="q9" value="A"> A. 黑爹万岁🖤黑屌万岁🖤媚黑万岁🖤</label>
+          <label><input type="radio" name="q9" value="B"> B. 最骚媚黑母猪求黑爹轮奸求操得操败北高潮🖤</label>
+          <label><input type="radio" name="q9" value="C"> C. 死内个，下次还找你们🖤</label>
+          <label><input type="radio" name="q9" value="D"> D. 黑爹大人到此一游——黑精便器🖤</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <div class="q-title">10. 黑爹们艹完你就走了，留下你这头母猪满身精液躺在床上失神。你不该怎样处理身上的精液：</div>
+        <div class="options">
+          <label><input type="radio" name="q10" value="A"> A. 当然是全舔干净一点也不能浪费呀❤️</label>
+          <label><input type="radio" name="q10" value="B"> B. 傻逼媚黑母畜用瓶子全收集起来想吃的时候打开尝尝❤️</label>
+          <label><input type="radio" name="q10" value="C"> C. 去洗个澡全冲干净w（正常人选项，防止母猪发情上头选这个事先说明这个选项没有错喵）</label>
+          <label><input type="radio" name="q10" value="D"> D. 用卫生纸擦干净。（同上喵）</label>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button type="submit" id="submitBtn">交卷并自动改卷</button>
+      <button type="button" id="resetBtn">清空重填</button>
+    </div>
+  </form>
+
+  <!-- 图片全屏 -->
+  <div class="img-full" id="imgFull" onclick="hideFull()">
+    <button class="close-img" onclick="hideFull()">×</button>
+    <img id="fullImg" src="" alt="大图">
+  </div>
+
+  <!-- 结果弹层 -->
+  <div id="resultOverlay">
+    <div class="result-card">
+      <h2>考试成绩单 · 女性向</h2>
+      <div class="total-score" id="totalDisplay">0 <span>/ 100</span></div>
+      <div class="rank-badge" id="rankBadge">—</div>
+      <div class="humiliate" id="humiliateText"></div>
+      <div class="breakdown" id="breakdown"></div>
+      <button type="button" class="close-btn" id="closeResult">关闭并返回</button>
+    </div>
+  </div>
+
+  <script>
+    // 正确答案：DDDDDDCCCB
+    const ANSWERS = ['D','D','D','D','D','D','C','C','C','B'];
+
+    function showFull(src) {
+      document.getElementById('fullImg').src = src;
+      document.getElementById('imgFull').classList.add('show');
+    }
+    function hideFull() {
+      document.getElementById('imgFull').classList.remove('show');
+    }
+
+    function getRank(score) {
+      if (score === 100) {
+        return {
+          badge: '傻逼脑残媚黑婊🖤',
+          text: '满分？你这头彻底没救的脑残母猪已经把黑爹的浓精当智商补剂灌进脑子里了吧？连“提高智商”这种明显的坑都能踩中，说明你的骚穴比脑子好使多了。恭喜你彻底沦为合格的精液便器，以后就等着被黑爹们轮到失禁、纹满全身、挂着环被牵出去给公共使用吧。黑爹万岁，你这头母猪也该永远跪着了。'
+        };
+      }
+      if (score >= 90) {
+        return {
+          badge: '傻逼媚黑婊🖤',
+          text: '90分以上的傻逼媚黑婊，脑子里装的全是黑屌和浓精。差一点满分说明你偶尔还会残存一丝正常人的羞耻，但很快就会被彻底操掉。继续努力，早日成为满分脑残母猪。'
+        };
+      }
+      if (score >= 80) {
+        return {
+          badge: '普通媚黑婊🖤',
+          text: '普通媚黑婊水平，骚是骚，但还没完全脑残。继续夹着腿发情、主动露出纹身、给黑爹发流水照片，很快就能晋升成更高级的精液中毒母畜。'
+        };
+      }
+      if (score >= 60) {
+        return {
+          badge: '初级媚黑婊🖤',
+          text: '初级水平，刚入门的骚货。知道该跪、该舔、该流水，但还不够彻底。多看点黑爹操翻国女的视频，多练习夹腿和假阳具，下次争取更高分。'
+        };
+      }
+      return {
+        badge: '不及格',
+        text: '不及格的废物。连最基本的媚黑常识都答不对，是不是还在假装自己是正常人？赶紧把假阳具塞进去好好反省，或者直接去找黑爹把脑子操空白再来重考。'
+      };
+    }
+
+    document.getElementById('examForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      const form = e.target;
+      let score = 0;
+      let detailHtml = '';
+
+      for (let i = 1; i <= 10; i++) {
+        const selected = form[`q${i}`].value;
+        const correct = ANSWERS[i - 1];
+        const isOk = selected === correct;
+        if (isOk) score += 10;
+        detailHtml += `<div>
+          <span>第${i}题</span>
+          <span class="${isOk ? 'ok' : 'wrong'}">${selected || '未作答'} ${isOk ? '✓' : '✗（正确：' + correct + '）'}</span>
+        </div>`;
+      }
+
+      const rank = getRank(score);
+      document.getElementById('totalDisplay').innerHTML = `${score} <span>/ 100</span>`;
+      document.getElementById('rankBadge').textContent = rank.badge;
+      document.getElementById('humiliateText').textContent = rank.text;
+      document.getElementById('breakdown').innerHTML = detailHtml;
+
+      document.getElementById('resultOverlay').classList.add('show');
+      window.scrollTo(0, 0);
+    });
+
+    document.getElementById('closeResult').addEventListener('click', function () {
+      document.getElementById('resultOverlay').classList.remove('show');
+    });
+
+    document.getElementById('resetBtn').addEventListener('click', function () {
+      if (confirm('确定要清空所有答案重新填写吗？')) {
+        document.getElementById('examForm').reset();
+      }
+    });
+  </script>
+</body>
+</html>
