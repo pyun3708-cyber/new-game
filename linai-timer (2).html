@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>黎奈同学的憋尿计时器🖤~</title>
+  <style>
+    :root {
+      --pink-deep: #ff5a9a;
+      --pink-bg1: #fff0f6;
+      --pink-bg2: #ffd6e7;
+      --text: #5a2a3c;
+      --card: rgba(255,255,255,0.78);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      font-family: "PingFang SC","Microsoft YaHei","Noto Sans SC",sans-serif;
+      color: var(--text);
+      background: linear-gradient(165deg, var(--pink-bg1) 0%, #ffc1d9 45%, var(--pink-bg2) 100%);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 14px 48px;
+    }
+    a.back {
+      align-self: flex-start;
+      color: var(--pink-deep);
+      text-decoration: none;
+      font-size: 14px;
+      margin-bottom: 10px;
+    }
+    .card {
+      width: 100%;
+      max-width: 440px;
+      background: var(--card);
+      backdrop-filter: blur(12px);
+      border-radius: 24px;
+      box-shadow: 0 12px 36px rgba(255,90,154,0.18);
+      border: 1px solid rgba(255,255,255,0.75);
+      padding: 22px 18px 20px;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+    .avatar-wrap {
+      width: 112px; height: 112px; margin: 0 auto 12px;
+      border-radius: 50%; padding: 3px;
+      background: linear-gradient(135deg,#ff9ec4,#ff5a9a,#ffb6d9);
+      box-shadow: 0 6px 18px rgba(255,90,154,0.3);
+    }
+    .avatar-wrap img {
+      width: 100%; height: 100%; object-fit: cover;
+      border-radius: 50%; display: block; background: #fff;
+    }
+    h1 { font-size: 1.15rem; color: #c2185b; margin-bottom: 4px; }
+    h2.section {
+      font-size: 1.05rem; color: #ad1457; margin-bottom: 6px; text-align: left;
+    }
+    .sub { font-size: 12px; color: #a05a78; margin-bottom: 10px; line-height: 1.45; }
+    .sync-badge {
+      display: inline-block; font-size: 11px; padding: 3px 10px;
+      border-radius: 999px; margin-bottom: 12px;
+      background: rgba(255,255,255,0.75); color: #9c4068;
+    }
+    .sync-badge.ok { color: #2e7d32; background: rgba(76,175,80,0.18); }
+    .sync-badge.err { color: #c62828; background: rgba(198,40,40,0.12); }
+    .timer {
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(2.1rem, 9vw, 2.9rem);
+      font-weight: 800; letter-spacing: 0.04em; color: #ad1457;
+      margin: 6px 0 4px;
+    }
+    .timer.zero { color: #2e7d32; }
+    .timer.sm { font-size: clamp(1.7rem, 7vw, 2.2rem); }
+    .status {
+      display: inline-block; font-size: 12px; padding: 3px 10px;
+      border-radius: 999px; margin-bottom: 14px;
+      background: rgba(255,255,255,0.7); color: #9c4068;
+    }
+    .status.running { background: rgba(255,90,154,0.18); color: #c2185b; }
+    .status.done { background: rgba(76,175,80,0.2); color: #2e7d32; }
+    .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .btns .full { grid-column: 1 / -1; }
+    button {
+      border: none; border-radius: 14px; padding: 12px 10px;
+      font-size: 15px; font-weight: 700; cursor: pointer;
+      font-family: inherit; transition: transform .12s, opacity .12s;
+    }
+    button:active { transform: scale(0.97); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+    .btn-start { background: linear-gradient(135deg,#ff7eb3,#ff4d94); color:#fff; }
+    .btn-pause { background: linear-gradient(135deg,#f5d0e0,#e8a8c4); color:#7a304e; }
+    .btn-add { background: linear-gradient(135deg,#2b2b2b,#4a4a4a); color:#ffb6d9; }
+    .btn-water { background: linear-gradient(135deg,#4fc3f7,#0288d1); color:#fff; }
+    .btn-drink { background: linear-gradient(135deg,#81d4fa,#0277bd); color:#fff; }
+    .btn-send { background: linear-gradient(135deg,#ff7eb3,#ff4d94); color:#fff; }
+    .btn-ghost { background: #f3e4eb; color: #7a4058; font-size: 12px; padding: 6px 10px; font-weight: 600; }
+    .btn-like { background: #ffe0ec; color: #c2185b; font-size: 12px; padding: 6px 10px; }
+    .btn-del { background: #ffcdd2; color: #b71c1c; font-size: 12px; padding: 6px 10px; }
+    .stats {
+      margin-top: 14px; text-align: left; font-size: 13px; color: #8a4a66;
+      background: rgba(255,255,255,0.55); border-radius: 12px; padding: 10px 12px; line-height: 1.7;
+    }
+    .stats strong { color: #ad1457; }
+    .water-box {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; margin: 8px 0 12px; flex-wrap: wrap;
+    }
+    .water-num { font-size: 1.5rem; font-weight: 800; color: #0277bd; }
+    .hint { margin-top: 12px; font-size: 11px; color: #b07090; line-height: 1.5; text-align: left; }
+    .board-sub { font-size: 12px; color: #c2185b; margin-bottom: 12px; text-align: left; line-height: 1.4; }
+    .msg-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; }
+    .msg-form input, .msg-form textarea {
+      width: 100%; border: 1.5px solid #f5b6d0; border-radius: 12px;
+      padding: 10px 12px; font-size: 14px; font-family: inherit; outline: none;
+    }
+    .msg-form textarea { min-height: 72px; resize: vertical; }
+    .msg-list { text-align: left; max-height: 480px; overflow-y: auto; }
+    .msg {
+      background: rgba(255,255,255,0.7); border-radius: 12px;
+      padding: 10px 12px; margin-bottom: 10px; border: 1px solid #f8d0e0;
+    }
+    .msg .meta { font-size: 11px; color: #a05a78; margin-bottom: 4px; }
+    .msg .body { font-size: 14px; color: #5a2a3c; white-space: pre-wrap; word-break: break-word; }
+    .msg .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .msg.reply-indent { margin-left: 14px; border-left: 3px solid #ff9ec4; }
+    .modal-mask {
+      position: fixed; inset: 0; background: rgba(80,20,50,0.45);
+      display: none; align-items: center; justify-content: center; z-index: 50; padding: 20px;
+    }
+    .modal-mask.show { display: flex; }
+    .modal {
+      width: 100%; max-width: 340px; background: #fff; border-radius: 18px;
+      padding: 20px 16px 16px; text-align: left;
+    }
+    .modal h3 { font-size: 16px; color: #c2185b; margin-bottom: 10px; text-align: center; }
+    .modal label { display: block; font-size: 12px; color: #8a4a66; margin: 8px 0 4px; }
+    .modal input {
+      width: 100%; border: 1.5px solid #f5b6d0; border-radius: 10px;
+      padding: 10px 12px; font-size: 15px; outline: none; font-family: inherit;
+    }
+    .modal .row { display: flex; gap: 8px; margin-top: 14px; }
+    .modal .row button { flex: 1; }
+    .btn-cancel { background: #f3e4eb; color: #7a4058; }
+    .btn-ok { background: linear-gradient(135deg,#ff7eb3,#ff4d94); color: #fff; }
+    .err { color: #d32f2f; font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .toast {
+      position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%) translateY(16px);
+      background: rgba(50,20,35,0.9); color: #fff; padding: 10px 16px;
+      border-radius: 999px; font-size: 13px; opacity: 0; pointer-events: none;
+      transition: .25s; z-index: 60; max-width: 90%; text-align: center;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <a class="back" href="index.html">← 返回草莓酱的个人主页</a>
+
+  <!-- 憋尿倒计时 -->
+  <div class="card">
+    <div class="avatar-wrap">
+      <img src="linai-avatar.jpg" alt="黎奈" />
+    </div>
+    <h1>黎奈同学的憋尿计时器🖤~</h1>
+    <p class="sub">倒计时憋尿 · 全网同步 · 归零才可以尿尿哦❤</p>
+    <div class="sync-badge" id="syncBadge">正在连接 Firebase…</div>
+
+    <div class="timer" id="holdDisplay">00:00:00</div>
+    <div class="status" id="holdStatus">加载中…</div>
+
+    <div class="btns">
+      <button type="button" class="btn-start" id="holdStart" onclick="authThen('holdStart')">开始 / 继续❤</button>
+      <button type="button" class="btn-pause" id="holdPause" onclick="authThen('holdPause')" disabled>暂停</button>
+      <button type="button" class="btn-add full" onclick="authThen('holdAdd')">加时🖤</button>
+    </div>
+
+    <div class="water-box">
+      <div>
+        <div style="font-size:12px;color:#0277bd;">当前待喝水量</div>
+        <div class="water-num"><span id="tankMl">0</span> ml</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;min-width:140px;">
+        <button type="button" class="btn-water" id="btnFeed" onclick="feedWater()">喂黎奈喝水 +50ml</button>
+        <button type="button" class="btn-drink" onclick="authThen('drink')">黎奈喝水🖤</button>
+      </div>
+    </div>
+    <div id="feedHint" class="hint" style="margin-top:0;">每位用户每 7 天只能喂一次水。</div>
+
+    <div class="stats">
+      📊 记录<br>
+      累计憋尿时长：<strong id="totalHold">00:00:00</strong><br>
+      累计已喝水量：<strong id="totalDrunk">0</strong> ml
+    </div>
+  </div>
+
+  <!-- 禁止高潮倒计时 -->
+  <div class="card">
+    <h2 class="section">禁止高潮倒计时🖤</h2>
+    <p class="sub" style="text-align:left;">归零前不许高潮 · 全网同步</p>
+    <div class="timer sm" id="banDisplay">00:00:00</div>
+    <div class="status" id="banStatus">加载中…</div>
+    <div class="btns">
+      <button type="button" class="btn-start" id="banStart" onclick="authThen('banStart')">开始 / 继续</button>
+      <button type="button" class="btn-pause" id="banPause" onclick="authThen('banPause')" disabled>暂停</button>
+      <button type="button" class="btn-add full" onclick="authThen('banAdd')">加时🖤</button>
+    </div>
+    <div class="stats">
+      累计禁止高潮时长：<strong id="totalBan">00:00:00</strong>
+    </div>
+  </div>
+
+  <!-- 留言板 -->
+  <div class="card">
+    <h2 class="section">留言板</h2>
+    <p class="board-sub">欢迎大家来羞辱抖m变态发情母猪黎奈</p>
+    <div class="msg-form">
+      <input id="nickInput" maxlength="16" placeholder="昵称（可选）" />
+      <textarea id="msgInput" maxlength="500" placeholder="写留言…（禁止发图）"></textarea>
+      <button type="button" class="btn-send" onclick="sendMessage()">发送留言</button>
+    </div>
+    <div class="msg-list" id="msgList">加载留言中…</div>
+  </div>
+
+  <!-- 通用密码弹窗 -->
+  <div class="modal-mask" id="pwdModal" onclick="if(event.target===this)closePwdModal()">
+    <div class="modal">
+      <h3 id="pwdTitle">需要密码</h3>
+      <label>密码（四位）</label>
+      <input type="password" id="pwdInput" maxlength="8" placeholder="请输入密码" autocomplete="off" />
+      <div id="extraFields"></div>
+      <div class="err" id="pwdErr"></div>
+      <div class="row">
+        <button type="button" class="btn-cancel" onclick="closePwdModal()">取消</button>
+        <button type="button" class="btn-ok" onclick="confirmPwd()">确认</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+  <script>
+    const OWNER_PASSWORD = "5200";
+    const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+    const FEED_ML = 50;
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeOpIqMdvV3N7jTrXZwGZxQprPLtoDAy0",
+      authDomain: "planning-with-ai-5a793.firebaseapp.com",
+      databaseURL: "https://planning-with-ai-5a793-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "planning-with-ai-5a793",
+      storageBucket: "planning-with-ai-5a793.firebasestorage.app",
+      messagingSenderId: "1092542525478",
+      appId: "1:1092542525478:web:a044a52e4334c496e676e7"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const auth = firebase.auth();
+
+    const holdRef = db.ref("linai/hold");
+    const banRef = db.ref("linai/ban");
+    const waterRef = db.ref("linai/water");
+    const msgRef = db.ref("linai/messages");
+    const feedsRef = db.ref("linai/feeds");
+
+    let uid = null;
+    let hold = { remainingMs: 0, running: false, endsAt: null, totalHoldMs: 0, lastTickAt: null };
+    let ban = { remainingMs: 0, running: false, endsAt: null, totalBanMs: 0, lastTickAt: null };
+    let water = { tankMl: 0, totalDrunkMl: 0 };
+    let myLastFeed = 0;
+    let pendingAction = null;
+    let holdTick = null, banTick = null;
+    let holdZeroed = false, banZeroed = false;
+
+    function toast(msg) {
+      const el = document.getElementById("toast");
+      el.textContent = msg;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+    }
+
+    function formatMs(ms) {
+      ms = Math.max(0, ms || 0);
+      const s = Math.floor(ms / 1000);
+      const h = Math.floor(s / 3600);
+      const m = Math.floor((s % 3600) / 60);
+      const sec = s % 60;
+      const p = (n) => String(n).padStart(2, "0");
+      return p(h) + ":" + p(m) + ":" + p(sec);
+    }
+
+    function remaining(st) {
+      if (st.running && st.endsAt) return Math.max(0, st.endsAt - Date.now());
+      return Math.max(0, st.remainingMs || 0);
+    }
+
+    function setSync(ok, text) {
+      const el = document.getElementById("syncBadge");
+      el.textContent = text;
+      el.className = "sync-badge " + (ok === true ? "ok" : ok === false ? "err" : "");
+    }
+
+    // —— 累计时长：运行中按墙钟累加 ——
+    function accumulate(st, ref) {
+      if (!st.running || !st.lastTickAt) {
+        return Promise.resolve();
+      }
+      const now = Date.now();
+      const delta = Math.max(0, now - st.lastTickAt);
+      if (delta < 500) return Promise.resolve();
+      const patch = {
+        totalHoldMs: null,
+        totalBanMs: null,
+        lastTickAt: now
+      };
+      // hold vs ban
+      if (ref === holdRef) {
+        return ref.update({
+          totalHoldMs: (st.totalHoldMs || 0) + delta,
+          lastTickAt: now
+        });
+      }
+      return ref.update({
+        totalBanMs: (st.totalBanMs || 0) + delta,
+        lastTickAt: now
+      });
+    }
+
+    function renderHold() {
+      const left = remaining(hold);
+      const display = document.getElementById("holdDisplay");
+      const status = document.getElementById("holdStatus");
+      const btnPause = document.getElementById("holdPause");
+      display.textContent = formatMs(left);
+      document.getElementById("totalHold").textContent = formatMs(hold.totalHoldMs || 0);
+
+      if (left <= 0) {
+        display.classList.add("zero");
+        status.textContent = "时间到 · 可以尿尿了💚";
+        status.className = "status done";
+        btnPause.disabled = true;
+        if (hold.running) {
+          holdRef.update({ running: false, endsAt: null, remainingMs: 0, lastTickAt: null });
+        }
+        if (!holdZeroed) { holdZeroed = true; toast("憋尿时间归零，可以尿尿了💚"); }
+        stopHoldTick();
+        return;
+      }
+      holdZeroed = false;
+      display.classList.remove("zero");
+      if (hold.running) {
+        status.textContent = "憋尿倒计时中…坚持住🖤";
+        status.className = "status running";
+        btnPause.disabled = false;
+      } else {
+        status.textContent = "已暂停 · 剩余 " + formatMs(left);
+        status.className = "status";
+        btnPause.disabled = true;
+      }
+    }
+
+    function renderBan() {
+      const left = remaining(ban);
+      const display = document.getElementById("banDisplay");
+      const status = document.getElementById("banStatus");
+      const btnPause = document.getElementById("banPause");
+      display.textContent = formatMs(left);
+      document.getElementById("totalBan").textContent = formatMs(ban.totalBanMs || 0);
+
+      if (left <= 0) {
+        display.classList.add("zero");
+        status.textContent = "时间到 · 禁止解除";
+        status.className = "status done";
+        btnPause.disabled = true;
+        if (ban.running) {
+          banRef.update({ running: false, endsAt: null, remainingMs: 0, lastTickAt: null });
+        }
+        if (!banZeroed) { banZeroed = true; toast("禁止高潮时间归零"); }
+        stopBanTick();
+        return;
+      }
+      banZeroed = false;
+      display.classList.remove("zero");
+      if (ban.running) {
+        status.textContent = "禁止高潮中…";
+        status.className = "status running";
+        btnPause.disabled = false;
+      } else {
+        status.textContent = "已暂停 · 剩余 " + formatMs(left);
+        status.className = "status";
+        btnPause.disabled = true;
+      }
+    }
+
+    function renderWater() {
+      document.getElementById("tankMl").textContent = Math.max(0, water.tankMl || 0);
+      document.getElementById("totalDrunk").textContent = Math.max(0, water.totalDrunkMl || 0);
+      const hint = document.getElementById("feedHint");
+      const left = myLastFeed ? (myLastFeed + WEEK_MS - Date.now()) : 0;
+      if (left > 0) {
+        const days = Math.ceil(left / (24 * 3600 * 1000));
+        hint.textContent = "本周已喂过，约 " + days + " 天后可再喂。";
+        document.getElementById("btnFeed").disabled = true;
+      } else {
+        hint.textContent = "每位用户每 7 天只能喂一次水（+50ml）。";
+        document.getElementById("btnFeed").disabled = false;
+      }
+    }
+
+    function startHoldTick() {
+      stopHoldTick();
+      holdTick = setInterval(() => {
+        renderHold();
+        // 每 15 秒把累计时长刷到云端
+        if (hold.running && Date.now() - (hold._accAt || 0) > 15000) {
+          hold._accAt = Date.now();
+          accumulate(hold, holdRef);
+        }
+      }, 250);
+    }
+    function stopHoldTick() {
+      if (holdTick) { clearInterval(holdTick); holdTick = null; }
+    }
+    function startBanTick() {
+      stopBanTick();
+      banTick = setInterval(() => {
+        renderBan();
+        if (ban.running && Date.now() - (ban._accAt || 0) > 15000) {
+          ban._accAt = Date.now();
+          accumulate(ban, banRef);
+        }
+      }, 250);
+    }
+    function stopBanTick() {
+      if (banTick) { clearInterval(banTick); banTick = null; }
+    }
+
+    // —— 密码弹窗 ——
+    function authThen(action) {
+      pendingAction = action;
+      const titles = {
+        holdStart: "开始 / 继续憋尿",
+        holdPause: "暂停憋尿",
+        holdAdd: "憋尿加时",
+        banStart: "开始 / 继续禁止高潮",
+        banPause: "暂停禁止高潮",
+        banAdd: "禁止高潮加时",
+        drink: "黎奈喝水（减少水量）"
+      };
+      document.getElementById("pwdTitle").textContent = titles[action] || "需要密码";
+      document.getElementById("pwdInput").value = "";
+      document.getElementById("pwdErr").textContent = "";
+      const extra = document.getElementById("extraFields");
+      extra.innerHTML = "";
+      if (action === "holdAdd" || action === "banAdd") {
+        extra.innerHTML = '<label>增加时长（分钟）</label><input type="number" id="minsInput" min="1" step="1" placeholder="例如 10" />';
+      }
+      if (action === "drink") {
+        extra.innerHTML = '<label>喝掉多少 ml</label><input type="number" id="drinkInput" min="1" step="1" placeholder="例如 50" />';
+      }
+      document.getElementById("pwdModal").classList.add("show");
+      setTimeout(() => document.getElementById("pwdInput").focus(), 40);
+    }
+    function closePwdModal() {
+      document.getElementById("pwdModal").classList.remove("show");
+      pendingAction = null;
+    }
+    function confirmPwd() {
+      const pwd = document.getElementById("pwdInput").value;
+      const err = document.getElementById("pwdErr");
+      if (pwd !== OWNER_PASSWORD) {
+        err.textContent = "密码不对哦";
+        return;
+      }
+      const action = pendingAction;
+      closePwdModal();
+      if (action === "holdStart") doHoldStart();
+      else if (action === "holdPause") doHoldPause();
+      else if (action === "holdAdd") doHoldAdd();
+      else if (action === "banStart") doBanStart();
+      else if (action === "banPause") doBanPause();
+      else if (action === "banAdd") doBanAdd();
+      else if (action === "drink") doDrink();
+    }
+
+    function doHoldStart() {
+      const left = remaining(hold);
+      if (left <= 0) return toast("请先加时");
+      if (hold.running) return;
+      const now = Date.now();
+      holdRef.update({
+        running: true,
+        endsAt: now + left,
+        remainingMs: left,
+        lastTickAt: now
+      }).then(() => toast("开始憋尿倒计时❤"));
+    }
+    function doHoldPause() {
+      if (!hold.running) return;
+      const left = remaining(hold);
+      const now = Date.now();
+      let total = hold.totalHoldMs || 0;
+      if (hold.lastTickAt) total += Math.max(0, now - hold.lastTickAt);
+      holdRef.update({
+        running: false,
+        endsAt: null,
+        remainingMs: left,
+        totalHoldMs: total,
+        lastTickAt: null
+      }).then(() => toast("已暂停"));
+    }
+    function doHoldAdd() {
+      const mins = parseInt(document.getElementById("minsInput")?.value || prompt("加时多少分钟？"), 10);
+      if (!Number.isFinite(mins) || mins < 1) return toast("分钟数无效");
+      const addMs = mins * 60 * 1000;
+      if (hold.running && hold.endsAt) {
+        const newEnds = hold.endsAt + addMs;
+        holdRef.update({
+          endsAt: newEnds,
+          remainingMs: Math.max(0, newEnds - Date.now())
+        });
+      } else {
+        holdRef.update({
+          remainingMs: (hold.remainingMs || 0) + addMs,
+          running: false,
+          endsAt: null
+        });
+      }
+      holdZeroed = false;
+      toast("已加时 " + mins + " 分钟");
+    }
+
+    function doBanStart() {
+      const left = remaining(ban);
+      if (left <= 0) return toast("请先加时");
+      if (ban.running) return;
+      const now = Date.now();
+      banRef.update({
+        running: true,
+        endsAt: now + left,
+        remainingMs: left,
+        lastTickAt: now
+      }).then(() => toast("开始禁止高潮倒计时"));
+    }
+    function doBanPause() {
+      if (!ban.running) return;
+      const left = remaining(ban);
+      const now = Date.now();
+      let total = ban.totalBanMs || 0;
+      if (ban.lastTickAt) total += Math.max(0, now - ban.lastTickAt);
+      banRef.update({
+        running: false,
+        endsAt: null,
+        remainingMs: left,
+        totalBanMs: total,
+        lastTickAt: null
+      }).then(() => toast("已暂停"));
+    }
+    function doBanAdd() {
+      const mins = parseInt(document.getElementById("minsInput")?.value || prompt("加时多少分钟？"), 10);
+      if (!Number.isFinite(mins) || mins < 1) return toast("分钟数无效");
+      const addMs = mins * 60 * 1000;
+      if (ban.running && ban.endsAt) {
+        const newEnds = ban.endsAt + addMs;
+        banRef.update({
+          endsAt: newEnds,
+          remainingMs: Math.max(0, newEnds - Date.now())
+        });
+      } else {
+        banRef.update({
+          remainingMs: (ban.remainingMs || 0) + addMs,
+          running: false,
+          endsAt: null
+        });
+      }
+      banZeroed = false;
+      toast("已加时 " + mins + " 分钟");
+    }
+
+    function feedWater() {
+      if (!uid) return toast("请稍等，正在识别身份…");
+      const now = Date.now();
+      if (myLastFeed && now - myLastFeed < WEEK_MS) {
+        return toast("本周已经喂过啦");
+      }
+      feedsRef.child(uid).set(now)
+        .then(() => waterRef.child("tankMl").transaction((cur) => (cur || 0) + FEED_ML))
+        .then(() => toast("已喂黎奈 +50ml 水💧"))
+        .catch((e) => toast("失败：" + e.message));
+    }
+
+    function doDrink() {
+      const ml = parseInt(document.getElementById("drinkInput")?.value || prompt("喝掉多少 ml？"), 10);
+      if (!Number.isFinite(ml) || ml < 1) return toast("数量无效");
+      waterRef.transaction((cur) => {
+        cur = cur || { tankMl: 0, totalDrunkMl: 0 };
+        const tank = Math.max(0, cur.tankMl || 0);
+        const drink = Math.min(tank, ml);
+        return {
+          tankMl: tank - drink,
+          totalDrunkMl: (cur.totalDrunkMl || 0) + drink
+        };
+      }).then((res) => {
+        if (res.committed) toast("已喝掉部分水");
+      });
+    }
+
+    // —— 留言板 ——
+    function sendMessage(replyTo) {
+      if (!uid) return toast("请稍等…");
+      const text = (document.getElementById("msgInput").value || "").trim();
+      if (!text) return toast("留言不能为空");
+      if (/https?:\/\/\S+\.(png|jpe?g|gif|webp|bmp)/i.test(text)) {
+        return toast("不允许发送图片链接");
+      }
+      const nick = (document.getElementById("nickInput").value || "").trim() || "匿名";
+      const payload = {
+        text: text.slice(0, 500),
+        nick: nick.slice(0, 16),
+        uid: uid,
+        createdAt: Date.now(),
+        likes: {},
+        replyTo: replyTo || null
+      };
+      msgRef.push(payload)
+        .then(() => {
+          document.getElementById("msgInput").value = "";
+          toast("已发送");
+        })
+        .catch((e) => toast("发送失败：" + e.message));
+    }
+
+    function likeMessage(id) {
+      if (!uid) return;
+      const likeRef = msgRef.child(id).child("likes").child(uid);
+      likeRef.once("value").then((snap) => {
+        if (snap.exists()) likeRef.remove();
+        else likeRef.set(true);
+      });
+    }
+
+    function replyMessage(id, nick) {
+      document.getElementById("msgInput").value = "@" + (nick || "") + " ";
+      document.getElementById("msgInput").focus();
+      document.getElementById("msgInput").dataset.replyTo = id;
+      const btn = document.querySelector(".msg-form .btn-send");
+      btn.onclick = function () {
+        const rid = document.getElementById("msgInput").dataset.replyTo || null;
+        sendMessage(rid);
+        document.getElementById("msgInput").dataset.replyTo = "";
+        btn.onclick = function () { sendMessage(); };
+      };
+    }
+
+    function deleteMessage(id, ownerUid) {
+      if (!uid) return;
+      if (ownerUid === uid) {
+        msgRef.child(id).remove().then(() => toast("已删除"));
+        return;
+      }
+      // 站长删别人的：要密码
+      pendingAction = "delMsg:" + id;
+      document.getElementById("pwdTitle").textContent = "站长删除留言";
+      document.getElementById("pwdInput").value = "";
+      document.getElementById("pwdErr").textContent = "";
+      document.getElementById("extraFields").innerHTML = "";
+      document.getElementById("pwdModal").classList.add("show");
+      const oldConfirm = window._confirmPwd;
+      // reuse confirmPwd path
+      const orig = confirmPwd;
+      // monkey: handled below by checking pendingAction prefix
+    }
+
+    // extend confirmPwd for delete
+    const _confirmPwdBase = confirmPwd;
+    confirmPwd = function () {
+      const pwd = document.getElementById("pwdInput").value;
+      if (pwd !== OWNER_PASSWORD) {
+        document.getElementById("pwdErr").textContent = "密码不对哦";
+        return;
+      }
+      if (pendingAction && String(pendingAction).startsWith("delMsg:")) {
+        const id = String(pendingAction).slice(7);
+        closePwdModal();
+        msgRef.child(id).remove().then(() => toast("站长已删除"));
+        return;
+      }
+      _confirmPwdBase();
+    };
+
+    function renderMessages(list) {
+      const box = document.getElementById("msgList");
+      if (!list.length) {
+        box.innerHTML = '<div class="hint">还没有留言，来第一条吧～</div>';
+        return;
+      }
+      // 简单：父留言在前，回复跟在后面
+      const byId = {};
+      list.forEach((m) => { byId[m.id] = m; });
+      const roots = list.filter((m) => !m.replyTo || !byId[m.replyTo]);
+      const replies = list.filter((m) => m.replyTo && byId[m.replyTo]);
+      const ordered = [];
+      roots.sort((a, b) => b.createdAt - a.createdAt).forEach((r) => {
+        ordered.push(r);
+        replies.filter((x) => x.replyTo === r.id).sort((a, b) => a.createdAt - b.createdAt).forEach((x) => ordered.push(x));
+      });
+
+      box.innerHTML = ordered.map((m) => {
+        const likeCount = m.likes ? Object.keys(m.likes).length : 0;
+        const liked = m.likes && uid && m.likes[uid];
+        const canDelSelf = m.uid === uid;
+        const time = new Date(m.createdAt).toLocaleString();
+        const cls = m.replyTo ? "msg reply-indent" : "msg";
+        return (
+          '<div class="' + cls + '">' +
+            '<div class="meta">' + escapeHtml(m.nick || "匿名") + " · " + time +
+              (m.replyTo ? " · 回复" : "") + "</div>" +
+            '<div class="body">' + escapeHtml(m.text) + "</div>" +
+            '<div class="actions">' +
+              '<button type="button" class="btn-like" onclick="likeMessage(\'' + m.id + '\')">' +
+                (liked ? "已赞 " : "点赞 ") + likeCount + "</button>" +
+              '<button type="button" class="btn-ghost" onclick="replyMessage(\'' + m.id + '\',\'' + escapeHtml(m.nick || "") + '\')">回复</button>' +
+              (canDelSelf
+                ? '<button type="button" class="btn-del" onclick="deleteMessage(\'' + m.id + '\',\'' + m.uid + '\')">删除</button>'
+                : '<button type="button" class="btn-del" onclick="deleteMessage(\'' + m.id + '\',\'' + m.uid + '\')">站长删除</button>') +
+            "</div></div>"
+        );
+      }).join("");
+    }
+
+    function escapeHtml(s) {
+      return String(s)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // —— 监听 ——
+    function bind() {
+      holdRef.on("value", (snap) => {
+        const v = snap.val();
+        if (!v) {
+          holdRef.set({ remainingMs: 0, running: false, endsAt: null, totalHoldMs: 0, lastTickAt: null });
+          return;
+        }
+        hold = {
+          remainingMs: v.remainingMs || 0,
+          running: !!v.running,
+          endsAt: v.endsAt || null,
+          totalHoldMs: v.totalHoldMs || 0,
+          lastTickAt: v.lastTickAt || null
+        };
+        if (hold.running) startHoldTick(); else stopHoldTick();
+        renderHold();
+      });
+
+      banRef.on("value", (snap) => {
+        const v = snap.val();
+        if (!v) {
+          banRef.set({ remainingMs: 0, running: false, endsAt: null, totalBanMs: 0, lastTickAt: null });
+          return;
+        }
+        ban = {
+          remainingMs: v.remainingMs || 0,
+          running: !!v.running,
+          endsAt: v.endsAt || null,
+          totalBanMs: v.totalBanMs || 0,
+          lastTickAt: v.lastTickAt || null
+        };
+        if (ban.running) startBanTick(); else stopBanTick();
+        renderBan();
+      });
+
+      waterRef.on("value", (snap) => {
+        const v = snap.val() || {};
+        water = { tankMl: v.tankMl || 0, totalDrunkMl: v.totalDrunkMl || 0 };
+        renderWater();
+      });
+
+      feedsRef.on("value", (snap) => {
+        const v = snap.val() || {};
+        myLastFeed = (uid && v[uid]) ? v[uid] : 0;
+        renderWater();
+      });
+
+      msgRef.orderByChild("createdAt").limitToLast(100).on("value", (snap) => {
+        const list = [];
+        snap.forEach((c) => {
+          const val = c.val() || {};
+          list.push({ id: c.key, ...val });
+        });
+        renderMessages(list);
+      });
+    }
+
+    // 匿名登录拿到稳定 uid（同浏览器大致固定）
+    auth.onAuthStateChanged((user) => {
+      if (user) {
+        uid = user.uid;
+        setSync(true, "● 全网同步中");
+        bind();
+      }
+    });
+    auth.signInAnonymously().catch((e) => {
+      setSync(false, "登录失败：" + e.message);
+      toast("匿名登录失败，请在 Firebase 开启 Anonymous 登录");
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closePwdModal();
+      if (e.key === "Enter" && document.getElementById("pwdModal").classList.contains("show")) {
+        confirmPwd();
+      }
+    });
+  </script>
+</body>
+</html>
