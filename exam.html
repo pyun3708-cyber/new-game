@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>在线考试 · 反媚黑高校</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600&display=swap');
+    :root { --paper:#f7f3ec; --ink:#292824; --muted:#777268; --accent:#8b765d; --line:rgba(41,40,36,.15); }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body {
+      min-height:100vh; color:var(--ink); background:var(--paper);
+      font-family:"Noto Serif SC","Songti SC",serif; letter-spacing:.04em;
+      padding:24px 16px 48px;
+    }
+    a { color:inherit; text-decoration:none; }
+    .wrap { width:min(720px,94%); margin:0 auto; }
+    .back { color:var(--accent); font-size:13px; letter-spacing:.12em; }
+    h1 { font-size:clamp(28px,5vw,40px); font-weight:500; letter-spacing:.18em; margin:28px 0 8px; text-align:center; }
+    .sub { text-align:center; color:var(--muted); font-size:13px; margin-bottom:36px; letter-spacing:.2em; }
+    .card {
+      display:block; padding:28px 24px; margin-bottom:14px;
+      border:1px solid var(--line); background:rgba(255,255,255,.55);
+      transition:transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform:translateY(-3px); box-shadow:0 12px 28px rgba(50,45,38,.1); background:rgba(255,255,255,.88); }
+    .num { font:12px Arial,sans-serif; color:rgba(41,40,36,.3); letter-spacing:.08em; }
+    .name { font-size:18px; margin-top:10px; letter-spacing:.1em; }
+    .desc { font-size:13px; color:var(--muted); margin-top:8px; line-height:1.6; }
+    footer { margin-top:40px; text-align:center; font-size:11px; color:var(--muted); letter-spacing:.12em; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="school.html">← 返回高校官网</a>
+    <h1>在线考试</h1>
+    <p class="sub">WEEKLY &amp; SPECIAL EXAMS</p>
+
+    <a class="card" href="quiz.html">
+      <div class="num">01</div>
+      <div class="name">第一次周测考卷</div>
+      <div class="desc">反媚黑洗脑第一次周测 · 自动计分</div>
+    </a>
+
+    <a class="card" href="quiz2.html">
+      <div class="num">02</div>
+      <div class="name">第二次周测问卷（女性向）</div>
+      <div class="desc">自动改卷并给出评级</div>
+    </a>
+
+    <p class="desc" style="text-align:center;margin-top:24px;">更多考试将陆续开放…</p>
+    <footer>反媚黑高校 · 在线考试</footer>
+  </div>
+</body>
+</html>

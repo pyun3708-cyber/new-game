@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f3ec">
+  <title>反媚黑高校 · 成人官网</title>
+
+  <!--
+    【图片替换说明】
+    把下面轮播图中的 school-01.jpg ~ school-05.jpg
+    替换成你自己的图片文件名即可。
+    如果只想使用4张，删除最后一个 .slide 即可。
+  -->
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+    :root {
+      --paper: #f7f3ec;
+      --paper-2: #eee8dd;
+      --ink: #292824;
+      --muted: #777268;
+      --line: rgba(41, 40, 36, 0.15);
+      --accent: #8b765d;
+      --card: rgba(255,255,255,0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(139,118,93,.08), transparent 28%),
+        radial-gradient(circle at 90% 80%, rgba(139,118,93,.07), transparent 30%),
+        var(--paper);
+      font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+      letter-spacing: .04em;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    /* ===== 顶部 ===== */
+    .hero {
+      width: min(1180px, 92%);
+      margin: 0 auto;
+      padding: 72px 0 36px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .school-title {
+      font-size: clamp(42px, 7vw, 76px);
+      font-weight: 500;
+      letter-spacing: .22em;
+      line-height: 1.1;
+      margin-left: .22em;
+    }
+
+    .title-line {
+      width: 52px;
+      height: 1px;
+      background: var(--accent);
+      margin: 28px auto 0;
+    }
+
+    /* ===== 图片轮播 ===== */
+    .gallery {
+      width: min(1180px, 92%);
+      height: min(62vw, 590px);
+      min-height: 300px;
+      margin: 10px auto 70px;
+      position: relative;
+      overflow: hidden;
+      background: var(--paper-2);
+      box-shadow: 0 20px 55px rgba(50,45,38,.10);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      animation: fade 25s infinite;
+      background-size: cover;
+      background-position: center;
+    }
+
+    /* ★ 后续只需要修改这里的图片文件名 */
+    .slide:nth-child(1) {
+      background-image: url("school-01.jpg");
+      animation-delay: 0s;
+    }
+
+    .slide:nth-child(2) {
+      background-image: url("school-02.jpg");
+      animation-delay: 5s;
+    }
+
+    .slide:nth-child(3) {
+      background-image: url("school-03.jpg");
+      animation-delay: 10s;
+    }
+
+    .slide:nth-child(4) {
+      background-image: url("school-04.jpg");
+      animation-delay: 15s;
+    }
+
+    .slide:nth-child(5) {
+      background-image: url("school-05.jpg");
+      animation-delay: 20s;
+    }
+
+    /* 图片尚未放入时的柔和占位 */
+    .slide::after {
+      content: "SCHOOL";
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      color: rgba(41,40,36,.20);
+      font: 13px Arial, sans-serif;
+      letter-spacing: .5em;
+    }
+
+    @keyframes fade {
+      0%, 18% { opacity: 1; }
+      20%, 100% { opacity: 0; }
+    }
+
+    .gallery-caption {
+      position: absolute;
+      left: 28px;
+      bottom: 25px;
+      z-index: 5;
+      padding: 9px 15px;
+      color: white;
+      background: rgba(25,24,21,.42);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      letter-spacing: .16em;
+    }
+
+    /* ===== 学校介绍 ===== */
+    .intro {
+      width: min(760px, 88%);
+      margin: 0 auto 82px;
+      text-align: center;
+    }
+
+    .section-label {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: .3em;
+      margin-bottom: 20px;
+    }
+
+    .intro p {
+      color: #514e47;
+      font-size: 16px;
+      line-height: 2.25;
+    }
+
+    /* ===== 功能入口 ===== */
+    .services {
+      width: min(1080px, 90%);
+      margin: 0 auto 90px;
+    }
+
+    .services-header {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .services-header h2 {
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: .14em;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .service-card {
+      position: relative;
+      min-height: 126px;
+      display: flex;
+      align-items: flex-end;
+      padding: 25px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      overflow: hidden;
+      transition: transform .25s ease, background .25s ease, box-shadow .25s ease;
+    }
+
+    .service-card::before {
+      content: "";
+      position: absolute;
+      width: 42px;
+      height: 1px;
+      top: 25px;
+      left: 25px;
+      background: var(--accent);
+      transition: width .25s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 14px 35px rgba(50,45,38,.09);
+    }
+
+    .service-card:hover::before {
+      width: 70px;
+    }
+
+    .service-name {
+      font-size: 17px;
+      letter-spacing: .08em;
+    }
+
+    .service-number {
+      position: absolute;
+      right: 22px;
+      top: 20px;
+      color: rgba(41,40,36,.22);
+      font: 12px Arial, sans-serif;
+      letter-spacing: .08em;
+    }
+
+    /* ===== 页脚 ===== */
+    footer {
+      border-top: 1px solid var(--line);
+      width: min(1180px, 92%);
+      margin: 0 auto;
+      padding: 30px 0 42px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .12em;
+    }
+
+    /* ===== 手机端 ===== */
+    @media (max-width: 700px) {
+      .hero {
+        padding-top: 48px;
+      }
+
+      .gallery {
+        height: 58vw;
+        min-height: 230px;
+        margin-bottom: 55px;
+      }
+
+      .intro {
+        margin-bottom: 60px;
+      }
+
+      .intro p {
+        font-size: 14px;
+        line-height: 2;
+      }
+
+      .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .service-card {
+        min-height: 112px;
+        padding: 20px;
+      }
+
+      .service-card::before {
+        top: 20px;
+        left: 20px;
+      }
+
+      .service-name {
+        font-size: 14px;
+      }
+
+      footer {
+        display: block;
+        line-height: 2;
+      }
+
+      footer span {
+        display: block;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ==============================
+       网站顶部
+       ============================== -->
+  <div style="width:min(1180px,92%);margin:16px auto 0;"><a href="index.html" style="color:#8b765d;font-size:13px;letter-spacing:.12em;">← 返回草莓酱主页</a></div>
+  <header class="hero">
+    <div class="eyebrow">ANTI-QOS RESISTANCE ACADEMY</div>
+    <h1 class="school-title">反媚黑高校</h1>
+    <div class="title-line"></div>
+  </header>
+
+
+  <!-- ==============================
+       学校图片轮播
+       这里默认准备5张图片
+       ============================== -->
+  <section class="gallery" aria-label="学校图片展示">
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+    <div class="slide"></div>
+
+    <div class="gallery-caption">校园 · 教育 · 艺术 · 成长</div>
+  </section>
+
+
+  <!-- ==============================
+       学校介绍
+       后续直接修改这里的文字即可
+       ============================== -->
+  <section class="intro">
+    <div class="section-label">ABOUT OUR SCHOOL</div>
+
+    <p>
+      我们致力于为每一位学生提供自由、温暖而富有创造力的学习环境，
+      尊重个性，鼓励探索，让知识、艺术与想象在校园中自然生长，
+      陪伴学生发现兴趣、发展能力，并成为更好的自己。
+    </p>
+  </section>
+
+
+  <!-- ==============================
+       功能入口
+       ★★★ 以后修改链接只需要修改 href ★★★
+
+       例如：
+       href="admission.html"
+       就会打开同文件夹里的 admission.html
+
+       你只需要把下面的文件名改成你自己的即可。
+       ============================== -->
+  <main class="services">
+
+    <div class="services-header">
+      <div class="section-label">CAMPUS SERVICES</div>
+      <h2>校园服务</h2>
+    </div>
+
+    <div class="service-grid">
+
+      <!-- 01 办理入学 -->
+      <a class="service-card" href="admission.html">
+        <span class="service-number">01</span>
+        <span class="service-name">办理入学</span>
+      </a>
+
+      <!-- 02 教师求职 -->
+      <a class="service-card" href="teacher-job.html">
+        <span class="service-number">02</span>
+        <span class="service-name">教师求职</span>
+      </a>
+
+      <!-- 03 老师介绍 -->
+      <a class="service-card" href="teachers.html">
+        <span class="service-number">03</span>
+        <span class="service-name">老师介绍</span>
+      </a>
+
+      <!-- 04 课程学习 -->
+      <a class="service-card" href="courses.html">
+        <span class="service-number">04</span>
+        <span class="service-name">课程学习</span>
+      </a>
+
+      <!-- 05 在线考试 -->
+      <a class="service-card" href="exam.html">
+        <span class="service-number">05</span>
+        <span class="service-name">在线考试</span>
+      </a>
+
+      <!-- 06 每周小测 -->
+      <a class="service-card" href="weekly-test.html">
+        <span class="service-number">06</span>
+        <span class="service-name">每周小测</span>
+      </a>
+
+      <!-- 07 学校留言墙 -->
+      <a class="service-card" href="message-wall.html">
+        <span class="service-number">07</span>
+        <span class="service-name">学校留言墙</span>
+      </a>
+
+      <!-- 08 资助校方 -->
+      <a class="service-card" href="support.html">
+        <span class="service-number">08</span>
+        <span class="service-name">资助校方</span>
+      </a>
+
+      <!-- 09 隐蔽角落 -->
+      <a class="service-card" href="hidden-corner.html">
+        <span class="service-number">09</span>
+        <span class="service-name">隐蔽角落</span>
+      </a>
+
+    </div>
+  </main>
+
+
+  <!-- ==============================
+       页脚
+       ============================== -->
+  <footer>
+    <span>反媚黑高校 · OFFICIAL WEBSITE</span>
+    <span>© 2026 反媚黑高校</span>
+  </footer>
+
+</body>
+</html>

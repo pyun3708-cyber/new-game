@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>教师资格证考试</title>
+  <style>
+    /* ========== 全局基础样式 ========== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      line-height: 1.6;
+      color: #e8e8e8;
+      overflow-x: hidden;
+      transition: background 0.8s ease;
+    }
+
+    /* 初始表版：深黑色背景 */
+    body.outer {
+      background: #0a0a0a;
+    }
+
+    /* 里版：上浅下深的粉色渐变 */
+    body.inner {
+      background: linear-gradient(180deg, #f8e1e7 0%, #e8a0b0 45%, #c46b7a 100%);
+      color: #2c1a1f;
+    }
+
+    /* 内容闪烁动画 */
+    @keyframes flash {
+      0% { opacity: 1; }
+      30% { opacity: 0.15; }
+      60% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    .flash {
+      animation: flash 0.45s ease;
+    }
+
+    /* ========== 主容器 ========== */
+    .app {
+      min-height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 18px 40px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* 卡片容器 */
+    .card {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 28px 22px;
+      backdrop-filter: blur(8px);
+      transition: all 0.4s ease;
+    }
+
+    body.inner .card {
+      background: rgba(255, 255, 255, 0.55);
+      border: 1px solid rgba(180, 80, 100, 0.25);
+      box-shadow: 0 8px 32px rgba(160, 60, 90, 0.15);
+    }
+
+    /* 标题 */
+    h1 {
+      font-size: 1.55rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    body.inner h1 {
+      color: #5a2030;
+    }
+
+    /* 正文 */
+    .content {
+      font-size: 0.95rem;
+      line-height: 1.85;
+      margin-bottom: 28px;
+      white-space: pre-wrap;
+    }
+
+    body.inner .content {
+      color: #3d222a;
+    }
+
+    /* 列表样式（期待的你） */
+    .list {
+      list-style: none;
+      padding: 0;
+    }
+    .list li {
+      position: relative;
+      padding-left: 1.4em;
+      margin-bottom: 12px;
+      font-size: 0.95rem;
+    }
+    .list li::before {
+      content: "◆";
+      position: absolute;
+      left: 0;
+      color: #c48a9a;
+      font-size: 0.75em;
+      top: 0.25em;
+    }
+    body.inner .list li::before {
+      color: #a04a60;
+    }
+
+    /* ========== 按钮 ========== */
+    .btn {
+      display: block;
+      width: 100%;
+      max-width: 280px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      font-size: 1rem;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      background: #2a2a2a;
+      color: #f0f0f0;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+
+    .btn:hover, .btn:active {
+      background: #3a3a3a;
+      transform: translateY(-1px);
+    }
+
+    body.inner .btn {
+      background: #c46b7a;
+      color: #fff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(160, 60, 90, 0.3);
+    }
+    body.inner .btn:hover, body.inner .btn:active {
+      background: #b05a6a;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .btn.secondary {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.25);
+      color: #ddd;
+    }
+    body.inner .btn.secondary {
+      background: rgba(255,255,255,0.4);
+      border: 1px solid rgba(160, 60, 90, 0.35);
+      color: #5a2030;
+    }
+
+    /* ========== 表单 ========== */
+    .form-group {
+      margin-bottom: 20px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+      opacity: 0.9;
+    }
+    body.inner .form-group label {
+      color: #4a2830;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select {
+      width: 100%;
+      padding: 12px 14px;
+      font-size: 1rem;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.06);
+      color: #eee;
+      outline: none;
+      transition: border 0.25s;
+    }
+    body.inner input[type="text"],
+    body.inner input[type="number"],
+    body.inner select {
+      background: rgba(255,255,255,0.7);
+      border: 1px solid rgba(160, 60, 90, 0.3);
+      color: #2c1a1f;
+    }
+    input:focus, select:focus {
+      border-color: #c48a9a;
+    }
+
+    /* 照片上传区域 */
+    .photo-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+    .photo-preview {
+      width: 120px;
+      height: 160px;
+      border-radius: 8px;
+      background: rgba(255,255,255,0.08);
+      border: 1px dashed rgba(255,255,255,0.25);
+      object-fit: cover;
+      display: none;
+    }
+    body.inner .photo-preview {
+      background: rgba(255,255,255,0.5);
+      border-color: rgba(160, 60, 90, 0.4);
+    }
+    .photo-hint {
+      font-size: 0.8rem;
+      opacity: 0.7;
+      text-align: center;
+    }
+    .file-btn {
+      display: inline-block;
+      padding: 10px 18px;
+      font-size: 0.9rem;
+      border-radius: 30px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
+      color: inherit;
+    }
+    body.inner .file-btn {
+      background: rgba(255,255,255,0.6);
+      border-color: rgba(160, 60, 90, 0.35);
+      color: #5a2030;
+    }
+    input[type="file"] {
+      display: none;
+    }
+
+    /* 年龄提示 */
+    .age-warning {
+      color: #e07070;
+      font-size: 0.88rem;
+      margin-top: 8px;
+      display: none;
+    }
+    body.inner .age-warning {
+      color: #b03040;
+    }
+
+    /* ========== 诚信宣言 ========== */
+    .declaration {
+      font-size: 0.92rem;
+      line-height: 1.8;
+      margin-bottom: 20px;
+    }
+    .declaration p {
+      margin-bottom: 12px;
+    }
+    .sign-line {
+      margin-top: 24px;
+      font-size: 0.95rem;
+    }
+
+    /* 指纹上传 */
+    .fingerprint-area {
+      margin: 24px 0;
+      text-align: center;
+    }
+    .fp-preview {
+      width: 100px;
+      height: 100px;
+      border-radius: 8px;
+      object-fit: contain;
+      margin: 12px auto;
+      display: none;
+      background: rgba(255,255,255,0.1);
+    }
+
+    /* ========== 最终页面 ========== */
+    .final-msg {
+      text-align: center;
+      margin: 20px 0;
+      font-size: 0.95rem;
+    }
+    .archive-box {
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 18px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    body.inner .archive-box {
+      background: rgba(255,255,255,0.45);
+    }
+    .archive-status {
+      font-size: 1.05rem;
+      margin-bottom: 8px;
+    }
+    .archive-id {
+      font-family: "Courier New", monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.1em;
+      margin-top: 6px;
+    }
+    .loading-text {
+      font-size: 0.9rem;
+      opacity: 0.8;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.6; }
+      50% { opacity: 1; }
+    }
+
+    /* Canvas 区域 */
+    #declarationCanvas {
+      max-width: 100%;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+      margin: 16px 0;
+      background: #fff;
+    }
+    .canvas-wrap {
+      text-align: center;
+      overflow-x: auto;
+    }
+
+    /* 隐藏阶段 */
+    .stage {
+      display: none;
+      width: 100%;
+    }
+    .stage.active {
+      display: block;
+    }
+
+    /* 响应式微调 */
+    @media (max-width: 400px) {
+      .card {
+        padding: 22px 16px;
+      }
+      h1 {
+        font-size: 1.35rem;
+      }
+      .content, .list li, .declaration {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body class="outer">
+  <div style="width:100%;max-width:640px;margin:0 auto;padding:12px 18px 0;"><a href="school.html" style="color:#c48a9a;font-size:13px;">← 返回高校官网</a></div>
+  <div class="app">
+    <!-- ========== 第一阶段：关于我们（表版·黑） ========== -->
+    <div class="stage active" id="stage1">
+      <div class="card">
+        <h1>关于我们</h1>
+        <div class="content">我们是一所专注于反对■■与对■■抵抗力培养的学校，致力于为学生提供自由、开放且富有想象力的学习环境。学校重视每一位学生的个性发展，鼓励孩子通过课程学习、校内考试与现实实践发现兴趣、表达自我。
+
+我们相信，优秀的教育不仅在于传授知识，更在于陪伴学生成长。因此，我们也希望与热爱教育、尊重学生、富有责任心与创造力的教师一起，共同建设一个温暖、有活力的校园。
+
+在这里，教师不仅是知识的传授者，也是学生探索艺术世界的引导者。</div>
+        <button class="btn" onclick="goNext(1)">下一步</button>
+      </div>
+    </div>
+
+    <!-- ========== 第二阶段：关于我们（里版·粉） ========== -->
+    <div class="stage" id="stage2">
+      <div class="card">
+        <h1>关于我们</h1>
+        <div class="content">我们是一所专注于反对■■与对■■抵抗力培养的学校，致力于为学生提供自由、开放且富有想象力的学习环境。学校重视每一位学生的个性发展，鼓励孩子通过课程学习、校内考试与现实实践发现兴趣、表达自我。
+
+我们相信，优秀的教育不仅在于传授知识，更在于陪伴学生成长。因此，我们也希望与热爱教育、尊重学生、富有责任心与创造力的教师一起，共同建设一个温暖、有活力的校园。
+
+在这里，教师不仅是知识的传授者，也是学生探索艺术世界的引导者。</div>
+        <button class="btn" onclick="goNext(2)">下一步 ❤️</button>
+      </div>
+    </div>
+
+    <!-- ========== 第三阶段：我们期待这样的你（表版·黑） ========== -->
+    <div class="stage" id="stage3">
+      <div class="card">
+        <h1>我们期待这样的你</h1>
+        <ul class="list content">
+          <li>热爱教育事业，认可学校的教育理念</li>
+          <li>尊重学生的个性与创造力</li>
+          <li>具有良好的沟通能力和责任心</li>
+          <li>能够耐心、平等地对待每一位学生</li>
+          <li>具备良好的专业能力与持续学习的意愿</li>
+          <li>善于发现学生的兴趣，并给予积极引导</li>
+          <li>有相关教学经验或专业资格者优先</li>
+        </ul>
+        <button class="btn" onclick="goNext(3)">下一步</button>
+      </div>
+    </div>
+
+    <!-- ========== 第四阶段：我们期待这样的你（里版·粉） ========== -->
+    <div class="stage" id="stage4">
+      <div class="card">
+        <h1>我们期待这样的你</h1>
+        <ul class="list content">
+          <li>热爱教育事业，认可学校的教育理念</li>
+          <li>尊重学生的个性与创造力</li>
+          <li>具有良好的沟通能力和责任心</li>
+          <li>能够耐心、平等地对待每一位学生</li>
+          <li>具备良好的专业能力与持续学习的意愿</li>
+          <li>善于发现学生的兴趣，并给予积极引导</li>
+          <li>有相关教学经验或专业资格者优先</li>
+        </ul>
+        <button class="btn" onclick="goNext(4)">下一步 ❤️</button>
+      </div>
+    </div>
+
+    <!-- ========== 第五阶段：考生信息填写（表版·黑） ========== -->
+    <div class="stage" id="stage5">
+      <div class="card">
+        <h1>考生信息填写</h1>
+        <div class="form-group">
+          <label for="name">考生姓名</label>
+          <input type="text" id="name" placeholder="请输入真实姓名" maxlength="20">
+        </div>
+        <div class="form-group">
+          <label for="gender">考生性别</label>
+          <select id="gender">
+            <option value="">请选择</option>
+            <option value="男">男</option>
+            <option value="女">女</option>
+            <option value="男娘">男娘</option>
+            <option value="不愿透露">不愿透露</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="age">考生年龄</label>
+          <input type="number" id="age" min="1" max="99" placeholder="请输入年龄">
+          <div class="age-warning" id="ageWarning">年龄未满18岁，无法继续参加考试。</div>
+        </div>
+        <div class="form-group">
+          <label>考生照片</label>
+          <div class="photo-area">
+            <img id="photoPreview" class="photo-preview" alt="照片预览">
+            <label class="file-btn" for="photoInput">选择照片</label>
+            <input type="file" id="photoInput" accept="image/*">
+            <div class="photo-hint">上传2寸蓝底照片最佳</div>
+          </div>
+        </div>
+        <button class="btn" onclick="submitInfo()">下一步</button>
+      </div>
+    </div>
+
+    <!-- ========== 第六阶段：诚信宣言（表版·黑） ========== -->
+    <div class="stage" id="stage6">
+      <div class="card">
+        <h1>教师资格证考前诚信宣言</h1>
+        <div class="declaration" id="declText6">
+          <p>我郑重承诺：</p>
+          <p>我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。</p>
+          <p>我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。</p>
+          <p>我将珍惜教师职业的荣誉，以诚信作为从教之始，以责任作为育人之本。</p>
+          <p>我明白，教师不仅要传授知识，更应成为学生诚实、正直、守信的榜样。因此，我愿从一次考试开始，守住诚信底线，以认真负责的态度迎接未来的教育工作。</p>
+          <p>我承诺：诚信考试，真实作答；遵守纪律，尊重规则；以诚立身，以信从教。</p>
+        </div>
+        <div class="sign-line">宣言人：____________</div>
+        <button class="btn" style="margin-top:28px;" onclick="goNext(6)">下一步</button>
+      </div>
+    </div>
+
+    <!-- ========== 第七阶段：诚信宣言 + 指纹（里版·粉） ========== -->
+    <div class="stage" id="stage7">
+      <div class="card">
+        <h1>教师资格证考前诚信宣言</h1>
+        <div class="declaration" id="declText7">
+          <p>我郑重承诺：</p>
+          <p>我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。</p>
+          <p>我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。</p>
+          <p>我将珍惜教师职业的荣誉，以诚信作为从教之始，以责任作为育人之本。</p>
+          <p>我明白，教师不仅要传授知识，更应成为学生诚实、正直、守信的榜样。因此，我愿从一次考试开始，守住诚信底线，以认真负责的态度迎接未来的教育工作。</p>
+          <p>我承诺：诚信考试，真实作答；遵守纪律，尊重规则；以诚立身，以信从教。</p>
+        </div>
+        <div class="sign-line">宣言人：<strong id="signerName"></strong></div>
+
+        <div class="fingerprint-area">
+          <label class="file-btn" for="fpInput">上传指纹（可选）</label>
+          <input type="file" id="fpInput" accept="image/*">
+          <img id="fpPreview" class="fp-preview" alt="指纹预览">
+          <div class="photo-hint" style="margin-top:8px;">指纹上传非强制，可不上传</div>
+        </div>
+
+        <button class="btn" onclick="goToFinal()">下一步 ❤️</button>
+      </div>
+    </div>
+
+    <!-- ========== 第八阶段：最终宣言页 ========== -->
+    <div class="stage" id="stage8">
+      <div class="card">
+        <h1>诚信考试宣言</h1>
+
+        <!-- 虚拟资料库收录效果 -->
+        <div class="archive-box" id="archiveBox">
+          <div class="loading-text" id="loadingText">正在录入校方资料库……</div>
+          <div id="archiveResult" style="display:none;">
+            <div class="archive-status">✓ 诚信宣言已收录</div>
+            <div>校方资料库：永久保存</div>
+            <div class="archive-id" id="archiveId"></div>
+          </div>
+        </div>
+
+        <div class="final-msg">
+          考生诚信考试宣言已收录到校方资料库中永久保存。
+        </div>
+
+        <!-- Canvas 生成区域 -->
+        <div class="canvas-wrap">
+          <canvas id="declarationCanvas" width="600" height="900"></canvas>
+        </div>
+
+        <div class="btn-group">
+          <button class="btn" onclick="saveDeclaration()">保存宣言</button>
+          <button class="btn secondary" onclick="startExam()">开始考试 ❤️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /*
+      ========================================
+      本页面为前端演示，资料库收录提示仅为虚拟效果，
+      实际不会保存考生数据。
+      考生姓名、照片、指纹仅在当前浏览器会话中使用，
+      不上传至任何服务器，不调用任何外部 API。
+      ========================================
+    */
+
+    // ========== 全局状态 ==========
+    let currentStage = 1;
+    let candidate = {
+      name: "",
+      gender: "",
+      age: 0,
+      photoDataUrl: null,   // 本地预览用
+      fingerprintDataUrl: null
+    };
+
+    // 诚信宣言正文（两份目前完全相同，预留以后按性别区分）
+    const declarationText = [
+      "我郑重承诺：",
+      "我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。",
+      "我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。",
+      "我将珍惜教师职业的荣誉，以诚信作为从教之始，以责任作为育人之本。",
+      "我明白，教师不仅要传授知识，更应成为学生诚实、正直、守信的榜样。因此，我愿从一次考试开始，守住诚信底线，以认真负责的态度迎接未来的教育工作。",
+      "我承诺：诚信考试，真实作答；遵守纪律，尊重规则；以诚立身，以信从教。"
+    ];
+
+    // ========== 阶段切换核心函数 ==========
+    /**
+     * 切换到下一阶段
+     * @param {number} from 当前阶段编号
+     */
+    function goNext(from) {
+      const next = from + 1;
+      const currentEl = document.getElementById("stage" + from);
+      const nextEl = document.getElementById("stage" + next);
+
+      if (!nextEl) return;
+
+      // 1. 当前内容快速闪烁
+      currentEl.classList.add("flash");
+
+      setTimeout(() => {
+        currentEl.classList.remove("flash");
+        currentEl.classList.remove("active");
+        nextEl.classList.add("active");
+        currentStage = next;
+
+        // 2. 根据目标阶段切换背景（奇数表版黑，偶数里版粉）
+        // 阶段 1,3,5,6 为表版（黑）；2,4,7,8 为里版（粉）
+        updateBackground(next);
+      }, 280);
+    }
+
+    /**
+     * 更新页面背景风格
+     * @param {number} stage
+     */
+    function updateBackground(stage) {
+      const body = document.body;
+      // 表版（黑）：1,3,5,6
+      // 里版（粉）：2,4,7,8
+      if (stage === 1 || stage === 3 || stage === 5 || stage === 6) {
+        body.classList.remove("inner");
+        body.classList.add("outer");
+      } else {
+        body.classList.remove("outer");
+        body.classList.add("inner");
+      }
+    }
+
+    // ========== 第五阶段：信息校验与提交 ==========
+    function submitInfo() {
+      const name = document.getElementById("name").value.trim();
+      const gender = document.getElementById("gender").value;
+      const ageStr = document.getElementById("age").value;
+      const age = parseInt(ageStr, 10);
+      const warning = document.getElementById("ageWarning");
+
+      if (!name) {
+        alert("请填写考生姓名");
+        return;
+      }
+      if (!gender) {
+        alert("请选择考生性别");
+        return;
+      }
+      if (!ageStr || isNaN(age) || age < 1) {
+        alert("请填写有效年龄");
+        return;
+      }
+
+      // 年龄必须满18岁
+      if (age < 18) {
+        warning.style.display = "block";
+        return;
+      }
+      warning.style.display = "none";
+
+      // 保存到本地状态（仅前端内存，不上传）
+      candidate.name = name;
+      candidate.gender = gender;
+      candidate.age = age;
+
+      goNext(5);
+    }
+
+    // ========== 照片本地预览 ==========
+    document.getElementById("photoInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        candidate.photoDataUrl = ev.target.result; // 仅本地使用
+        const img = document.getElementById("photoPreview");
+        img.src = ev.target.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ========== 指纹本地预览（可选） ==========
+    document.getElementById("fpInput").addEventListener("change", function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(ev) {
+        candidate.fingerprintDataUrl = ev.target.result; // 仅本地用于 Canvas
+        const img = document.getElementById("fpPreview");
+        img.src = ev.target.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // ========== 进入最终阶段 ==========
+    function goToFinal() {
+      // 必须有姓名（签名）
+      if (!candidate.name) {
+        alert("缺少考生姓名，无法生成宣言");
+        return;
+      }
+
+      // 显示宣言人姓名
+      document.getElementById("signerName").textContent = candidate.name;
+
+      // 切换到第8阶段
+      const currentEl = document.getElementById("stage7");
+      const nextEl = document.getElementById("stage8");
+      currentEl.classList.add("flash");
+      setTimeout(() => {
+        currentEl.classList.remove("flash");
+        currentEl.classList.remove("active");
+        nextEl.classList.add("active");
+        currentStage = 8;
+        updateBackground(8);
+
+        // 启动虚拟“资料库录入”动画
+        startArchiveSimulation();
+        // 生成 Canvas 宣言图
+        generateDeclarationCanvas();
+      }, 280);
+    }
+
+    // ========== 虚拟资料库收录效果（纯前端视觉） ==========
+    /**
+     * 模拟“正在录入 → 完成”过程，并生成随机档案编号
+     * 注意：此为演示效果，不会真正保存任何数据
+     */
+    function startArchiveSimulation() {
+      const loading = document.getElementById("loadingText");
+      const result = document.getElementById("archiveResult");
+      const idEl = document.getElementById("archiveId");
+
+      loading.style.display = "block";
+      result.style.display = "none";
+
+      // 随机档案编号 TQ-2026-XXXX
+      const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+      let code = "";
+      for (let i = 0; i < 4; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      const archiveNo = "TQ-2026-" + code;
+
+      setTimeout(() => {
+        loading.style.display = "none";
+        result.style.display = "block";
+        idEl.textContent = "档案编号：" + archiveNo;
+      }, 1600); // 短暂加载感
+    }
+
+    // ========== 生成最终诚信宣言 Canvas ==========
+    /**
+     * 使用 Canvas 绘制完整宣言图片
+     * 包含：标题、正文、艺术签名、可选指纹盖章
+     */
+    function generateDeclarationCanvas() {
+      const canvas = document.getElementById("declarationCanvas");
+      const ctx = canvas.getContext("2d");
+      const W = canvas.width;
+      const H = canvas.height;
+
+      // 背景
+      ctx.fillStyle = "#fdf8f9";
+      ctx.fillRect(0, 0, W, H);
+
+      // 装饰边框
+      ctx.strokeStyle = "#c48a9a";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(18, 18, W - 36, H - 36);
+      ctx.strokeStyle = "#e8c0c8";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(26, 26, W - 52, H - 52);
+
+      // 标题
+      ctx.fillStyle = "#5a2030";
+      ctx.font = "bold 28px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("教师资格证考前诚信宣言", W / 2, 70);
+
+      // 正文
+      ctx.fillStyle = "#2c1a1f";
+      ctx.font = "16px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+      ctx.textAlign = "left";
+      let y = 120;
+      const lineHeight = 28;
+      const maxWidth = W - 90;
+
+      declarationText.forEach((para, idx) => {
+        // 简单换行处理
+        const words = para.split("");
+        let line = "";
+        for (let i = 0; i < words.length; i++) {
+          const test = line + words[i];
+          if (ctx.measureText(test).width > maxWidth && line !== "") {
+            ctx.fillText(line, 50, y);
+            line = words[i];
+            y += lineHeight;
+          } else {
+            line = test;
+          }
+        }
+        if (line) {
+          ctx.fillText(line, 50, y);
+          y += lineHeight + 8;
+        }
+      });
+
+      // 签名区域
+      y += 20;
+      ctx.font = "16px 'PingFang SC', 'Microsoft YaHei', sans-serif";
+      ctx.fillText("宣言人：", 50, y);
+
+      // 随机艺术风格签名（使用不同字体大小与轻微倾斜模拟手写感）
+      const signY = y + 45;
+      drawArtisticSignature(ctx, candidate.name, 140, signY);
+
+      // 可选指纹盖章
+      if (candidate.fingerprintDataUrl) {
+        const fpImg = new Image();
+        fpImg.onload = function() {
+          // 放在右下角作为盖章
+          const size = 90;
+          ctx.globalAlpha = 0.75;
+          ctx.drawImage(fpImg, W - 140, H - 160, size, size);
+          ctx.globalAlpha = 1.0;
+
+          // 盖章文字
+          ctx.fillStyle = "rgba(160, 40, 60, 0.7)";
+          ctx.font = "12px sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText("指纹确认", W - 95, H - 55);
+        };
+        fpImg.src = candidate.fingerprintDataUrl;
+      }
+
+      // 底部说明（仅视觉）
+      ctx.fillStyle = "#888";
+      ctx.font = "12px sans-serif";
+      ctx.textAlign = "center";
+      ctx.fillText("本宣言仅供本次考试前端演示使用", W / 2, H - 30);
+    }
+
+    /**
+     * 绘制带有轻微艺术感的签名
+     * 使用随机偏移与字体变化模拟手写效果
+     */
+    function drawArtisticSignature(ctx, name, x, y) {
+      ctx.save();
+      // 轻微旋转
+      const angle = (Math.random() * 0.12 - 0.06);
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+
+      // 主签名
+      ctx.fillStyle = "#1a1a1a";
+      ctx.font = "italic 32px 'Segoe Script', 'Brush Script MT', 'KaiTi', 'STKaiti', cursive";
+      ctx.textAlign = "left";
+      ctx.fillText(name, 0, 0);
+
+      // 轻微阴影增强手写感
+      ctx.fillStyle = "rgba(0,0,0,0.15)";
+      ctx.fillText(name, 1.5, 1.5);
+
+      ctx.restore();
+    }
+
+    // ========== 保存宣言为 PNG ==========
+    function saveDeclaration() {
+      const canvas = document.getElementById("declarationCanvas");
+      const link = document.createElement("a");
+      link.download = "教师资格证考前诚信宣言_" + candidate.name + ".png";
+      link.href = canvas.toDataURL("image/png");
+      link.click();
+    }
+
+    // ========== 开始考试：按性别跳转 ==========
+    /**
+     * 男 / 男娘 → male-exam.html
+     * 女 / 不愿透露 → female-exam.html
+     * 文件名直接写在代码中，方便以后修改
+     */
+    function startExam() {
+      let target = "female-exam.html"; // 默认
+      if (candidate.gender === "男" || candidate.gender === "男娘") {
+        target = "male-exam.html";
+      } else if (candidate.gender === "女" || candidate.gender === "不愿透露") {
+        target = "female-exam.html";
+      }
+      // 实际跳转（演示时这两个文件可能还不存在，可先提示）
+      window.location.href = target;
+    }
+
+    // ========== 初始化 ==========
+    // 确保初始为表版黑色
+    document.body.classList.add("outer");
+  </script>
+</body>
+</html>
