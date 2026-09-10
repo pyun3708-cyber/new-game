@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f3ec">
+  <title>反媚黑高校 · 成人官网</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+
+    :root {
+      --paper: #f7f3ec;
+      --paper-2: #eee8dd;
+      --ink: #292824;
+      --muted: #777268;
+      --line: rgba(41, 40, 36, 0.15);
+      --accent: #8b765d;
+      --card: rgba(255,255,255,0.55);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, rgba(139,118,93,.08), transparent 28%),
+        radial-gradient(circle at 90% 80%, rgba(139,118,93,.07), transparent 30%),
+        var(--paper);
+      font-family: "Noto Serif SC", "Songti SC", "STSong", serif;
+      letter-spacing: .04em;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .back-bar {
+      width: min(1180px, 92%);
+      margin: 16px auto 0;
+    }
+    .back-bar a {
+      color: var(--accent);
+      font-size: 13px;
+      letter-spacing: .12em;
+    }
+
+    .hero {
+      width: min(1180px, 92%);
+      margin: 0 auto;
+      padding: 48px 0 36px;
+      text-align: center;
+    }
+
+    .eyebrow {
+      color: var(--muted);
+      font-family: Arial, sans-serif;
+      font-size: 11px;
+      letter-spacing: .32em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .school-title {
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 500;
+      letter-spacing: .18em;
+      line-height: 1.15;
+      cursor: default;
+      user-select: none;
+    }
+
+    /* 「反」字悬停划掉；手机点击 .struck 同样生效 */
+    .school-title .fan {
+      position: relative;
+      display: inline-block;
+      transition: color .25s;
+    }
+    .school-title .fan::after {
+      content: "";
+      position: absolute;
+      left: -4%;
+      right: -4%;
+      top: 52%;
+      height: 3px;
+      background: #c62828;
+      transform: scaleX(0);
+      transform-origin: center;
+      transition: transform .28s ease;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+    .school-title:hover .fan::after,
+    .school-title.struck .fan::after {
+      transform: scaleX(1);
+    }
+    .school-title:hover .fan,
+    .school-title.struck .fan {
+      color: #8b3a3a;
+    }
+
+    .title-line {
+      width: 52px;
+      height: 1px;
+      background: var(--accent);
+      margin: 28px auto 0;
+    }
+
+    /* ===== 轮播 ===== */
+    .gallery {
+      width: min(1180px, 92%);
+      height: min(62vw, 590px);
+      min-height: 300px;
+      margin: 10px auto 70px;
+      position: relative;
+      overflow: hidden;
+      background: #1a1a1a;
+      box-shadow: 0 20px 55px rgba(50,45,38,.10);
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      animation: fade 30s infinite;
+      background: #111 center/cover no-repeat;
+    }
+
+    /* 5 张，每张约 6s 展示 */
+    .slide:nth-child(1) { animation-delay: 0s; }
+    .slide:nth-child(2) { animation-delay: 6s; }
+    .slide:nth-child(3) { animation-delay: 12s; }
+    .slide:nth-child(4) { animation-delay: 18s; }
+    .slide:nth-child(5) { animation-delay: 24s; }
+
+    @keyframes fade {
+      0%, 3% { opacity: 0; }
+      6%, 18% { opacity: 1; }
+      22%, 100% { opacity: 0; }
+    }
+
+    /* 悬停/点击切换的双图层 */
+    .swap {
+      position: absolute;
+      inset: 0;
+      cursor: pointer;
+    }
+    .swap img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      transition: opacity .35s ease;
+      pointer-events: none;
+      user-select: none;
+    }
+    .swap .img-b { opacity: 0; }
+    /* 桌面悬停 */
+    .swap:hover .img-a { opacity: 0; }
+    .swap:hover .img-b { opacity: 1; }
+    /* 手机点击切换 */
+    .swap.on .img-a { opacity: 0; }
+    .swap.on .img-b { opacity: 1; }
+
+    .slide-plain {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .gallery-caption {
+      position: absolute;
+      left: 28px;
+      bottom: 25px;
+      z-index: 5;
+      padding: 9px 15px;
+      color: white;
+      background: rgba(25,24,21,.42);
+      backdrop-filter: blur(8px);
+      font-size: 12px;
+      letter-spacing: .16em;
+      pointer-events: none;
+    }
+
+    .gallery-hint {
+      position: absolute;
+      right: 20px;
+      bottom: 22px;
+      z-index: 5;
+      font-size: 11px;
+      color: rgba(255,255,255,.75);
+      letter-spacing: .08em;
+      pointer-events: none;
+    }
+
+    .intro {
+      width: min(760px, 88%);
+      margin: 0 auto 82px;
+      text-align: center;
+    }
+
+    .section-label {
+      font-family: Arial, sans-serif;
+      font-size: 10px;
+      color: var(--accent);
+      letter-spacing: .3em;
+      margin-bottom: 20px;
+    }
+
+    .intro p {
+      color: #514e47;
+      font-size: 16px;
+      line-height: 2.25;
+    }
+
+    .spoiler {
+      background: #292824;
+      color: transparent;
+      border-radius: 3px;
+      cursor: help;
+      transition: color .2s, background .2s;
+      padding: 0 .12em;
+    }
+    .spoiler:hover,
+    .spoiler:active,
+    .spoiler.on {
+      background: rgba(139, 118, 93, 0.15);
+      color: inherit;
+    }
+
+    .services {
+      width: min(1080px, 90%);
+      margin: 0 auto 90px;
+    }
+
+    .services-header {
+      text-align: center;
+      margin-bottom: 34px;
+    }
+
+    .services-header h2 {
+      font-size: 26px;
+      font-weight: 500;
+      letter-spacing: .14em;
+    }
+
+    .service-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+    }
+
+    .service-card {
+      position: relative;
+      min-height: 126px;
+      display: flex;
+      align-items: flex-end;
+      padding: 25px;
+      border: 1px solid var(--line);
+      background: var(--card);
+      overflow: hidden;
+      transition: transform .25s ease, background .25s ease, box-shadow .25s ease;
+    }
+
+    .service-card::before {
+      content: "";
+      position: absolute;
+      width: 42px;
+      height: 1px;
+      top: 25px;
+      left: 25px;
+      background: var(--accent);
+      transition: width .25s ease;
+    }
+
+    .service-card:hover {
+      transform: translateY(-4px);
+      background: rgba(255,255,255,.88);
+      box-shadow: 0 14px 35px rgba(50,45,38,.09);
+    }
+
+    .service-card:hover::before { width: 70px; }
+
+    .service-name {
+      font-size: 17px;
+      letter-spacing: .08em;
+    }
+
+    .service-number {
+      position: absolute;
+      right: 22px;
+      top: 20px;
+      color: rgba(41,40,36,.22);
+      font: 12px Arial, sans-serif;
+      letter-spacing: .08em;
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      width: min(1180px, 92%);
+      margin: 0 auto;
+      padding: 30px 0 42px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: 11px;
+      letter-spacing: .12em;
+    }
+
+    @media (max-width: 700px) {
+      .hero { padding-top: 32px; }
+      .gallery {
+        height: 72vw;
+        min-height: 260px;
+        margin-bottom: 55px;
+      }
+      .intro { margin-bottom: 60px; }
+      .intro p { font-size: 14px; line-height: 2; }
+      .service-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+      .service-card {
+        min-height: 112px;
+        padding: 20px;
+      }
+      .service-name { font-size: 14px; }
+      footer {
+        display: block;
+        line-height: 2;
+      }
+      footer span { display: block; }
+      .gallery-hint { font-size: 10px; right: 12px; bottom: 14px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="back-bar">
+    <a href="index.html">← 返回草莓酱主页</a>
+  </div>
+
+  <header class="hero">
+    <div class="eyebrow">ANTI-BLACKED RESISTANCE ACADEMY</div>
+    <!-- 点击标题也可划掉「反」（方便手机） -->
+    <h1 class="school-title" id="schoolTitle" title="悬停或点击试试">
+      <span class="fan">反</span>媚黑高校
+    </h1>
+    <div class="title-line"></div>
+  </header>
+
+  <section class="gallery" aria-label="校园展示">
+    <!-- 1 莉音：悬停/点击切换 -->
+    <div class="slide">
+      <div class="swap" data-swap>
+        <img class="img-a" src="school-liyin-1.jpg" alt="莉音">
+        <img class="img-b" src="school-liyin-2.jpg" alt="莉音">
+      </div>
+    </div>
+    <!-- 2 知更鸟 -->
+    <div class="slide">
+      <div class="swap" data-swap>
+        <img class="img-a" src="school-robin-1.jpg" alt="知更鸟">
+        <img class="img-b" src="school-robin-2.jpg" alt="知更鸟">
+      </div>
+    </div>
+    <!-- 3 三月七 -->
+    <div class="slide">
+      <img class="slide-plain" src="school-march7.jpg" alt="三月七">
+    </div>
+    <!-- 4 多人 -->
+    <div class="slide">
+      <img class="slide-plain" src="school-group.png" alt="学员展示">
+    </div>
+    <!-- 5 练室 -->
+    <div class="slide">
+      <img class="slide-plain" src="school-studio.jpg" alt="训练现场">
+    </div>
+
+    <div class="gallery-caption">校园 · 教育 · 艺术 · 成长</div>
+    <div class="gallery-hint">部分图片可悬停 / 点按切换</div>
+  </section>
+
+  <section class="intro">
+    <div class="section-label">ABOUT OUR SCHOOL</div>
+    <p>
+      本校对外宣称培养对黑色诱惑的
+      <span class="spoiler">抵抗力</span>，
+      对内则进行系统化
+      <span class="spoiler">媚黑洗脑与服从训练</span>。
+      课程涵盖视觉脱敏、高潮管理与实践考核。
+      校训：
+      <span class="spoiler">先学会跪，再谈毕业。</span>
+    </p>
+  </section>
+
+  <main class="services">
+    <div class="services-header">
+      <div class="section-label">CAMPUS SERVICES</div>
+      <h2>校园服务</h2>
+    </div>
+
+    <div class="service-grid">
+      <a class="service-card" href="admission.html">
+        <span class="service-number">01</span>
+        <span class="service-name">办理入学</span>
+      </a>
+      <a class="service-card" href="teacher-job.html">
+        <span class="service-number">02</span>
+        <span class="service-name">教师求职</span>
+      </a>
+      <a class="service-card" href="teachers.html">
+        <span class="service-number">03</span>
+        <span class="service-name">老师介绍</span>
+      </a>
+      <a class="service-card" href="courses.html">
+        <span class="service-number">04</span>
+        <span class="service-name">课程学习</span>
+      </a>
+      <a class="service-card" href="exam.html">
+        <span class="service-number">05</span>
+        <span class="service-name">在线考试</span>
+      </a>
+      <a class="service-card" href="exam.html">
+        <span class="service-number">06</span>
+        <span class="service-name">每周小测</span>
+      </a>
+      <a class="service-card" href="message-wall.html">
+        <span class="service-number">07</span>
+        <span class="service-name">学校留言墙</span>
+      </a>
+      <a class="service-card" href="support.html">
+        <span class="service-number">08</span>
+        <span class="service-name">资助校方</span>
+      </a>
+      <a class="service-card" href="hidden-corner.html">
+        <span class="service-number">09</span>
+        <span class="service-name">隐蔽角落</span>
+      </a>
+    </div>
+  </main>
+
+  <footer>
+    <span>反媚黑高校 · OFFICIAL WEBSITE</span>
+    <span>© 2026 反媚黑高校</span>
+  </footer>
+
+  <script>
+    // 标题：手机点击切换划掉「反」
+    (function () {
+      var title = document.getElementById('schoolTitle');
+      if (!title) return;
+      title.addEventListener('click', function () {
+        title.classList.toggle('struck');
+      });
+    })();
+
+    // 图片：手机点按切换 A/B（桌面仍可用悬停）
+    document.querySelectorAll('[data-swap]').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        // 仅在粗指针/触摸环境用点击切换，避免和悬停打架过多
+        if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+          return; // 桌面鼠标：交给 CSS :hover
+        }
+        el.classList.toggle('on');
+      });
+    });
+
+    // 屏蔽字：手机点按显示
+    document.querySelectorAll('.spoiler').forEach(function (el) {
+      el.addEventListener('click', function (e) {
+        e.preventDefault();
+        el.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>
