@@ -82,7 +82,30 @@
 
     .intro{width:min(760px,88%);margin:0 auto 82px;text-align:center}
     .section-label{font-family:Arial,sans-serif;font-size:10px;color:var(--accent);letter-spacing:.3em;margin-bottom:20px}
-    .intro p{color:#514e47;font-size:16px;line-height:2.25}
+    .intro p{color:#514e47;font-size:15px;line-height:2.15;text-align:left}
+    .morph{
+      display:inline;
+      transition:color .35s, background .35s, opacity .35s;
+      border-radius:3px;
+      padding:0 .05em;
+    }
+    .morph.is-alt{
+      color:#8b3a3a;
+      background:rgba(198,40,40,.08);
+    }
+    .fan-blink{
+      display:inline-block;
+      position:relative;
+      transition:color .4s, background .4s;
+      border-radius:2px;
+      padding:0 .02em;
+    }
+    .fan-blink.blacked{
+      color:transparent !important;
+      background:#1a1a1a;
+      border-radius:3px;
+      min-width:0.9em;
+    }
     .spoiler{background:#292824;color:transparent;border-radius:3px;cursor:help;transition:color .2s,background .2s;padding:0 .12em}
     .spoiler:hover,.spoiler:active,.spoiler.on{background:rgba(139,118,93,.15);color:inherit}
 
@@ -149,18 +172,12 @@
     </div>
   </div>
   <div class="dots" id="dots"></div>
-  <p class="gallery-hint">♠学校校风展示🖤</p>
+  <p class="gallery-hint">中间大图 · 两侧预览 · 自动从右往左 · 箭头可切换</p>
 
   <section class="intro">
     <div class="section-label">ABOUT OUR SCHOOL</div>
-    <p>
-      本校对外宣称培养对黑色诱惑的
-      <span class="spoiler">抵抗力</span>，
-      对内则进行系统化
-      <span class="spoiler">媚黑洗脑与服从训练</span>。
-      课程涵盖视觉脱敏、高潮管理与实践考核。
-      校训：
-      <span class="spoiler">先学会跪，再谈毕业。</span>
+    <p id="schoolIntro">
+      <span class="fan-blink">反</span>媚黑洗脑成人教育培训高校，简称<span class="fan-blink">反</span>媚黑高校，位于xx省月亮市市中心。本校为响应解决近年来难民接收带来的种族矛盾问题由<span class="fan-blink">反</span>媚黑教育部设立，是<span class="fan-blink">反</span>媚黑教育部直属重点综合性高等教育场所。本校于2026年建校，校内配备完善的<span class="morph" data-alt="调教场所">教育场地</span>和齐全的<span class="morph" data-alt="情趣道具">教育设施</span>，拥有<span class="morph" data-alt="下贱">优秀</span>的<span class="morph" data-alt="蝈蝻母猪">男女老师</span>，<span class="morph" data-alt="巨根">扶她教师</span>和<span class="morph" data-alt="黑爹洋妈">国外讲师</span>，设置了科学有效的学习课程。学校广纳人才，吸引众多留学生前来交流学习，并为他们的就业创业提供了巨大帮助。学校讲究<span class="morph" data-alt="任劳任操">吃苦耐劳</span>，<span class="morph" data-alt="足踏小屌">脚踏实地</span>，<span class="morph" data-alt="永久锁死">忍耐克己</span>，<span class="morph" data-alt="终身媚黑">持之以恒</span>，<span class="morph" data-alt="阳具崇拜">宽容待人</span>，<span class="morph" data-alt="献妻供女">乐善好施</span>，<span class="morph" data-alt="献出一切">舍己为人</span>，<span class="morph" data-alt="侍奉黑爹">热情奉献</span>，<span class="morph" data-alt="性虐调教">百折不挠</span>的优良学风❤。学校致力于将大家培养成一名优秀的，能为社会做出贡献，正确认识人人平等理念的<span class="fan-blink">反</span>媚黑人才，希望大家从加入学校的那一刻起，就坚持做到身体力行，在毕业时用自己的身体交出一份令自己满意的答卷。
     </p>
   </section>
 
@@ -252,6 +269,42 @@
   document.querySelectorAll('.spoiler').forEach(function(el){
     el.onclick=function(e){ e.preventDefault(); el.classList.toggle('on'); };
   });
+
+  // 简介：词语随机切换 + 「反」字涂黑闪烁
+  (function () {
+    function rand(min, max) {
+      return min + Math.random() * (max - min);
+    }
+    function scheduleMorph(el) {
+      var orig = el.getAttribute('data-orig') || el.textContent;
+      var alt = el.getAttribute('data-alt');
+      el.setAttribute('data-orig', orig);
+      function toAlt() {
+        el.textContent = alt;
+        el.classList.add('is-alt');
+        setTimeout(toOrig, rand(5000, 10000));
+      }
+      function toOrig() {
+        el.textContent = orig;
+        el.classList.remove('is-alt');
+        setTimeout(toAlt, rand(10000, 15000));
+      }
+      setTimeout(toAlt, rand(3000, 12000));
+    }
+    document.querySelectorAll('.morph').forEach(scheduleMorph);
+
+    function scheduleFan(el) {
+      function black() {
+        el.classList.add('blacked');
+        setTimeout(function () {
+          el.classList.remove('blacked');
+          setTimeout(black, rand(10000, 15000));
+        }, rand(5000, 10000));
+      }
+      setTimeout(black, rand(2000, 10000));
+    }
+    document.querySelectorAll('.fan-blink').forEach(scheduleFan);
+  })();
   </script>
 </body>
 </html>
