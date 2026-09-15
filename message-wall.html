@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>反媚黑高校 · 学校留言墙</title>
+  <style>
+    :root {
+      --ink: #2a2420;
+      --muted: #7a6e64;
+      --accent: #8b765d;
+      --card: rgba(255, 250, 244, 0.88);
+      --line: rgba(41, 40, 36, 0.12);
+      --pink: #c45c7a;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      color: var(--ink);
+      line-height: 1.55;
+      background: #1a1512;
+    }
+    .bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      background:
+        radial-gradient(ellipse at center, rgba(20,16,14,.35) 0%, rgba(10,8,7,.78) 70%, rgba(8,6,5,.92) 100%),
+        #120e0c url("school-badge.png") center center / min(72vmin, 520px) no-repeat;
+    }
+    .bg::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 14, 12, 0.42);
+      pointer-events: none;
+    }
+    .wrap {
+      position: relative;
+      z-index: 1;
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 16px 14px 48px;
+      min-height: 100vh;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      gap: 10px;
+    }
+    .top-bar a {
+      color: #e8d5c4;
+      text-decoration: none;
+      font-size: 13px;
+      letter-spacing: .06em;
+      opacity: .9;
+    }
+    .top-bar a:hover { opacity: 1; text-decoration: underline; }
+    .sync { font-size: 11px; color: #c4b0a0; }
+    .sync.ok { color: #9ccc65; }
+    .sync.err { color: #ef9a9a; }
+    .hero {
+      text-align: center;
+      margin-bottom: 18px;
+      color: #f5ebe0;
+    }
+    .hero h1 {
+      font-size: 1.45rem;
+      font-weight: 700;
+      letter-spacing: .14em;
+      text-shadow: 0 2px 12px rgba(0,0,0,.5);
+    }
+    .hero p {
+      margin-top: 8px;
+      font-size: 13px;
+      color: #d4c0b0;
+      letter-spacing: .04em;
+    }
+    .panel {
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.35);
+      border-radius: 16px;
+      padding: 16px 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,.28);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .board-sub {
+      font-size: 12px;
+      color: var(--pink);
+      margin-bottom: 12px;
+      line-height: 1.5;
+    }
+    .msg-form {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .msg-form input,
+    .msg-form textarea {
+      width: 100%;
+      border: 1.5px solid #e0d0c0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      background: rgba(255,255,255,.85);
+      color: var(--ink);
+    }
+    .msg-form textarea { min-height: 78px; resize: vertical; }
+    .msg-form input:focus,
+    .msg-form textarea:focus { border-color: var(--accent); }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    button {
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .1s, opacity .2s;
+    }
+    button:active { transform: scale(0.97); }
+    .btn-send {
+      background: linear-gradient(135deg, #a08060, #8b765d);
+      color: #fff;
+      flex: 1;
+      min-width: 120px;
+    }
+    .btn-cancel-reply {
+      background: #eee6dc;
+      color: #6a5a4a;
+      display: none;
+    }
+    .btn-cancel-reply.show { display: inline-block; }
+    .btn-like { background: #f5e6dc; color: #8b5a4a; font-size: 12px; padding: 6px 10px; }
+    .btn-del { background: #f5d6d6; color: #a33; font-size: 12px; padding: 6px 10px; }
+    .btn-reply { background: #e8efe8; color: #4a6a4a; font-size: 12px; padding: 6px 10px; }
+    .msg-list {
+      text-align: left;
+      max-height: min(62vh, 560px);
+      overflow-y: auto;
+      padding-right: 2px;
+    }
+    .msg {
+      background: rgba(255,255,255,.78);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 10px;
+      border: 1px solid #eadcce;
+    }
+    .msg .meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
+    .msg .meta .nick { color: var(--accent); font-weight: 600; }
+    .msg .body {
+      font-size: 14px;
+      color: #3a322c;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .msg .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .msg.reply { margin-left: 14px; border-left: 3px solid #c4a888; }
+    .hint {
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+      padding: 20px 10px;
+    }
+    .modal-mask {
+      position: fixed;
+      inset: 0;
+      background: rgba(30, 20, 14, .55);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+    }
+    .modal-mask.show { display: flex; }
+    .modal {
+      width: 100%;
+      max-width: 340px;
+      background: #fffaf4;
+      border-radius: 18px;
+      padding: 20px 16px 16px;
+    }
+    .modal h3 {
+      font-size: 16px;
+      color: var(--accent);
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .modal label { display: block; font-size: 12px; color: var(--muted); margin: 8px 0 4px; }
+    .modal input {
+      width: 100%;
+      border: 1.5px solid #e0d0c0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 15px;
+      outline: none;
+      font-family: inherit;
+    }
+    .modal .row { display: flex; gap: 8px; margin-top: 14px; }
+    .modal .row button { flex: 1; }
+    .btn-cancel { background: #eee6dc; color: #6a5a4a; }
+    .btn-ok { background: linear-gradient(135deg, #a08060, #8b765d); color: #fff; }
+    .err { color: #c62828; font-size: 12px; margin-top: 6px; min-height: 16px; }
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      transform: translateX(-50%) translateY(16px);
+      background: rgba(40, 28, 20, .92);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 999px;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity .2s, transform .2s;
+      z-index: 60;
+      max-width: 90%;
+    }
+    .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <div class="wrap">
+    <div class="top-bar">
+      <a href="school.html">← 返回学校官网</a>
+      <span class="sync" id="sync">连接中…</span>
+    </div>
+    <div class="hero">
+      <h1>学校留言墙</h1>
+      <p>学生 · 老师 · 路人皆可留言</p>
+    </div>
+    <div class="panel">
+      <p class="board-sub">欢迎在此留下对反媚黑高校的感受、吐槽或表白。禁止发图；站长可删除任意留言。</p>
+      <div class="msg-form">
+        <input id="nick" type="text" maxlength="20" placeholder="昵称（可选，默认匿名）" autocomplete="nickname">
+        <textarea id="msg" maxlength="500" placeholder="写留言…（禁止发图）"></textarea>
+        <div class="btn-row">
+          <button type="button" class="btn-send" onclick="postMsg()">发送留言</button>
+          <button type="button" class="btn-cancel-reply" id="cancelReply" onclick="clearReply()">取消回复</button>
+        </div>
+      </div>
+      <div class="msg-list" id="list">
+        <div class="hint">加载中…</div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-mask" id="modal">
+    <div class="modal">
+      <h3>站长删除</h3>
+      <label>密码</label>
+      <input type="password" id="pwd" maxlength="20" placeholder="输入站长密码" autocomplete="off">
+      <div class="err" id="err"></div>
+      <div class="row">
+        <button type="button" class="btn-cancel" onclick="closeModal()">取消</button>
+        <button type="button" class="btn-ok" onclick="confirmAdminDel()">确认删除</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast" id="toast"></div>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+    import { getDatabase, ref, push, set, remove, onValue } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBeOpIqMdvV3N7jTrXZwGZxQprPLtoDAy0",
+      authDomain: "planning-with-ai-5a793.firebaseapp.com",
+      databaseURL: "https://planning-with-ai-5a793-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "planning-with-ai-5a793",
+      storageBucket: "planning-with-ai-5a793.firebasestorage.app",
+      messagingSenderId: "1092542525478",
+      appId: "1:1092542525478:web:a044a52e4334c496e676e7"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const msgsRef = ref(db, "schoolWall/messages");
+    const ADMIN_PASSWORD = "5200";
+
+    const clientId = (() => {
+      let id = localStorage.getItem("school_wall_cid");
+      if (!id) {
+        id = "c" + Math.random().toString(36).slice(2) + Date.now().toString(36);
+        localStorage.setItem("school_wall_cid", id);
+      }
+      return id;
+    })();
+
+    let messages = [];
+    let pendingDeleteId = null;
+    let replyToId = null;
+
+    function toast(m) {
+      const el = document.getElementById("toast");
+      el.textContent = m;
+      el.classList.add("show");
+      clearTimeout(toast._t);
+      toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+    }
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+    function fmtTime(ts) {
+      if (!ts) return "";
+      const d = new Date(ts);
+      const p = n => String(n).padStart(2, "0");
+      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
+        p(d.getHours()) + ":" + p(d.getMinutes());
+    }
+
+    function render() {
+      const box = document.getElementById("list");
+      if (!messages.length) {
+        box.innerHTML = '<div class="hint">还没有留言，来当第一个吧～</div>';
+        return;
+      }
+      const byId = {};
+      messages.forEach(m => { byId[m.id] = m; });
+      const roots = messages.filter(m => !m.replyTo || !byId[m.replyTo])
+        .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const children = {};
+      messages.forEach(m => {
+        if (m.replyTo && byId[m.replyTo]) {
+          (children[m.replyTo] || (children[m.replyTo] = [])).push(m);
+        }
+      });
+      Object.keys(children).forEach(k => {
+        children[k].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+      });
+
+      function card(m, isReply) {
+        const likes = m.likes ? Object.keys(m.likes).length : 0;
+        const liked = m.likes && m.likes[clientId];
+        const isOwn = m.uid === clientId;
+        return (
+          '<div class="msg' + (isReply ? " reply" : "") + '" data-id="' + esc(m.id) + '">' +
+            '<div class="meta"><span class="nick">' + esc(m.nick || "匿名") + '</span> · ' +
+              fmtTime(m.createdAt) +
+              (m.replyTo && byId[m.replyTo] ? ' · 回复 ' + esc(byId[m.replyTo].nick || "匿名") : "") +
+            '</div>' +
+            '<div class="body">' + esc(m.text) + '</div>' +
+            '<div class="actions">' +
+              '<button type="button" class="btn-like" data-act="like">' + (liked ? "已赞 " : "点赞 ") + likes + "</button>" +
+              '<button type="button" class="btn-reply" data-act="reply">回复</button>' +
+              (isOwn
+                ? '<button type="button" class="btn-del" data-act="delOwn">删除</button>'
+                : '<button type="button" class="btn-del" data-act="delAdmin">站长删</button>') +
+            '</div>' +
+          '</div>'
+        );
+      }
+
+      let html = "";
+      roots.forEach(m => {
+        html += card(m, false);
+        (children[m.id] || []).forEach(c => { html += card(c, true); });
+      });
+      box.innerHTML = html;
+
+      box.querySelectorAll(".msg").forEach(el => {
+        const id = el.getAttribute("data-id");
+        const m = byId[id];
+        if (!m) return;
+        el.querySelector('[data-act="like"]')?.addEventListener("click", () => like(m));
+        el.querySelector('[data-act="reply"]')?.addEventListener("click", () => setReply(m));
+        el.querySelector('[data-act="delOwn"]')?.addEventListener("click", () => delOwn(m));
+        el.querySelector('[data-act="delAdmin"]')?.addEventListener("click", () => askAdminDel(m.id));
+      });
+    }
+
+    async function postMsg() {
+      const text = document.getElementById("msg").value.trim();
+      const nick = document.getElementById("nick").value.trim() || "匿名";
+      if (!text) { toast("写点内容再发吧"); return; }
+      if (text.length > 500) { toast("最多 500 字"); return; }
+      try {
+        const newRef = push(msgsRef);
+        await set(newRef, {
+          text,
+          nick: nick.slice(0, 20),
+          uid: clientId,
+          createdAt: Date.now(),
+          likes: {},
+          replyTo: replyToId || null
+        });
+        document.getElementById("msg").value = "";
+        clearReply();
+        toast("已发送");
+      } catch (e) {
+        toast(e.message || "发送失败");
+      }
+    }
+
+    function setReply(m) {
+      replyToId = m.id;
+      document.getElementById("msg").value = "@" + (m.nick || "匿名") + " ";
+      document.getElementById("cancelReply").classList.add("show");
+      document.getElementById("msg").focus();
+    }
+    function clearReply() {
+      replyToId = null;
+      document.getElementById("cancelReply").classList.remove("show");
+    }
+
+    async function like(m) {
+      try {
+        const path = "schoolWall/messages/" + m.id + "/likes/" + clientId;
+        if (m.likes && m.likes[clientId]) {
+          await remove(ref(db, path));
+        } else {
+          await set(ref(db, path), true);
+        }
+      } catch (e) {
+        toast(e.message || "点赞失败");
+      }
+    }
+
+    async function delOwn(m) {
+      if (m.uid !== clientId) return;
+      if (!confirm("确定删除自己的这条留言？")) return;
+      try {
+        await remove(ref(db, "schoolWall/messages/" + m.id));
+        toast("已删除");
+      } catch (e) {
+        toast(e.message || "删除失败");
+      }
+    }
+
+    function askAdminDel(id) {
+      pendingDeleteId = id;
+      document.getElementById("pwd").value = "";
+      document.getElementById("err").textContent = "";
+      document.getElementById("modal").classList.add("show");
+      setTimeout(() => document.getElementById("pwd").focus(), 40);
+    }
+    function closeModal() {
+      document.getElementById("modal").classList.remove("show");
+      pendingDeleteId = null;
+    }
+    async function confirmAdminDel() {
+      const pwd = document.getElementById("pwd").value;
+      if (pwd !== ADMIN_PASSWORD) {
+        document.getElementById("err").textContent = "密码错误";
+        return;
+      }
+      if (!pendingDeleteId) return;
+      try {
+        await remove(ref(db, "schoolWall/messages/" + pendingDeleteId));
+        closeModal();
+        toast("站长已删除");
+      } catch (e) {
+        document.getElementById("err").textContent = e.message || "删除失败";
+      }
+    }
+
+    window.postMsg = postMsg;
+    window.clearReply = clearReply;
+    window.closeModal = closeModal;
+    window.confirmAdminDel = confirmAdminDel;
+
+    onValue(msgsRef, (snap) => {
+      const val = snap.val() || {};
+      messages = Object.keys(val).map(id => ({ id, ...val[id] }));
+      document.getElementById("sync").textContent = "● 实时同步中";
+      document.getElementById("sync").className = "sync ok";
+      render();
+    }, (err) => {
+      document.getElementById("sync").textContent = "连接失败";
+      document.getElementById("sync").className = "sync err";
+      document.getElementById("list").innerHTML =
+        '<div class="hint">无法连接留言库。请检查 Firebase 规则是否允许 schoolWall 读写。<br>' +
+        esc(err.message || "") + "</div>";
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeModal();
+      if (e.key === "Enter" && document.getElementById("modal").classList.contains("show")) {
+        confirmAdminDel();
+      }
+    });
+  </script>
+</body>
+</html>
