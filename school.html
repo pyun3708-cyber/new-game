@@ -23,6 +23,15 @@
     .back-bar a{color:var(--accent);font-size:13px;letter-spacing:.12em}
     .hero{width:min(1180px,92%);margin:0 auto;padding:48px 0 28px;text-align:center}
     .eyebrow{color:var(--muted);font-family:Arial,sans-serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;margin-bottom:14px}
+    .title-row{
+      display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
+    }
+    .school-badge{
+      width:clamp(64px,12vw,96px);height:clamp(64px,12vw,96px);
+      object-fit:contain;border-radius:50%;
+      box-shadow:0 6px 20px rgba(0,0,0,.18);
+      background:#1a1a1a;flex-shrink:0;
+    }
     .school-title{font-size:clamp(36px,7vw,72px);font-weight:500;letter-spacing:.18em;line-height:1.15;cursor:pointer;user-select:none}
     .school-title .fan{position:relative;display:inline-block;transition:color .25s}
     .school-title .fan::after{content:"";position:absolute;left:-4%;right:-4%;top:52%;height:3px;background:#c62828;transform:scaleX(0);transform-origin:center;transition:transform .28s ease;border-radius:2px}
@@ -96,6 +105,7 @@
       .slide.is-prev{transform:translate(calc(-50% - 42%),-50%) scale(.68)}
       .slide.is-next{transform:translate(calc(-50% + 42%),-50%) scale(.68)}
       .nav-btn{width:36px;height:36px}
+      .title-row{gap:10px}
       .service-grid{grid-template-columns:repeat(2,1fr)}
       footer{display:block;line-height:2}
     }
@@ -106,7 +116,10 @@
 
   <header class="hero">
     <div class="eyebrow">ANTI-BLACKED RESISTANCE ACADEMY</div>
-    <h1 class="school-title" id="schoolTitle"><span class="fan">反</span>媚黑高校</h1>
+    <div class="title-row">
+      <img class="school-badge" src="school-badge.png" alt="反媚黑高校校徽">
+      <h1 class="school-title" id="schoolTitle"><span class="fan">反</span>媚黑高校</h1>
+    </div>
     <div class="title-line"></div>
   </header>
 
