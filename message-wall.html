@@ -88,6 +88,9 @@
     }
     .msg .meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
     .msg .meta .nick { color: var(--accent); font-weight: 600; }
+    .msg .meta a.nick-link { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px dashed rgba(139,118,93,.45); }
+    .msg .meta a.nick-link:hover { border-bottom-style: solid; }
+    .msg .meta .nick-anon { color: var(--muted); font-weight: 600; cursor: default; }
     .msg .body { font-size: 14px; color: #3a322c; white-space: pre-wrap; word-break: break-word; }
     .msg .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
     .msg.reply { margin-left: 14px; border-left: 3px solid #c4a888; }
@@ -113,7 +116,7 @@
       <p>需登录后发言 · 可选匿名显示</p>
     </div>
     <div class="panel">
-      <p class="board-sub">必须登录才能发送。勾选「匿名发言」后公开展示为「匿名」，后台仍关联账号以防滥用（他人看不到你的用户名）。禁止发图。</p>
+      <p class="board-sub">必须登录才能发送。勾选「匿名发言」后公开展示为「匿名」，且无法点进主页。非匿名名字可点击查看对方主页。禁止发图。</p>
       <div id="gate" class="login-gate" style="display:none">
         <div>登录后才能发言</div>
         <a href="login.html">去登录</a>
@@ -123,7 +126,7 @@
         <div class="msg-form">
           <div class="anon-row">
             <input type="checkbox" id="anonymous">
-            <label for="anonymous">匿名发言（别人只看到「匿名」）</label>
+            <label for="anonymous">匿名发言（别人只看到「匿名」，不可点进主页）</label>
           </div>
           <textarea id="msg" maxlength="500" placeholder="写留言…（禁止发图，最多500字）"></textarea>
           <div class="btn-row">
@@ -204,10 +207,21 @@ function render() {
     const liked = !!m.liked_by_me;
     const isOwn = myId && m.user_id === myId;
     const nick = m.nick_display || "匿名";
+    const isAnon = (nick === "匿名") || m.is_anonymous === 1 || m.is_anonymous === true;
+    const nickHtml = isAnon
+      ? ('<span class="nick-anon" title="匿名留言不可查看主页">' + esc(nick) + '</span>')
+      : ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(nick) + '" title="查看主页">' + esc(nick) + '</a>');
+    let replyHtml = '';
+    if (m.reply_to && byId[m.reply_to]) {
+      const rn = byId[m.reply_to].nick_display || '匿名';
+      const ra = (rn === '匿名') || byId[m.reply_to].is_anonymous === 1 || byId[m.reply_to].is_anonymous === true;
+      replyHtml = ra
+        ? (' · 回复 <span class="nick-anon">' + esc(rn) + '</span>')
+        : (' · 回复 <a class="nick-link" href="profile.html?u=' + encodeURIComponent(rn) + '">' + esc(rn) + '</a>');
+    }
     return (
       '<div class="msg' + (isReply ? " reply" : "") + '" data-id="' + esc(m.id) + '">' +
-        '<div class="meta"><span class="nick">' + esc(nick) + '</span> · ' + fmtTime(m.created_at) +
-        (m.reply_to && byId[m.reply_to] ? ' · 回复 ' + esc(byId[m.reply_to].nick_display || "匿名") : "") +
+        '<div class="meta">' + nickHtml + ' · ' + fmtTime(m.created_at) + replyHtml +
         '</div>' +
         '<div class="body">' + esc(m.text) + '</div>' +
         '<div class="actions">' +
@@ -243,7 +257,7 @@ async function pull() {
     document.getElementById("sync").textContent = "连接失败";
     document.getElementById("sync").className = "sync err";
     document.getElementById("list").innerHTML =
-      '<div class="hint">无法加载留言。请确认 Worker 已更新并建好留言表。<br>' + esc(e.message) + "</div>";
+      '<div class="hint">无法加载留言。<br>' + esc(e.message) + "</div>";
   }
 }
 async function postMsg() {
