@@ -261,7 +261,8 @@
       var u=JSON.parse(raw);
       var name=(u&&u.username)?u.username:'用户';
       var role=(u&&u.role==='teacher')?'教师':'学生';
-      bar.innerHTML='<span style="color:var(--muted)">'+name+' · '+role+'</span>'+
+      bar.innerHTML='<a href="profile.html" style="color:var(--accent);font-weight:600">'+name+'</a>'+
+        '<span style="color:var(--muted)"> · '+role+'</span>'+
         ' <a href="#" id="logoutBtn" style="color:var(--accent);margin-left:10px">退出</a>';
       var btn=document.getElementById('logoutBtn');
       if(btn)btn.onclick=function(e){
