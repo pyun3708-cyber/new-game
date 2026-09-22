@@ -23,32 +23,17 @@
     .back-bar a{color:var(--accent);font-size:13px;letter-spacing:.12em}
     .hero{width:min(1180px,92%);margin:0 auto;padding:48px 0 28px;text-align:center}
     .eyebrow{color:var(--muted);font-family:Arial,sans-serif;font-size:11px;letter-spacing:.32em;text-transform:uppercase;margin-bottom:14px}
-    .title-row{
-      display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap;
-    }
-    .school-badge{
-      width:clamp(64px,12vw,96px);height:clamp(64px,12vw,96px);
-      object-fit:contain;border-radius:50%;
-      box-shadow:0 6px 20px rgba(0,0,0,.18);
-      background:#1a1a1a;flex-shrink:0;
-    }
+    .title-row{display:flex;align-items:center;justify-content:center;gap:16px;flex-wrap:wrap}
+    .school-badge{width:clamp(64px,12vw,96px);height:clamp(64px,12vw,96px);object-fit:contain;border-radius:50%;box-shadow:0 6px 20px rgba(0,0,0,.18);background:#1a1a1a;flex-shrink:0}
     .school-title{font-size:clamp(36px,7vw,72px);font-weight:500;letter-spacing:.18em;line-height:1.15;cursor:pointer;user-select:none}
     .school-title .fan{position:relative;display:inline-block;transition:color .25s}
     .school-title .fan::after{content:"";position:absolute;left:-4%;right:-4%;top:52%;height:3px;background:#c62828;transform:scaleX(0);transform-origin:center;transition:transform .28s ease;border-radius:2px}
     .school-title:hover .fan::after,.school-title.struck .fan::after{transform:scaleX(1)}
     .school-title:hover .fan,.school-title.struck .fan{color:#8b3a3a}
     .title-line{width:52px;height:1px;background:var(--accent);margin:28px auto 0}
-
     .carousel{position:relative;width:min(1100px,96%);margin:8px auto 20px;height:min(56vw,440px);min-height:260px;user-select:none}
     .carousel-stage{position:relative;width:100%;height:100%}
-    .slide{
-      position:absolute;top:50%;left:50%;
-      width:min(52%,420px);height:88%;
-      transform:translate(-50%,-50%) scale(.72);opacity:0;
-      transition:transform .55s cubic-bezier(.4,.1,.2,1),opacity .55s ease;
-      border-radius:6px;overflow:hidden;background:#12100e;
-      box-shadow:0 12px 36px rgba(0,0,0,.28);pointer-events:none;
-    }
+    .slide{position:absolute;top:50%;left:50%;width:min(52%,420px);height:88%;transform:translate(-50%,-50%) scale(.72);opacity:0;transition:transform .55s cubic-bezier(.4,.1,.2,1),opacity .55s ease;border-radius:6px;overflow:hidden;background:#12100e;box-shadow:0 12px 36px rgba(0,0,0,.28);pointer-events:none}
     .slide.is-active{transform:translate(-50%,-50%) scale(1);opacity:1;z-index:5;pointer-events:auto;box-shadow:0 18px 48px rgba(0,0,0,.35)}
     .slide.is-prev{transform:translate(calc(-50% - 58%),-50%) scale(.72);opacity:.75;z-index:3;pointer-events:auto;cursor:pointer}
     .slide.is-next{transform:translate(calc(-50% + 58%),-50%) scale(.72);opacity:.75;z-index:3;pointer-events:auto;cursor:pointer}
@@ -63,52 +48,23 @@
     .swap:hover .img-b{opacity:1}
     .swap.on .img-a{opacity:0}
     .swap.on .img-b{opacity:1}
-
-    .nav-btn{
-      position:absolute;top:50%;transform:translateY(-50%);z-index:10;
-      width:44px;height:44px;border:none;border-radius:50%;
-      background:rgba(255,255,255,.85);color:#3a322c;cursor:pointer;
-      display:flex;align-items:center;justify-content:center;
-      box-shadow:0 6px 18px rgba(0,0,0,.15);transition:background .2s,transform .2s;
-    }
+    .nav-btn{position:absolute;top:50%;transform:translateY(-50%);z-index:10;width:44px;height:44px;border:none;border-radius:50%;background:rgba(255,255,255,.85);color:#3a322c;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,.15);transition:background .2s,transform .2s}
     .nav-btn:hover{background:#fff;transform:translateY(-50%) scale(1.06)}
     .nav-btn svg{width:18px;height:18px;fill:currentColor}
     .nav-prev{left:6px}.nav-next{right:6px}
-
     .dots{display:flex;justify-content:center;gap:8px;margin:0 0 36px}
     .dots button{width:8px;height:8px;border-radius:50%;border:none;background:rgba(41,40,36,.22);cursor:pointer;padding:0}
     .dots button.active{background:var(--accent);transform:scale(1.25)}
     .gallery-hint{text-align:center;font-size:12px;color:var(--muted);letter-spacing:.1em;margin:-20px 0 48px}
-
     .intro{width:min(760px,88%);margin:0 auto 82px;text-align:center}
     .section-label{font-family:Arial,sans-serif;font-size:10px;color:var(--accent);letter-spacing:.3em;margin-bottom:20px}
     .intro p{color:#514e47;font-size:15px;line-height:2.15;text-align:left}
-    .morph{
-      display:inline;
-      transition:color .35s, background .35s, opacity .35s;
-      border-radius:3px;
-      padding:0 .05em;
-    }
-    .morph.is-alt{
-      color:#8b3a3a;
-      background:rgba(198,40,40,.08);
-    }
-    .fan-blink{
-      display:inline-block;
-      position:relative;
-      transition:color .4s, background .4s;
-      border-radius:2px;
-      padding:0 .02em;
-    }
-    .fan-blink.blacked{
-      color:transparent !important;
-      background:#1a1a1a;
-      border-radius:3px;
-      min-width:0.9em;
-    }
+    .morph{display:inline;transition:color .35s, background .35s, opacity .35s;border-radius:3px;padding:0 .05em}
+    .morph.is-alt{color:#8b3a3a;background:rgba(198,40,40,.08)}
+    .fan-blink{display:inline-block;position:relative;transition:color .4s, background .4s;border-radius:2px;padding:0 .02em}
+    .fan-blink.blacked{color:transparent !important;background:#1a1a1a;border-radius:3px;min-width:0.9em}
     .spoiler{background:#292824;color:transparent;border-radius:3px;cursor:help;transition:color .2s,background .2s;padding:0 .12em}
     .spoiler:hover,.spoiler:active,.spoiler.on{background:rgba(139,118,93,.15);color:inherit}
-
     .services{width:min(1080px,90%);margin:0 auto 90px}
     .services-header{text-align:center;margin-bottom:34px}
     .services-header h2{font-size:26px;font-weight:500;letter-spacing:.14em}
@@ -119,9 +75,7 @@
     .service-card:hover::before{width:70px}
     .service-name{font-size:17px;letter-spacing:.08em}
     .service-number{position:absolute;right:22px;top:20px;color:rgba(41,40,36,.22);font:12px Arial,sans-serif}
-
     footer{border-top:1px solid var(--line);width:min(1180px,92%);margin:0 auto;padding:30px 0 42px;display:flex;justify-content:space-between;color:var(--muted);font-size:11px;letter-spacing:.12em}
-
     @media(max-width:700px){
       .carousel{height:62vw;min-height:220px}
       .slide{width:min(70%,280px)}
@@ -135,7 +89,14 @@
   </style>
 </head>
 <body>
-  <div class="back-bar"><a href="index.html">← 返回草莓酱主页</a></div>
+  <div class="back-bar" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px">
+    <a href="index.html">← 返回草莓酱主页</a>
+    <span id="authBar" style="font-size:13px;letter-spacing:.06em">
+      <a href="login.html" style="color:var(--accent)">登录</a>
+      <span style="margin:0 6px;opacity:.4">·</span>
+      <a href="register.html" style="color:var(--accent)">注册</a>
+    </span>
+  </div>
 
   <header class="hero">
     <div class="eyebrow">ANTI-BLACKED RESISTANCE ACADEMY</div>
@@ -217,7 +178,6 @@
       dotsBox.appendChild(b);
     }
     var dots=[].slice.call(dotsBox.querySelectorAll('button'));
-
     function posClass(offset){
       if(offset===0) return 'is-active';
       if(offset===-1||offset===n-1) return 'is-prev';
@@ -237,7 +197,6 @@
     function next(){ goTo(index+1); }
     function prev(){ goTo(index-1); }
     function restart(){ clearInterval(timer); timer=setInterval(next, INTERVAL); }
-
     document.getElementById('btnNext').onclick=function(){ next(); restart(); };
     document.getElementById('btnPrev').onclick=function(){ prev(); restart(); };
     slides.forEach(function(el){
@@ -258,7 +217,6 @@
     },{passive:true});
     render(); restart();
   })();
-
   document.getElementById('schoolTitle').onclick=function(){ this.classList.toggle('struck'); };
   document.querySelectorAll('[data-swap]').forEach(function(el){
     el.addEventListener('click',function(e){
@@ -271,41 +229,50 @@
   document.querySelectorAll('.spoiler').forEach(function(el){
     el.onclick=function(e){ e.preventDefault(); el.classList.toggle('on'); };
   });
-
   (function () {
-    function rand(min, max) {
-      return min + Math.random() * (max - min);
-    }
+    function rand(min, max) { return min + Math.random() * (max - min); }
     function scheduleMorph(el) {
       var orig = el.getAttribute('data-orig') || el.textContent;
       var alt = el.getAttribute('data-alt');
       el.setAttribute('data-orig', orig);
-      function toAlt() {
-        el.textContent = alt;
-        el.classList.add('is-alt');
-        setTimeout(toOrig, rand(5000, 10000));
-      }
-      function toOrig() {
-        el.textContent = orig;
-        el.classList.remove('is-alt');
-        setTimeout(toAlt, rand(10000, 15000));
-      }
+      function toAlt() { el.textContent = alt; el.classList.add('is-alt'); setTimeout(toOrig, rand(5000, 10000)); }
+      function toOrig() { el.textContent = orig; el.classList.remove('is-alt'); setTimeout(toAlt, rand(10000, 15000)); }
       setTimeout(toAlt, rand(3000, 12000));
     }
     document.querySelectorAll('.morph').forEach(scheduleMorph);
-
     function scheduleFan(el) {
       function black() {
         el.classList.add('blacked');
-        setTimeout(function () {
-          el.classList.remove('blacked');
-          setTimeout(black, rand(10000, 15000));
-        }, rand(5000, 10000));
+        setTimeout(function () { el.classList.remove('blacked'); setTimeout(black, rand(10000, 15000)); }, rand(5000, 10000));
       }
       setTimeout(black, rand(2000, 10000));
     }
     document.querySelectorAll('.fan-blink').forEach(scheduleFan);
   })();
   </script>
+<script>
+(function(){
+  var bar=document.getElementById('authBar');
+  if(!bar)return;
+  try{
+    var raw=localStorage.getItem('school_user');
+    var token=localStorage.getItem('school_token');
+    if(raw&&token){
+      var u=JSON.parse(raw);
+      var name=(u&&u.username)?u.username:'用户';
+      var role=(u&&u.role==='teacher')?'教师':'学生';
+      bar.innerHTML='<span style="color:var(--muted)">'+name+' · '+role+'</span>'+
+        ' <a href="#" id="logoutBtn" style="color:var(--accent);margin-left:10px">退出</a>';
+      var btn=document.getElementById('logoutBtn');
+      if(btn)btn.onclick=function(e){
+        e.preventDefault();
+        localStorage.removeItem('school_token');
+        localStorage.removeItem('school_user');
+        location.reload();
+      };
+    }
+  }catch(e){}
+})();
+</script>
 </body>
 </html>
