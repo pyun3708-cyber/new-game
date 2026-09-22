@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · 反媚黑高校</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+      background:#f7f3ec;color:#292824;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:400px;background:#fff;border-radius:16px;padding:28px 22px;
+      box-shadow:0 12px 40px rgba(50,40,30,.08);border:1px solid rgba(41,40,36,.08)}
+    h1{font-size:1.25rem;text-align:center;margin-bottom:18px;letter-spacing:.08em}
+    .tabs{display:flex;gap:8px;margin-bottom:18px}
+    .tabs button{flex:1;padding:10px;border-radius:10px;border:1.5px solid #e0d8ce;
+      background:#faf8f5;cursor:pointer;font-family:inherit;font-size:14px}
+    .tabs button.on{background:#8b765d;color:#fff;border-color:#8b765d}
+    label{display:block;font-size:13px;margin:12px 0 6px;color:#555}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #e0d8ce;
+      font-size:15px;font-family:inherit;outline:none}
+    input:focus{border-color:#8b765d}
+    .btn{width:100%;margin-top:18px;padding:13px;border:none;border-radius:10px;
+      background:linear-gradient(135deg,#a08060,#8b765d);color:#fff;font-size:15px;
+      font-weight:600;cursor:pointer;font-family:inherit}
+    .btn:disabled{opacity:.6}
+    .err{color:#c62828;font-size:13px;margin-top:10px;min-height:1.2em}
+    .links{text-align:center;margin-top:16px;font-size:13px}
+    .links a{color:#8b765d;text-decoration:none}
+    .links a:hover{text-decoration:underline}
+    #certWrap{display:none}
+    #certWrap.show{display:block}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>登录</h1>
+    <div class="tabs">
+      <button type="button" class="on" id="tabStudent">学生登录</button>
+      <button type="button" id="tabTeacher">教师登录</button>
+    </div>
+    <label>邮箱或用户名</label>
+    <input id="account" placeholder="邮箱或用户名" autocomplete="username">
+    <label>密码</label>
+    <input id="password" type="password" placeholder="密码" autocomplete="current-password">
+    <div id="certWrap">
+      <label>教师资格证号</label>
+      <input id="certNo" placeholder="通过考试后获得的证号" style="text-transform:uppercase" autocomplete="off">
+    </div>
+    <div class="err" id="err"></div>
+    <button class="btn" id="btn" type="button">登录</button>
+    <p class="links"><a href="register.html">注册学生账号</a> · <a href="school.html">返回官网</a></p>
+  </div>
+<script>
+const API_BASE = "https://school-auth.pyun3708.workers.dev";
+let mode = "student";
+
+document.getElementById("tabStudent").onclick = function () {
+  mode = "student";
+  this.classList.add("on");
+  document.getElementById("tabTeacher").classList.remove("on");
+  document.getElementById("certWrap").classList.remove("show");
+};
+document.getElementById("tabTeacher").onclick = function () {
+  mode = "teacher";
+  this.classList.add("on");
+  document.getElementById("tabStudent").classList.remove("on");
+  document.getElementById("certWrap").classList.add("show");
+};
+
+document.getElementById("btn").onclick = async () => {
+  const err = document.getElementById("err");
+  const btn = document.getElementById("btn");
+  err.textContent = "";
+  btn.disabled = true;
+  try {
+    const res = await fetch(API_BASE + "/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        account: document.getElementById("account").value.trim(),
+        password: document.getElementById("password").value,
+        mode,
+        certNo: document.getElementById("certNo").value.trim(),
+        turnstileToken: "",
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ("登录失败 " + res.status));
+    localStorage.setItem("school_token", data.token);
+    localStorage.setItem("school_user", JSON.stringify(data.user));
+    location.href = "school.html";
+  } catch (e) {
+    err.textContent = e.message || "网络错误";
+  } finally {
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
