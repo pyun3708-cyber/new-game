@@ -194,6 +194,30 @@
       30%{opacity:1}
       100%{opacity:0}
     }
+    #pwdGate{
+      display:none;position:fixed;inset:0;z-index:10050;
+      background:rgba(0,0,0,.88);align-items:center;justify-content:center;
+      flex-direction:column;padding:20px;
+    }
+    #pwdGate.show{display:flex}
+    #pwdGate .box{
+      width:min(360px,92vw);background:#1a1512;border:1px solid #5a4a40;
+      border-radius:14px;padding:22px 18px;color:#f0e8e0;text-align:center;
+    }
+    #pwdGate h3{font-size:16px;margin-bottom:8px;letter-spacing:.08em}
+    #pwdGate p{font-size:12px;color:#a09080;margin-bottom:14px}
+    #pwdGate input{
+      width:100%;padding:12px;border-radius:10px;border:1px solid #5a4a40;
+      background:#0e0c0a;color:#fff;font-size:16px;text-align:center;letter-spacing:.2em;
+      outline:none;margin-bottom:10px;
+    }
+    #pwdGate .err{color:#e57373;font-size:12px;min-height:1.2em;margin-bottom:8px}
+    #pwdGate .btn-row{display:flex;gap:8px}
+    #pwdGate button{
+      flex:1;padding:12px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;
+    }
+    #pwdGate .ok{background:linear-gradient(135deg,#a08060,#8b765d);color:#fff}
+    #pwdGate .cancel{background:#2a2420;color:#c0b0a0}
   </style>
 </head>
 <body class="outer">
@@ -344,6 +368,18 @@
     <p class="insert-hint">正在将诚信宣言录入校方系统…</p>
   </div>
   <div id="whiteFlash"></div>
+  <div id="pwdGate" aria-hidden="true">
+    <div class="box">
+      <h3>考试入口验证</h3>
+      <p>请输入测试密码后进入考试（暂未对外开放）</p>
+      <input type="password" id="examPwd" maxlength="16" placeholder="••••" autocomplete="off">
+      <div class="err" id="examPwdErr"></div>
+      <div class="btn-row">
+        <button type="button" class="cancel" id="pwdCancel">取消</button>
+        <button type="button" class="ok" id="pwdOk">进入考试</button>
+      </div>
+    </div>
+  </div>
 
 <script>
 const DECL = {
@@ -566,8 +602,39 @@ function startExam() {
   const overlay = document.getElementById('insertOverlay');
   const fly = document.getElementById('flyPaper');
   const flash = document.getElementById('whiteFlash');
+
+  function goExam() {
+    const gate = document.getElementById('pwdGate');
+    const inp = document.getElementById('examPwd');
+    const err = document.getElementById('examPwdErr');
+    if (!gate) { window.location.href = page; return; }
+    err.textContent = '';
+    inp.value = '';
+    gate.classList.add('show');
+    inp.focus();
+    function tryEnter() {
+      if (inp.value === '5200') {
+        try { sessionStorage.setItem('teacherExamUnlocked', '1'); } catch (e) {}
+        window.location.href = page;
+      } else {
+        err.textContent = '密码错误';
+        inp.value = '';
+        inp.focus();
+      }
+    }
+    document.getElementById('pwdOk').onclick = tryEnter;
+    document.getElementById('pwdCancel').onclick = function () {
+      gate.classList.remove('show');
+      document.querySelectorAll('#s7 button').forEach(function (b) { b.disabled = false; });
+      if (overlay) overlay.classList.remove('show');
+    };
+    inp.onkeydown = function (e) {
+      if (e.key === 'Enter') tryEnter();
+    };
+  }
+
   if (!overlay || !fly || !canvas) {
-    window.location.href = page;
+    goExam();
     return;
   }
 
@@ -576,7 +643,7 @@ function startExam() {
   try {
     fly.src = canvas.toDataURL('image/jpeg', 0.85);
   } catch (e) {
-    window.location.href = page;
+    goExam();
     return;
   }
 
@@ -590,7 +657,7 @@ function startExam() {
   }, 1500);
 
   setTimeout(function () {
-    window.location.href = page;
+    goExam();
   }, 2100);
 }
 </script>
