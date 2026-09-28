@@ -1,1 +1,55 @@
-PLACEHOLDER_SEE_BELOW
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>教师资格证考试（男）</title>
+<style>
+html,body{margin:0;height:100%;background:#020304;color:#d8dde0;font-family:Courier New,Microsoft YaHei,monospace}
+#examLock{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column}
+.box{width:min(360px,90vw);border:1px solid #3c454a;background:#0a0d0f;padding:24px;text-align:center}
+input{width:100%;padding:10px;background:#0b0f11;border:1px solid #30383d;color:#d8dde0;text-align:center;font-size:16px;letter-spacing:.2em;outline:none}
+button{width:100%;margin-top:10px;padding:10px;border:1px solid #4c565b;background:#0a0d0f;color:#c8ced1;cursor:pointer;font:inherit}
+.err{color:#e74c3c;font-size:12px;min-height:1.2em;margin:8px 0}
+#main{display:none;padding:16px;max-width:640px;margin:0 auto;line-height:1.7}
+</style>
+</head>
+<body>
+<div id="examLock">
+  <div class="box">
+    <div style="letter-spacing:3px;margin-bottom:10px">ACCESS RESTRICTED</div>
+    <div style="font-size:12px;color:#778188;margin-bottom:16px">请输入测试密码</div>
+    <input id="lockPwd" type="password" maxlength="16" placeholder="••••">
+    <div class="err" id="lockErr"></div>
+    <button id="lockBtn" type="button">进入</button>
+  </div>
+</div>
+<div id="main">
+  <p>密码已通过。完整考试正文文件较大，请用仓库里的完整 <code>teacher-exam-male.html</code>（你本地的 v18）覆盖本页后即可正常开考。</p>
+  <p style="color:#8a949a;font-size:13px">从诚信宣言页输入 5200 进入时会自动带上解锁标记。</p>
+</div>
+<script>
+(function(){
+  var unlocked=false;
+  try{unlocked=sessionStorage.getItem('teacherExamUnlocked')==='1'}catch(e){}
+  function openMain(){
+    document.getElementById('examLock').style.display='none';
+    document.getElementById('main').style.display='block';
+  }
+  if(unlocked){openMain();return}
+  function ok(){
+    var v=document.getElementById('lockPwd').value;
+    if(v==='5200'){
+      try{sessionStorage.setItem('teacherExamUnlocked','1')}catch(e){}
+      openMain();
+    }else{
+      document.getElementById('lockErr').textContent='密码错误';
+      document.getElementById('lockPwd').value='';
+    }
+  }
+  document.getElementById('lockBtn').onclick=ok;
+  document.getElementById('lockPwd').onkeydown=function(e){if(e.key==='Enter')ok()};
+})();
+</script>
+</body>
+</html>
