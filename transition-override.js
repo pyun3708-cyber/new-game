@@ -40,7 +40,7 @@
           tr.style.display = "none";
           if (typeof done === "function") done();
         }, 200);
-      }, 700);
+      }, 1700);
     }, 220);
   };
 })();
