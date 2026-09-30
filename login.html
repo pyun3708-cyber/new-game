@@ -29,6 +29,7 @@
     .links a:hover{text-decoration:underline}
     #certWrap{display:none}
     #certWrap.show{display:block}
+    .hint{font-size:12px;color:#888;margin-top:6px;line-height:1.4}
   </style>
 </head>
 <body>
@@ -44,7 +45,8 @@
     <input id="password" type="password" placeholder="密码" autocomplete="current-password">
     <div id="certWrap">
       <label>教师资格证号</label>
-      <input id="certNo" placeholder="通过考试后获得的证号" style="text-transform:uppercase" autocomplete="off">
+      <input id="certNo" placeholder="例如 202600001" inputmode="numeric" autocomplete="off">
+      <p class="hint">须使用<strong>通过考试的同一账号</strong> + 该账号绑定的证号登录</p>
     </div>
     <div class="err" id="err"></div>
     <button class="btn" id="btn" type="button">登录</button>
@@ -71,16 +73,27 @@ document.getElementById("btn").onclick = async () => {
   const err = document.getElementById("err");
   const btn = document.getElementById("btn");
   err.textContent = "";
+  const account = document.getElementById("account").value.trim();
+  const password = document.getElementById("password").value;
+  const certNo = document.getElementById("certNo").value.trim();
+  if (!account || !password) {
+    err.textContent = "请输入账号和密码";
+    return;
+  }
+  if (mode === "teacher" && !certNo) {
+    err.textContent = "教师登录请填写教师资格证号";
+    return;
+  }
   btn.disabled = true;
   try {
     const res = await fetch(API_BASE + "/auth/login", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        account: document.getElementById("account").value.trim(),
-        password: document.getElementById("password").value,
+        account,
+        password,
         mode,
-        certNo: document.getElementById("certNo").value.trim(),
+        certNo,
         turnstileToken: "",
       }),
     });
