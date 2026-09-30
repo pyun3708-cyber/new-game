@@ -53,10 +53,32 @@
     "transitions/trans_51.jpg"
   ];
   window.transIdx = window.transIdx || 0;
+
+  // 页面加载时预加载全部转场图（进考试、输密码阶段就会开始下）
+  var _cache = Object.create(null);
+  function preloadAll(){
+    var list = window.TRANS_IMAGES || [];
+    for (var i = 0; i < list.length; i++) {
+      (function(src){
+        if (_cache[src]) return;
+        var im = new Image();
+        im.decoding = "async";
+        im.src = src;
+        _cache[src] = im;
+      })(list[i]);
+    }
+  }
+  preloadAll();
+  // DOM 就绪后再预加载一次（防止脚本过早执行）
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", preloadAll);
+  }
+  window.addEventListener("load", preloadAll);
+
   window.doTransition = function(done){
-    const tr = document.getElementById("blackTransition");
-    const slot = document.getElementById("animSlot");
-    let img = document.getElementById("transImg");
+    var tr = document.getElementById("blackTransition");
+    var slot = document.getElementById("animSlot");
+    var img = document.getElementById("transImg");
     if (!tr) { if (typeof done==="function") done(); return; }
     if (!img) {
       img = document.createElement("img");
@@ -69,22 +91,12 @@
     tr.style.display = "flex";
     if (slot) slot.style.opacity = "0";
     img.style.opacity = "0";
-    img.removeAttribute("src");
-    setTimeout(function(){
-      const list = window.TRANS_IMAGES || [];
-      const srcPath = list.length ? list[window.transIdx % list.length] : "";
-      if (srcPath) {
-        window.transIdx++;
-        img.onload = function(){ img.style.opacity = "1"; };
-        img.onerror = function(){
-          if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
-        };
-        img.src = srcPath;
-      } else if (slot) {
-        slot.style.display="block";
-        slot.style.opacity="1";
-        slot.textContent="[ TRANSITION ]";
-      }
+
+    var list = window.TRANS_IMAGES || [];
+    var srcPath = list.length ? list[window.transIdx % list.length] : "";
+    if (srcPath) window.transIdx++;
+
+    function showAndFinish(){
       setTimeout(function(){
         img.style.opacity = "0";
         if (slot) slot.style.opacity = "0";
@@ -93,6 +105,35 @@
           if (typeof done === "function") done();
         }, 200);
       }, 1700);
-    }, 220);
+    }
+
+    setTimeout(function(){
+      if (!srcPath) {
+        if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
+        showAndFinish();
+        return;
+      }
+      var cached = _cache[srcPath];
+      // 已预加载完成：立刻显示
+      if (cached && cached.complete && cached.naturalWidth > 0) {
+        img.src = srcPath;
+        img.style.opacity = "1";
+        showAndFinish();
+        return;
+      }
+      // 未完成则边下边显示，下完再亮
+      img.onload = function(){
+        img.style.opacity = "1";
+      };
+      img.onerror = function(){
+        if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
+      };
+      img.src = srcPath;
+      // 若浏览器缓存命中，onload 可能已触发或 complete 已为 true
+      if (img.complete && img.naturalWidth > 0) {
+        img.style.opacity = "1";
+      }
+      showAndFinish();
+    }, 120);
   };
 })();
