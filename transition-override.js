@@ -19,7 +19,7 @@
     "transitions/trans_17.jpg",
     "transitions/trans_18.jpg",
     "transitions/trans_19.jpg",
-    "transitions/trans_20.jpg",
+    // 第20题用视频 media/q20-trans.mp4，仓库无 trans_20.jpg
     "transitions/trans_21.jpg",
     "transitions/trans_22.jpg",
     "transitions/trans_23.jpg",
@@ -54,7 +54,6 @@
   ];
   window.transIdx = window.transIdx || 0;
 
-  // 页面加载时预加载全部转场图（进考试、输密码阶段就会开始下）
   var _cache = Object.create(null);
   function preloadAll(){
     var list = window.TRANS_IMAGES || [];
@@ -69,7 +68,6 @@
     }
   }
   preloadAll();
-  // DOM 就绪后再预加载一次（防止脚本过早执行）
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", preloadAll);
   }
@@ -114,14 +112,12 @@
         return;
       }
       var cached = _cache[srcPath];
-      // 已预加载完成：立刻显示
       if (cached && cached.complete && cached.naturalWidth > 0) {
         img.src = srcPath;
         img.style.opacity = "1";
         showAndFinish();
         return;
       }
-      // 未完成则边下边显示，下完再亮
       img.onload = function(){
         img.style.opacity = "1";
       };
@@ -129,7 +125,6 @@
         if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
       };
       img.src = srcPath;
-      // 若浏览器缓存命中，onload 可能已触发或 complete 已为 true
       if (img.complete && img.naturalWidth > 0) {
         img.style.opacity = "1";
       }
