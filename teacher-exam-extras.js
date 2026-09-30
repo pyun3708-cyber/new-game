@@ -328,10 +328,27 @@
     var dataUrl = await drawTeacherCert({ name: profile.name, gender: profile.gender || "—", age: profile.age || "—", course: course.trim(), teacherId: teacherId, photoData: photoData, bio: bio.trim() });
     if (dataUrl) {
       try {
+        var uploadUrl = dataUrl;
+        try {
+          var im = new Image();
+          uploadUrl = await new Promise(function (res) {
+            im.onload = function () {
+              var c = document.createElement("canvas");
+              var maxW = 520;
+              var sc = Math.min(1, maxW / im.width);
+              c.width = Math.round(im.width * sc);
+              c.height = Math.round(im.height * sc);
+              c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
+              res(c.toDataURL("image/jpeg", 0.72));
+            };
+            im.onerror = function () { res(dataUrl); };
+            im.src = dataUrl;
+          });
+        } catch (e3) {}
         await fetch(API_BASE + "/teacher/cert/issue", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify({ course: course.trim(), public_display: pub, cert_image: dataUrl, name: profile.name, gender: profile.gender }),
+          body: JSON.stringify({ course: course.trim(), public_display: pub, cert_image: uploadUrl, name: profile.name, gender: profile.gender }),
         });
       } catch (e2) {}
     }
