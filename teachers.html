@@ -52,7 +52,7 @@ a{color:var(--accent);text-decoration:none}
 <header>
   <div>
     <h1>老师介绍 ♠</h1>
-    <div class="sub">自愿公开展示的教师资格证 · 按编号从左到右 · 弹幕每秒随机一条</div>
+    <div class="sub">自愿公开展示的教师资格证 · 按编号从左到右 · 弹幕约每十秒随机一条</div>
   </div>
   <div class="search">
     <input id="q" placeholder="输入教师编号 如 202600001" maxlength="12">
@@ -71,7 +71,7 @@ function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
 function esc(s){
   return String(s??"").replace(/[&<>"']/g, function(c){
-    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    return ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'})[c];
   });
 }
 function isAdmin(){
@@ -297,7 +297,7 @@ document.getElementById("q").onkeydown = e => { if (e.key === "Enter") document.
 
 loadList();
 refreshDanmakuPool();
-setInterval(spawnDanmaku, 1000);
+setInterval(spawnDanmaku, 10000);
 setInterval(refreshDanmakuPool, 30000);
 </script>
 </body>
