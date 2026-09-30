@@ -1,6 +1,10 @@
 (function () {
   "use strict";
   var API_BASE = "https://school-auth.pyun3708.workers.dev";
+  var Q20_VIDEO_SRC = "media/q20-trans.mp4";
+  var SEX_NOISE_SRC = "media/sex-noise.mp3";
+  var q20BlobUrl = null;
+  var q20Ready = false;
 
   function ensureUI() {
     if (!document.getElementById("loginGate")) {
@@ -18,8 +22,19 @@
       wrap.style.cssText =
         "position:fixed;inset:0;z-index:120;background:#000;display:none;align-items:center;justify-content:center";
       wrap.innerHTML =
-        '<video id="transVideo" playsinline webkit-playsinline style="max-width:100%;max-height:100%;object-fit:contain;background:#000"></video>';
+        '<video id="transVideo" playsinline webkit-playsinline preload="auto" style="max-width:100%;max-height:100%;object-fit:contain;background:#000"></video>';
       document.body.appendChild(wrap);
+    }
+    // 隐藏预加载用 video（不进 DOM 显示）
+    if (!document.getElementById("q20PreloadVideo")) {
+      var pv = document.createElement("video");
+      pv.id = "q20PreloadVideo";
+      pv.preload = "auto";
+      pv.muted = true;
+      pv.playsInline = true;
+      pv.setAttribute("playsinline", "");
+      pv.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px";
+      document.body.appendChild(pv);
     }
     if (!document.getElementById("sexNoiseBtn")) {
       var btn = document.createElement("button");
@@ -41,13 +56,73 @@
     }
   }
 
+  /** 开场 / 进页就拉视频到内存（blob），转场时秒开 */
+  function preloadQ20Video() {
+    // 1) 元素 preload
+    var pv = document.getElementById("q20PreloadVideo");
+    if (pv && !pv.src) {
+      pv.src = Q20_VIDEO_SRC;
+      try {
+        pv.load();
+      } catch (e) {}
+    }
+    // 2) fetch → blob URL（更稳）
+    if (q20BlobUrl || q20Ready) return;
+    fetch(Q20_VIDEO_SRC)
+      .then(function (r) {
+        if (!r.ok) throw new Error("video http " + r.status);
+        return r.blob();
+      })
+      .then(function (blob) {
+        q20BlobUrl = URL.createObjectURL(blob);
+        q20Ready = true;
+        if (pv) {
+          pv.src = q20BlobUrl;
+          try {
+            pv.load();
+          } catch (e) {}
+        }
+        var main = document.getElementById("transVideo");
+        if (main) {
+          main.src = q20BlobUrl;
+          main.preload = "auto";
+          try {
+            main.load();
+          } catch (e) {}
+        }
+        console.log("[exam] Q20 video preloaded", Math.round(blob.size / 1024) + "KB");
+      })
+      .catch(function (err) {
+        console.warn("[exam] Q20 video preload failed", err);
+        // 退回直接路径 preload
+        var main = document.getElementById("transVideo");
+        if (main) {
+          main.src = Q20_VIDEO_SRC;
+          main.preload = "auto";
+          try {
+            main.load();
+          } catch (e) {}
+        }
+      });
+  }
+
+  function preloadSexNoise() {
+    try {
+      var a = new Audio();
+      a.preload = "auto";
+      a.src = SEX_NOISE_SRC;
+      // 触发下载
+      a.load();
+    } catch (e) {}
+  }
+
   var sexNoiseAudio = null;
   var sexNoiseOn = true;
   window.startSexNoise = function startSexNoise() {
     var btn = document.getElementById("sexNoiseBtn");
     if (btn) btn.style.display = "block";
     if (!sexNoiseAudio) {
-      sexNoiseAudio = new Audio("media/sex-noise.mp3");
+      sexNoiseAudio = new Audio(SEX_NOISE_SRC);
       sexNoiseAudio.loop = true;
       sexNoiseAudio.volume = 0.55;
     }
@@ -72,7 +147,6 @@
     else sexNoiseAudio.pause();
   }
 
-  /** 视频占一个转场位，与图片序号对齐 */
   function advanceTransIdx() {
     try {
       if (typeof window.transIdx === "number") window.transIdx++;
@@ -94,15 +168,13 @@
           vid.onended = null;
           vid.onerror = null;
           vid.pause();
-          vid.removeAttribute("src");
-          vid.load();
+          // 保留 preload src，不要清空，方便调试；仅 seek 回 0
+          vid.currentTime = 0;
         } catch (e) {}
       }
       if (useImageFallback && typeof doTransition === "function") {
-        // 失败时走普通转场（内部会 +1 transIdx）
         doTransition(done);
       } else {
-        // 视频成功：补一次序号，避免后面图片整体错位
         advanceTransIdx();
         if (typeof done === "function") done();
       }
@@ -113,41 +185,64 @@
       return;
     }
 
+    var src = q20BlobUrl || Q20_VIDEO_SRC;
     wrap.style.display = "flex";
     vid.setAttribute("playsinline", "");
     vid.setAttribute("webkit-playsinline", "");
-    // 用户刚点过「下一题」，一般允许有声；若被拦再静音重试
-    vid.muted = false;
     vid.playsInline = true;
-    vid.src = "media/q20-trans.mp4";
-    vid.currentTime = 0;
+    vid.muted = false;
+
+    // 若当前 src 不是预加载的，换上
+    if (vid.src !== src && !String(vid.src || "").endsWith("q20-trans.mp4") && !q20BlobUrl) {
+      vid.src = src;
+    } else if (q20BlobUrl && vid.src !== q20BlobUrl) {
+      vid.src = q20BlobUrl;
+    } else if (!vid.src) {
+      vid.src = src;
+    }
+
+    try {
+      vid.currentTime = 0;
+    } catch (e) {}
 
     vid.onended = function () {
       finish(false);
     };
     vid.onerror = function () {
+      console.warn("[exam] Q20 video play error, fallback image transition");
       finish(true);
     };
 
-    var p = vid.play();
-    if (p && p.catch) {
-      p.catch(function () {
-        // 自动播放被拦：静音再试一次
-        try {
-          vid.muted = true;
-          var p2 = vid.play();
-          if (p2 && p2.catch) {
-            p2.catch(function () {
-              finish(true);
-            });
-          }
-        } catch (e) {
-          finish(true);
-        }
-      });
+    function tryPlay(muted) {
+      vid.muted = !!muted;
+      var p = vid.play();
+      if (p && p.catch) {
+        p.catch(function (err) {
+          console.warn("[exam] play() rejected", err);
+          if (!muted) tryPlay(true);
+          else finish(true);
+        });
+      }
     }
 
-    // 安全超时（视频约 7～8 秒，给足余量）
+    // 已缓冲够就直接播；否则等 canplay
+    if (vid.readyState >= 3) {
+      tryPlay(false);
+    } else {
+      var onCanPlay = function () {
+        vid.removeEventListener("canplay", onCanPlay);
+        tryPlay(false);
+      };
+      vid.addEventListener("canplay", onCanPlay);
+      try {
+        vid.load();
+      } catch (e) {}
+      // 若 2 秒内仍不能播，再试一次 play
+      setTimeout(function () {
+        if (!finished && vid.paused) tryPlay(false);
+      }, 2000);
+    }
+
     setTimeout(function () {
       if (!finished) finish(false);
     }, 12000);
@@ -189,6 +284,8 @@
     window.renderQuiz = function () {
       orig.apply(this, arguments);
       if (typeof qIdx !== "undefined" && qIdx >= 19) startSexNoise();
+      // 临近第20题再确保预加载
+      if (typeof qIdx !== "undefined" && qIdx >= 15) preloadQ20Video();
     };
   }
 
@@ -467,6 +564,9 @@
     installRenderQuiz();
     installShowRadar();
     checkLoginGate();
+    // 开场动画阶段就开始下视频 + 噪声
+    preloadQ20Video();
+    preloadSexNoise();
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
@@ -476,5 +576,7 @@
     installNextQuiz();
     installRenderQuiz();
     installShowRadar();
+    preloadQ20Video();
+    preloadSexNoise();
   });
 })();
