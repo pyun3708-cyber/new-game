@@ -27,14 +27,15 @@ function b64url(buf) {
 }
 
 function b64urlStr(str) {
-  return btoa(unescape(encodeURIComponent(str)))
+  return btoa(unescape(encodeURIComponent(String(str ?? ""))))
     .replace(/\+/g, "-")
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
 
 function fromB64url(str) {
-  str = str.replace(/-/g, "+").replace(/_/g, "/");
+  if (str == null || str === "") throw new Error("缺少 salt/签名数据");
+  str = String(str).replace(/-/g, "+").replace(/_/g, "/");
   while (str.length % 4) str += "=";
   const bin = atob(str);
   const bytes = new Uint8Array(bin.length);
@@ -43,10 +44,11 @@ function fromB64url(str) {
 }
 
 async function hashPassword(password, saltB64) {
+  if (!saltB64) throw new Error("账号 salt 缺失");
   const salt = fromB64url(saltB64);
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(password),
+    new TextEncoder().encode(String(password ?? "")),
     "PBKDF2",
     false,
     ["deriveBits"]
@@ -84,12 +86,13 @@ function weekKey(d = new Date()) {
 }
 
 async function signJwt(payload, secret) {
+  if (!secret) throw new Error("JWT_SECRET 未配置");
   const header = b64urlStr(JSON.stringify({ alg: "HS256", typ: "JWT" }));
   const body = b64urlStr(JSON.stringify(payload));
   const data = header + "." + body;
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(String(secret)),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -105,7 +108,7 @@ async function verifyJwt(token, secret) {
   const data = header + "." + body;
   const key = await crypto.subtle.importKey(
     "raw",
-    new TextEncoder().encode(secret),
+    new TextEncoder().encode(String(secret || "")),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["verify"]
@@ -297,15 +300,18 @@ export default {
           { sub: id, username, exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30 },
           env.JWT_SECRET
         );
-        const user = publicUser({
-          id,
-          username,
-          email,
-          display_name: username,
-          role: "student",
-          created_at,
+        return json({
+          ok: true,
+          token,
+          user: publicUser({
+            id,
+            username,
+            email,
+            display_name: username,
+            role: "student",
+            created_at,
+          }),
         });
-        return json({ ok: true, token, user });
       }
 
       if (path === "/auth/login" && request.method === "POST") {
@@ -322,13 +328,22 @@ export default {
           .bind(account, account.toLowerCase())
           .first();
         if (!row) return json({ error: "账号或密码错误" }, 401);
-        const hash = await hashPassword(password, row.salt);
+        if (!row.salt || !row.password_hash) {
+          return json(
+            { error: "该账号密码数据不完整，请联系管理员或重新注册" },
+            500
+          );
+        }
+        let hash;
+        try {
+          hash = await hashPassword(password, row.salt);
+        } catch (e) {
+          return json({ error: "密码校验失败：" + (e.message || "unknown") }, 500);
+        }
         if (hash !== row.password_hash) return json({ error: "账号或密码错误" }, 401);
 
         if (mode === "teacher") {
-          if (!certNo) {
-            return json({ error: "请填写教师资格证号" }, 400);
-          }
+          if (!certNo) return json({ error: "请填写教师资格证号" }, 400);
           const bound = String(row.teacher_cert_no || "").trim();
           if (!bound) {
             return json(
