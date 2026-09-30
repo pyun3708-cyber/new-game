@@ -7,8 +7,8 @@
 <style>
 :root{--bg:#f7f3ee;--card:#fff;--ink:#292824;--muted:#6a655c;--accent:#c45c7a;--line:#e8e0d4}
 *{box-sizing:border-box}
-body{margin:0;font-family:"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
-header{padding:14px 16px;border-bottom:1px solid var(--line);background:#fff;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+body{margin:0;font-family:"Microsoft YaHei",sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;overflow-x:hidden}
+header{padding:14px 16px;border-bottom:1px solid var(--line);background:#fff;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;position:relative;z-index:5}
 h1{font-size:18px;margin:0;letter-spacing:.06em}
 .sub{font-size:12px;color:var(--muted)}
 a{color:var(--accent);text-decoration:none}
@@ -17,7 +17,7 @@ a{color:var(--accent);text-decoration:none}
 .search button,.btn{padding:8px 14px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font:inherit}
 .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
 .btn.danger{background:#b33}
-.rail{display:flex;gap:20px;padding:20px 16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch}
+.rail{display:flex;gap:20px;padding:20px 16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;position:relative;z-index:2}
 .card{flex:0 0 min(320px,85vw);scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,.04)}
 .card .meta{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
 .card .meta a{font-weight:600}
@@ -33,14 +33,26 @@ a{color:var(--accent);text-decoration:none}
 .compose{display:flex;gap:6px;margin-top:8px}
 .compose input{flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .empty{padding:40px;text-align:center;color:var(--muted)}
-.status{font-size:12px;color:var(--muted);padding:0 16px 12px}
+.status{font-size:12px;color:var(--muted);padding:0 16px 12px;position:relative;z-index:2}
+#danmakuLayer{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.danmaku{
+  position:absolute;white-space:nowrap;font-weight:700;color:var(--accent);
+  text-shadow:0 0 4px #fff, 0 1px 2px rgba(0,0,0,.25);
+  will-change:transform;pointer-events:none;
+  animation: danmakuMove linear forwards;
+}
+@keyframes danmakuMove{
+  from{transform:translateX(0)}
+  to{transform:translateX(calc(-100vw - 100%))}
+}
 </style>
 </head>
 <body>
+<div id="danmakuLayer"></div>
 <header>
   <div>
     <h1>老师介绍 ♠</h1>
-    <div class="sub">自愿公开展示的教师资格证 · 按编号从左到右</div>
+    <div class="sub">自愿公开展示的教师资格证 · 按编号从左到右 · 弹幕每秒随机一条</div>
   </div>
   <div class="search">
     <input id="q" placeholder="输入教师编号 如 202600001" maxlength="12">
@@ -53,11 +65,15 @@ a{color:var(--accent);text-decoration:none}
 
 <script>
 const API = "https://school-auth.pyun3708.workers.dev";
-const ADMIN_NAMES = ["草莓酱", "strawberry", "admin"]; // 管理员用户名（可改）
+const ADMIN_NAMES = ["草莓酱", "strawberry", "admin"];
 
 function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
-function esc(s){ return String(s??"").replace(/[&<>"']/g, c => ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c])); }
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g, function(c){
+    return ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'})[c];
+  });
+}
 function isAdmin(){
   const u = me();
   if (!u) return false;
@@ -74,6 +90,7 @@ async function api(path, opts={}){
 }
 
 let list = [];
+let danmakuPool = [];
 
 async function loadList(certNo){
   const st = document.getElementById("status");
@@ -85,7 +102,7 @@ async function loadList(certNo){
     st.textContent = list.length ? ("共 " + list.length + " 位老师展示中") : "暂无公开展示的教师资格证";
     render();
   } catch (e) {
-    st.textContent = "加载失败：" + e.message + "（请确认 Worker 已部署 /teachers 接口）";
+    st.textContent = "加载失败：" + e.message + "（请确认 Worker 已部署）";
     document.getElementById("rail").innerHTML = "<div class='empty'>" + esc(e.message) + "</div>";
   }
 }
@@ -123,8 +140,7 @@ function buildCard(item){
 
   const wrap = card.querySelector(".cert-wrap");
   const canvas = card.querySelector("canvas.draw");
-  const img = card.querySelector("img.cert");
-  setupCanvas(canvas, wrap, item.cert_no, item.drawing);
+  setupCanvas(canvas, wrap, item.drawing);
 
   card.querySelector(".btn-save-draw").onclick = async () => {
     try {
@@ -163,13 +179,14 @@ function buildCard(item){
       await api("/teachers/comment", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, content: text }) });
       inp.value = "";
       loadComments(item.cert_no, cbox);
+      refreshDanmakuPool();
     } catch (e) { alert(e.message); }
   };
 
   return card;
 }
 
-function setupCanvas(canvas, wrap, certNo, drawingDataUrl){
+function setupCanvas(canvas, wrap, drawingDataUrl){
   function fit(){
     const r = wrap.getBoundingClientRect();
     const dpr = window.devicePixelRatio || 1;
@@ -235,6 +252,37 @@ async function loadComments(certNo, box){
   }
 }
 
+/* ========== 弹幕：每秒随机一条，从右往左，字号随机 ========= */
+async function refreshDanmakuPool(){
+  try {
+    const data = await api("/teachers/danmaku");
+    danmakuPool = (data.items || []).map(function(x){
+      return (x.username ? (x.username + "：") : "") + (x.content || "");
+    }).filter(Boolean);
+  } catch (e) {
+    danmakuPool = danmakuPool || [];
+  }
+}
+
+function spawnDanmaku(){
+  if (!danmakuPool.length) return;
+  const text = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
+  const layer = document.getElementById("danmakuLayer");
+  if (!layer) return;
+  const el = document.createElement("div");
+  el.className = "danmaku";
+  el.textContent = text;
+  const size = 14 + Math.floor(Math.random() * 18); // 14–31px
+  const top = 8 + Math.random() * 70; // vh
+  const dur = 8 + Math.random() * 8; // 8–16s
+  el.style.fontSize = size + "px";
+  el.style.top = top + "vh";
+  el.style.left = "100vw";
+  el.style.animationDuration = dur + "s";
+  layer.appendChild(el);
+  setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, dur * 1000 + 200);
+}
+
 document.getElementById("btnSearch").onclick = () => {
   const v = document.getElementById("q").value.trim();
   if (!v) loadList();
@@ -243,6 +291,9 @@ document.getElementById("btnSearch").onclick = () => {
 document.getElementById("q").onkeydown = e => { if (e.key === "Enter") document.getElementById("btnSearch").click(); };
 
 loadList();
+refreshDanmakuPool();
+setInterval(spawnDanmaku, 1000);
+setInterval(refreshDanmakuPool, 30000);
 </script>
 </body>
 </html>
