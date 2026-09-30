@@ -16,8 +16,9 @@
       var wrap = document.createElement("div");
       wrap.id = "transVideoWrap";
       wrap.style.cssText =
-        "position:fixed;inset:0;z-index:95;background:#000;display:none;align-items:center;justify-content:center";
-      wrap.innerHTML = '<video id="transVideo" playsinline style="max-width:100%;max-height:100%;object-fit:contain"></video>';
+        "position:fixed;inset:0;z-index:120;background:#000;display:none;align-items:center;justify-content:center";
+      wrap.innerHTML =
+        '<video id="transVideo" playsinline webkit-playsinline style="max-width:100%;max-height:100%;object-fit:contain;background:#000"></video>';
       document.body.appendChild(wrap);
     }
     if (!document.getElementById("sexNoiseBtn")) {
@@ -71,37 +72,85 @@
     else sexNoiseAudio.pause();
   }
 
+  /** 视频占一个转场位，与图片序号对齐 */
+  function advanceTransIdx() {
+    try {
+      if (typeof window.transIdx === "number") window.transIdx++;
+      else window.transIdx = 1;
+    } catch (e) {}
+  }
+
   window.playQ20VideoTransition = function playQ20VideoTransition(done) {
     var wrap = document.getElementById("transVideoWrap");
     var vid = document.getElementById("transVideo");
+    var finished = false;
+
+    function finish(useImageFallback) {
+      if (finished) return;
+      finished = true;
+      if (wrap) wrap.style.display = "none";
+      if (vid) {
+        try {
+          vid.onended = null;
+          vid.onerror = null;
+          vid.pause();
+          vid.removeAttribute("src");
+          vid.load();
+        } catch (e) {}
+      }
+      if (useImageFallback && typeof doTransition === "function") {
+        // 失败时走普通转场（内部会 +1 transIdx）
+        doTransition(done);
+      } else {
+        // 视频成功：补一次序号，避免后面图片整体错位
+        advanceTransIdx();
+        if (typeof done === "function") done();
+      }
+    }
+
     if (!wrap || !vid) {
-      if (typeof doTransition === "function") doTransition(done);
-      else if (typeof done === "function") done();
+      finish(true);
       return;
     }
+
     wrap.style.display = "flex";
+    vid.setAttribute("playsinline", "");
+    vid.setAttribute("webkit-playsinline", "");
+    // 用户刚点过「下一题」，一般允许有声；若被拦再静音重试
+    vid.muted = false;
+    vid.playsInline = true;
     vid.src = "media/q20-trans.mp4";
     vid.currentTime = 0;
+
     vid.onended = function () {
-      wrap.style.display = "none";
-      try {
-        vid.removeAttribute("src");
-        vid.load();
-      } catch (e) {}
-      if (typeof done === "function") done();
+      finish(false);
     };
     vid.onerror = function () {
-      wrap.style.display = "none";
-      if (typeof doTransition === "function") doTransition(done);
-      else if (typeof done === "function") done();
+      finish(true);
     };
+
     var p = vid.play();
-    if (p && p.catch)
+    if (p && p.catch) {
       p.catch(function () {
-        wrap.style.display = "none";
-        if (typeof doTransition === "function") doTransition(done);
-        else if (typeof done === "function") done();
+        // 自动播放被拦：静音再试一次
+        try {
+          vid.muted = true;
+          var p2 = vid.play();
+          if (p2 && p2.catch) {
+            p2.catch(function () {
+              finish(true);
+            });
+          }
+        } catch (e) {
+          finish(true);
+        }
       });
+    }
+
+    // 安全超时（视频约 7～8 秒，给足余量）
+    setTimeout(function () {
+      if (!finished) finish(false);
+    }, 12000);
   };
 
   function installNextQuiz() {
