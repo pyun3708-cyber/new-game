@@ -2,8 +2,6 @@
  * 反媚黑高校 · school-auth Worker（完整可替换）
  * 绑定：D1 变量名必须为 DB
  * Secret：JWT_SECRET（必填）
- *
- * 部署：复制本文件全部内容到 Cloudflare Worker 编辑器 → Save and Deploy
  */
 
 const CORS_HEADERS = {
@@ -165,7 +163,6 @@ function isAdminUser(user) {
 }
 
 async function ensureTables(env) {
-  // 尽量兼容已有表；新表用 IF NOT EXISTS
   await env.DB.batch([
     env.DB.prepare(`CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
@@ -268,7 +265,6 @@ export default {
     try {
       await ensureTables(env);
 
-      // ========== 注册 ==========
       if (path === "/auth/register" && request.method === "POST") {
         const body = await request.json();
         const username = String(body.username || "").trim();
@@ -312,11 +308,12 @@ export default {
         return json({ ok: true, token, user });
       }
 
-      // ========== 登录 ==========
       if (path === "/auth/login" && request.method === "POST") {
         const body = await request.json();
         const account = String(body.username || body.email || body.account || "").trim();
         const password = String(body.password || "");
+        const mode = String(body.mode || "student").toLowerCase();
+        const certNo = String(body.certNo || body.cert_no || "").trim();
         if (!account || !password) return json({ error: "请输入账号和密码" }, 400);
 
         const row = await env.DB.prepare(
@@ -328,10 +325,39 @@ export default {
         const hash = await hashPassword(password, row.salt);
         if (hash !== row.password_hash) return json({ error: "账号或密码错误" }, 401);
 
+        if (mode === "teacher") {
+          if (!certNo) {
+            return json({ error: "请填写教师资格证号" }, 400);
+          }
+          const bound = String(row.teacher_cert_no || "").trim();
+          if (!bound) {
+            return json(
+              {
+                error:
+                  "该账号尚未绑定教师资格证号。请先通过教师资格证考试并领取编号后再用教师身份登录。",
+              },
+              403
+            );
+          }
+          if (bound !== certNo) {
+            return json(
+              { error: "教师资格证号与该账号不匹配（请核对是否为本人考试获得的编号）" },
+              403
+            );
+          }
+          if (row.role !== "teacher" && row.role !== "admin") {
+            await env.DB.prepare("UPDATE users SET role = 'teacher' WHERE id = ?")
+              .bind(row.id)
+              .run();
+            row.role = "teacher";
+          }
+        }
+
         const token = await signJwt(
           {
             sub: row.id,
             username: row.username,
+            role: row.role || "student",
             exp: Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 30,
           },
           env.JWT_SECRET
@@ -339,7 +365,6 @@ export default {
         return json({ ok: true, token, user: publicUser(row) });
       }
 
-      // ========== 当前用户 ==========
       if (path === "/auth/me" && request.method === "GET") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -350,7 +375,6 @@ export default {
         return json({ user: publicUser(row) });
       }
 
-      // ========== 个人主页 ==========
       if (path === "/profile/me" && request.method === "GET") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -409,7 +433,6 @@ export default {
         return json({ ok: true, profile: publicUser(row) });
       }
 
-      // ========== 留言墙 ==========
       if (path === "/wall/messages" && request.method === "GET") {
         const rows = await env.DB.prepare(
           `SELECT m.*, (SELECT COUNT(*) FROM wall_likes l WHERE l.message_id = m.id) AS likes
@@ -495,7 +518,6 @@ export default {
         return json({ ok: true });
       }
 
-      // ========== 教师资格证发号 ==========
       if (path === "/teacher/cert/issue" && request.method === "POST") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -561,7 +583,6 @@ export default {
         return json({ ok: true, teacher_id: teacherId });
       }
 
-      // ========== 老师介绍：公开列表 ==========
       if (path === "/teachers/public" && request.method === "GET") {
         const certNo = url.searchParams.get("cert_no");
         let rows;
@@ -597,7 +618,6 @@ export default {
         return json({ items });
       }
 
-      // ========== 评论 ==========
       if (path === "/teachers/comments" && request.method === "GET") {
         const certNo = url.searchParams.get("cert_no");
         if (!certNo) return json({ error: "缺少 cert_no" }, 400);
@@ -644,7 +664,6 @@ export default {
         return json({ ok: true, id });
       }
 
-      // ========== 涂鸦 ==========
       if (path === "/teachers/draw" && request.method === "POST") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -664,7 +683,6 @@ export default {
         return json({ ok: true });
       }
 
-      // ========== 切换是否公开展示 ==========
       if (path === "/teachers/toggle-public" && request.method === "POST") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -682,7 +700,6 @@ export default {
         return json({ ok: true, public_display: !!public_display });
       }
 
-      // ========== 管理员下架 ==========
       if (path === "/teachers/unpublish" && request.method === "POST") {
         const payload = await requireUser(request, env);
         if (!payload) return json({ error: "请先登录" }, 401);
@@ -700,7 +717,6 @@ export default {
         return json({ ok: true });
       }
 
-      // ========== 弹幕池：最近评论 ==========
       if (path === "/teachers/danmaku" && request.method === "GET") {
         const rows = await env.DB.prepare(
           `SELECT content, username, cert_no, created_at FROM teacher_cert_comments
