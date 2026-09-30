@@ -19,7 +19,7 @@
     "transitions/trans_17.jpg",
     "transitions/trans_18.jpg",
     "transitions/trans_19.jpg",
-    // 第20题用视频 media/q20-trans.mp4，仓库无 trans_20.jpg
+    // 第20题用视频，无 trans_20.jpg
     "transitions/trans_21.jpg",
     "transitions/trans_22.jpg",
     "transitions/trans_23.jpg",
@@ -55,34 +55,43 @@
   window.transIdx = window.transIdx || 0;
 
   var _cache = Object.create(null);
-  function preloadAll(){
-    var list = window.TRANS_IMAGES || [];
-    for (var i = 0; i < list.length; i++) {
-      (function(src){
-        if (_cache[src]) return;
-        var im = new Image();
-        im.decoding = "async";
-        im.src = src;
-        _cache[src] = im;
-      })(list[i]);
-    }
+
+  function preloadOne(src) {
+    if (!src || _cache[src]) return _cache[src];
+    var im = new Image();
+    im.decoding = "async";
+    im.src = src;
+    _cache[src] = im;
+    return im;
   }
+
+  function preloadAll() {
+    var list = window.TRANS_IMAGES || [];
+    // 优先前 15 张（开场几题马上用到）
+    for (var i = 0; i < list.length; i++) preloadOne(list[i]);
+  }
+
+  // 尽早开始：脚本执行时 + DOM + load 各一次
   preloadAll();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", preloadAll);
   }
   window.addEventListener("load", preloadAll);
 
-  window.doTransition = function(done){
+  window.doTransition = function(done) {
     var tr = document.getElementById("blackTransition");
     var slot = document.getElementById("animSlot");
     var img = document.getElementById("transImg");
-    if (!tr) { if (typeof done==="function") done(); return; }
+    if (!tr) {
+      if (typeof done === "function") done();
+      return;
+    }
     if (!img) {
       img = document.createElement("img");
       img.id = "transImg";
       img.alt = "";
-      img.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;pointer-events:none;transition:opacity .12s ease";
+      img.style.cssText =
+        "position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;opacity:0;pointer-events:none;transition:opacity .12s ease";
       tr.style.overflow = "hidden";
       tr.insertBefore(img, tr.firstChild);
     }
@@ -94,41 +103,93 @@
     var srcPath = list.length ? list[window.transIdx % list.length] : "";
     if (srcPath) window.transIdx++;
 
-    function showAndFinish(){
-      setTimeout(function(){
+    // 顺带预加载后面几张
+    for (var k = 0; k < 3; k++) {
+      var ni = (window.transIdx + k) % (list.length || 1);
+      if (list[ni]) preloadOne(list[ni]);
+    }
+
+    function showAndFinish() {
+      setTimeout(function () {
         img.style.opacity = "0";
         if (slot) slot.style.opacity = "0";
-        setTimeout(function(){
+        setTimeout(function () {
           tr.style.display = "none";
           if (typeof done === "function") done();
         }, 200);
       }, 1700);
     }
 
-    setTimeout(function(){
+    function reveal() {
+      img.style.opacity = "1";
+      showAndFinish();
+    }
+
+    setTimeout(function () {
       if (!srcPath) {
-        if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
+        if (slot) {
+          slot.style.display = "block";
+          slot.style.opacity = "1";
+          slot.textContent = "[ TRANSITION ]";
+        }
         showAndFinish();
         return;
       }
-      var cached = _cache[srcPath];
+
+      var cached = _cache[srcPath] || preloadOne(srcPath);
+
+      // 已缓存完成：立刻显示，再计时
       if (cached && cached.complete && cached.naturalWidth > 0) {
         img.src = srcPath;
-        img.style.opacity = "1";
-        showAndFinish();
+        reveal();
         return;
       }
-      img.onload = function(){
-        img.style.opacity = "1";
+
+      // 未完成：等加载好再显示并开始计时（避免前几题黑屏）
+      var settled = false;
+      function onReady(ok) {
+        if (settled) return;
+        settled = true;
+        if (ok) {
+          img.src = srcPath;
+          reveal();
+        } else {
+          if (slot) {
+            slot.style.display = "block";
+            slot.style.opacity = "1";
+            slot.textContent = "[ TRANSITION ]";
+          }
+          showAndFinish();
+        }
+      }
+
+      if (cached) {
+        cached.onload = function () {
+          onReady(true);
+        };
+        cached.onerror = function () {
+          onReady(false);
+        };
+        // 可能在绑定前就已完成
+        if (cached.complete && cached.naturalWidth > 0) onReady(true);
+        if (cached.complete && cached.naturalWidth === 0) onReady(false);
+      }
+
+      img.onload = function () {
+        onReady(true);
       };
-      img.onerror = function(){
-        if (slot) { slot.style.display="block"; slot.style.opacity="1"; slot.textContent="[ TRANSITION ]"; }
+      img.onerror = function () {
+        onReady(false);
       };
       img.src = srcPath;
-      if (img.complete && img.naturalWidth > 0) {
-        img.style.opacity = "1";
-      }
-      showAndFinish();
-    }, 120);
+
+      // 最长等 2.5 秒，仍没有就继续（避免卡死）
+      setTimeout(function () {
+        if (!settled) {
+          if (img.complete && img.naturalWidth > 0) onReady(true);
+          else onReady(false);
+        }
+      }, 2500);
+    }, 80);
   };
 })();
