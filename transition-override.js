@@ -19,7 +19,6 @@
     "transitions/trans_17.jpg",
     "transitions/trans_18.jpg",
     "transitions/trans_19.jpg",
-    // 第20题用视频，无 trans_20.jpg
     "transitions/trans_21.jpg",
     "transitions/trans_22.jpg",
     "transitions/trans_23.jpg",
@@ -50,7 +49,9 @@
     "transitions/trans_48.jpg",
     "transitions/trans_49.jpg",
     "transitions/trans_50.jpg",
-    "transitions/trans_51.jpg"
+    "transitions/trans_51.jpg",
+    "transitions/trans_52.jpg",
+    "transitions/trans_53.jpg"
   ];
   window.transIdx = window.transIdx || 0;
 
@@ -67,11 +68,9 @@
 
   function preloadAll() {
     var list = window.TRANS_IMAGES || [];
-    // 优先前 15 张（开场几题马上用到）
     for (var i = 0; i < list.length; i++) preloadOne(list[i]);
   }
 
-  // 尽早开始：脚本执行时 + DOM + load 各一次
   preloadAll();
   if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", preloadAll);
@@ -103,7 +102,6 @@
     var srcPath = list.length ? list[window.transIdx % list.length] : "";
     if (srcPath) window.transIdx++;
 
-    // 顺带预加载后面几张
     for (var k = 0; k < 3; k++) {
       var ni = (window.transIdx + k) % (list.length || 1);
       if (list[ni]) preloadOne(list[ni]);
@@ -138,14 +136,12 @@
 
       var cached = _cache[srcPath] || preloadOne(srcPath);
 
-      // 已缓存完成：立刻显示，再计时
       if (cached && cached.complete && cached.naturalWidth > 0) {
         img.src = srcPath;
         reveal();
         return;
       }
 
-      // 未完成：等加载好再显示并开始计时（避免前几题黑屏）
       var settled = false;
       function onReady(ok) {
         if (settled) return;
@@ -164,26 +160,16 @@
       }
 
       if (cached) {
-        cached.onload = function () {
-          onReady(true);
-        };
-        cached.onerror = function () {
-          onReady(false);
-        };
-        // 可能在绑定前就已完成
+        cached.onload = function () { onReady(true); };
+        cached.onerror = function () { onReady(false); };
         if (cached.complete && cached.naturalWidth > 0) onReady(true);
         if (cached.complete && cached.naturalWidth === 0) onReady(false);
       }
 
-      img.onload = function () {
-        onReady(true);
-      };
-      img.onerror = function () {
-        onReady(false);
-      };
+      img.onload = function () { onReady(true); };
+      img.onerror = function () { onReady(false); };
       img.src = srcPath;
 
-      // 最长等 2.5 秒，仍没有就继续（避免卡死）
       setTimeout(function () {
         if (!settled) {
           if (img.complete && img.naturalWidth > 0) onReady(true);
