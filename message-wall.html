@@ -159,14 +159,17 @@ function toast(m) {
   toast._t = setTimeout(function () { el.classList.remove("show"); }, 2200);
 }
 function esc(s) {
-  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
-    if (c === "&") return "&";
-    if (c === "<") return "<";
-    if (c === ">") return ">";
-    if (c === '"') return """;
-    if (c === "'") return "&#39;";
-    return c;
-  });
+  var amp = "&" + "amp;";
+  var lt = "&" + "lt;";
+  var gt = "&" + "gt;";
+  var quot = "&" + "quot;";
+  var apos = "&#" + "39;";
+  return String(s == null ? "" : s)
+    .replace(/&/g, amp)
+    .replace(/</g, lt)
+    .replace(/>/g, gt)
+    .replace(/"/g, quot)
+    .replace(/'/g, apos);
 }
 function fmtTime(ts) {
   if (ts == null || ts === "") return "";
