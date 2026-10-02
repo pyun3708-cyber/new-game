@@ -190,11 +190,12 @@ function refreshGate() {
 function normalizeMsg(m) {
   if (!m || typeof m !== "object") return null;
   var anon = m.anonymous === 1 || m.anonymous === true || m.is_anonymous === 1 || m.is_anonymous === true;
-  var nick = anon ? "匿名" : (m.nick_display || m.username || "用户");
+  var uname = m.username || "";
+  var nick = anon ? "匿名" : (m.nick_display || uname || "用户");
   return {
     id: m.id,
     user_id: m.user_id,
-    username: m.username || "",
+    username: uname,
     nick_display: nick,
     is_anonymous: anon ? 1 : 0,
     anonymous: anon ? 1 : 0,
@@ -253,18 +254,24 @@ function render() {
     var likes = m.like_count || m.likes || 0;
     var liked = !!m.liked_by_me;
     var isOwn = myId && m.user_id === myId;
-    var nick = m.nick_display || "匿名";
+    var nick = m.nick_display || m.username || "匿名";
     var isAnon = !!m.is_anonymous || nick === "匿名";
-    var nickHtml = isAnon
-      ? ('<span class="nick-anon">' + esc(nick) + "</span>")
-      : ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(nick) + '">' + esc(nick) + "</a>");
+    var linkUser = (m.username && m.username !== "匿名" && m.username !== "用户")
+      ? m.username
+      : ((!isAnon && nick !== "用户") ? nick : "");
+    var canLink = !isAnon && !!linkUser;
+    var nickHtml = canLink
+      ? ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(linkUser) + '" title="查看主页">' + esc(nick) + "</a>")
+      : ('<span class="nick-anon" title="无法查看主页">' + esc(nick) + "</span>");
     var replyHtml = "";
     if (m.reply_to && byId[m.reply_to]) {
       var rn = byId[m.reply_to].nick_display || "匿名";
       var ra = !!byId[m.reply_to].is_anonymous || rn === "匿名";
-      replyHtml = ra
+      var rUser = (byId[m.reply_to].username && byId[m.reply_to].username !== "匿名" && byId[m.reply_to].username !== "用户")
+        ? byId[m.reply_to].username : "";
+      replyHtml = (ra || !rUser)
         ? (" · 回复 <span class=\"nick-anon\">" + esc(rn) + "</span>")
-        : (" · 回复 <a class=\"nick-link\" href=\"profile.html?u=" + encodeURIComponent(rn) + "\">" + esc(rn) + "</a>");
+        : (" · 回复 <a class=\"nick-link\" href=\"profile.html?u=" + encodeURIComponent(rUser) + "\">" + esc(rn) + "</a>");
     }
     var body = m.text || m.content || "";
     return (
