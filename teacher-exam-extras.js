@@ -220,7 +220,9 @@
     };
   }
 
-  var SEX_ATTRS = ["媚黑", "淫荡", "绿帽", "S属性", "M属性", "阳具崇拜"];
+  // 女版可在页面里预设 window.SEX_ATTRS / window.SEX_ATTRS_LABEL（绿帽→雌竞）
+  var SEX_ATTRS = window.SEX_ATTRS || ["媚黑", "淫荡", "绿帽", "S属性", "M属性", "阳具崇拜"];
+  var SEX_ATTRS_LABEL = window.SEX_ATTRS_LABEL || "媚黑+淫荡+绿帽+S+M+阳具崇拜";
   var VIRTUE_ATTRS = ["宽容", "善良", "热心", "公正", "纯洁"];
   var PERSON_ATTRS = ["自信", "自卑", "严厉", "责任心"];
   function sumAttrs(list) {
@@ -235,7 +237,7 @@
     var person = sumAttrs(PERSON_ATTRS);
     var passed = sex >= 500 && virtue >= 100 && person >= 100;
     var html = "<h2 style='font-size:16px;letter-spacing:.08em;margin:12px 0 6px;color:#e8a0d0'>属性汇总</h2>";
-    html += '<div style="margin:4px 0">色色属性（媚黑+淫荡+绿帽+S+M+阳具崇拜）：<b>' + sex + "</b> " + (sex >= 500 ? "✓" : "（需≥500）") + "</div>";
+    html += '<div style="margin:4px 0">色色属性（' + SEX_ATTRS_LABEL + '）：<b>' + sex + "</b> " + (sex >= 500 ? "✓" : "（需≥500）") + "</div>";
     html += '<div style="margin:4px 0">美德属性（宽容+善良+热心+公正+纯洁）：<b>' + virtue + "</b> " + (virtue >= 100 ? "✓" : "（需≥100）") + "</div>";
     html += '<div style="margin:4px 0">人格属性（自信+自卑+严厉+责任心）：<b>' + person + "</b> " + (person >= 100 ? "✓" : "（需≥100）") + "</div>";
     if (passed) {
