@@ -3,7 +3,7 @@
  * 绑定：D1 变量名必须为 DB
  * Secret：JWT_SECRET（必填）
  *
- * 版本：auth-fix-20261002
+ * 版本：auth-fix-20261002b（自动补 users 缺列）
  */
 
 const CORS_HEADERS = {
@@ -246,6 +246,30 @@ async function ensureTables(env) {
       updated_at TEXT NOT NULL
     )`),
   ]);
+
+  // 旧库可能缺列：逐个尝试 ADD COLUMN（已存在则忽略）
+  const userCols = [
+    "password_hash TEXT",
+    "salt TEXT",
+    "display_name TEXT",
+    "role TEXT",
+    "gender TEXT",
+    "bio TEXT",
+    "birthday TEXT",
+    "avatar TEXT",
+    "bg_image TEXT",
+    "teacher_cert_no TEXT",
+    "created_at TEXT",
+    "username TEXT",
+    "email TEXT",
+  ];
+  for (const col of userCols) {
+    try {
+      await env.DB.prepare(`ALTER TABLE users ADD COLUMN ${col}`).run();
+    } catch (e) {
+      // column already exists — ignore
+    }
+  }
 }
 
 async function nextTeacherId(env) {
@@ -346,7 +370,7 @@ export default {
           return json(
             {
               error:
-                "该账号密码数据不完整（缺少 salt）。请先调用修复接口或在 D1 检查 users 表。",
+                "该账号密码数据不完整（缺少 salt）。请打开 repair.html 修复密码。",
               need_repair: true,
             },
             500
@@ -791,7 +815,7 @@ export default {
       }
 
       if (path === "/health" && request.method === "GET") {
-        return json({ ok: true, version: "auth-fix-20261002" });
+        return json({ ok: true, version: "auth-fix-20261002b" });
       }
 
       return json({ error: "Not found", path }, 404);
