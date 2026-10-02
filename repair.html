@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>修复账号密码 · 反媚黑高校</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{min-height:100vh;font-family:"PingFang SC","Microsoft YaHei",sans-serif;
+      background:#f7f3ec;color:#292824;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:400px;background:#fff;border-radius:16px;padding:28px 22px;
+      box-shadow:0 12px 40px rgba(50,40,30,.08);border:1px solid rgba(41,40,36,.08)}
+    h1{font-size:1.2rem;text-align:center;margin-bottom:10px}
+    .sub{font-size:12px;color:#777;line-height:1.5;margin-bottom:16px;text-align:center}
+    label{display:block;font-size:13px;margin:12px 0 6px;color:#555}
+    input{width:100%;padding:12px 14px;border-radius:10px;border:1.5px solid #e0d8ce;
+      font-size:15px;font-family:inherit;outline:none}
+    input:focus{border-color:#8b765d}
+    .btn{width:100%;margin-top:18px;padding:13px;border:none;border-radius:10px;
+      background:linear-gradient(135deg,#a08060,#8b765d);color:#fff;font-size:15px;
+      font-weight:600;cursor:pointer;font-family:inherit}
+    .btn:disabled{opacity:.6}
+    .msg{font-size:13px;margin-top:12px;min-height:1.4em;line-height:1.4}
+    .msg.err{color:#c62828}
+    .msg.ok{color:#2e7d32}
+    .links{text-align:center;margin-top:16px;font-size:13px}
+    .links a{color:#8b765d;text-decoration:none}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>修复账号密码</h1>
+    <p class="sub">仅用于「密码数据不完整 / salt 缺失」的账号。<br>若账号正常，请直接去登录页登录。</p>
+    <label>邮箱或用户名</label>
+    <input id="account" placeholder="例如 3518593873@qq.com" autocomplete="username">
+    <label>新密码（至少 6 位）</label>
+    <input id="password" type="password" placeholder="设置一个新密码" autocomplete="new-password">
+    <label>再输入一次新密码</label>
+    <input id="password2" type="password" placeholder="确认新密码" autocomplete="new-password">
+    <div class="msg" id="msg"></div>
+    <button class="btn" id="btn" type="button">修复并设置新密码</button>
+    <p class="links"><a href="login.html">返回登录</a> · <a href="school.html">学校官网</a></p>
+  </div>
+<script>
+const API = "https://school-auth.pyun3708.workers.dev";
+document.getElementById("btn").onclick = async () => {
+  const msg = document.getElementById("msg");
+  const btn = document.getElementById("btn");
+  const account = document.getElementById("account").value.trim();
+  const password = document.getElementById("password").value;
+  const password2 = document.getElementById("password2").value;
+  msg.className = "msg";
+  msg.textContent = "";
+  if (!account) { msg.className = "msg err"; msg.textContent = "请填写邮箱或用户名"; return; }
+  if (!password || password.length < 6) { msg.className = "msg err"; msg.textContent = "新密码至少 6 位"; return; }
+  if (password !== password2) { msg.className = "msg err"; msg.textContent = "两次密码不一致"; return; }
+  btn.disabled = true;
+  try {
+    const res = await fetch(API + "/auth/repair-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ account, password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || ("失败 " + res.status));
+    msg.className = "msg ok";
+    msg.textContent = (data.message || "修复成功") + "。请用新密码去登录页登录。";
+  } catch (e) {
+    msg.className = "msg err";
+    msg.textContent = e.message || "网络错误";
+  } finally {
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>
