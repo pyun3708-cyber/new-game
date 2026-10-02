@@ -2,6 +2,8 @@
  * 反媚黑高校 · school-auth Worker（完整可替换）
  * 绑定：D1 变量名必须为 DB
  * Secret：JWT_SECRET（必填）
+ *
+ * 版本：auth-fix-20261002
  */
 
 const CORS_HEADERS = {
@@ -34,17 +36,26 @@ function b64urlStr(str) {
 }
 
 function fromB64url(str) {
-  if (str == null || str === "") throw new Error("缺少 salt/签名数据");
+  if (str == null || str === undefined || str === "") {
+    throw new Error("缺少 salt/签名数据");
+  }
   str = String(str).replace(/-/g, "+").replace(/_/g, "/");
   while (str.length % 4) str += "=";
-  const bin = atob(str);
+  let bin;
+  try {
+    bin = atob(str);
+  } catch (e) {
+    throw new Error("salt 格式无效");
+  }
   const bytes = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return bytes;
 }
 
 async function hashPassword(password, saltB64) {
-  if (!saltB64) throw new Error("账号 salt 缺失");
+  if (saltB64 == null || saltB64 === undefined || saltB64 === "") {
+    throw new Error("账号 salt 缺失");
+  }
   const salt = fromB64url(saltB64);
   const key = await crypto.subtle.importKey(
     "raw",
@@ -106,21 +117,21 @@ async function verifyJwt(token, secret) {
   if (parts.length !== 3) return null;
   const [header, body, sig] = parts;
   const data = header + "." + body;
-  const key = await crypto.subtle.importKey(
-    "raw",
-    new TextEncoder().encode(String(secret || "")),
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["verify"]
-  );
-  const ok = await crypto.subtle.verify(
-    "HMAC",
-    key,
-    fromB64url(sig),
-    new TextEncoder().encode(data)
-  );
-  if (!ok) return null;
   try {
+    const key = await crypto.subtle.importKey(
+      "raw",
+      new TextEncoder().encode(String(secret || "")),
+      { name: "HMAC", hash: "SHA-256" },
+      false,
+      ["verify"]
+    );
+    const ok = await crypto.subtle.verify(
+      "HMAC",
+      key,
+      fromB64url(sig),
+      new TextEncoder().encode(data)
+    );
+    if (!ok) return null;
     const jsonStr = new TextDecoder().decode(fromB64url(body));
     const payload = JSON.parse(jsonStr);
     if (payload.exp && Date.now() / 1000 > payload.exp) return null;
@@ -328,19 +339,30 @@ export default {
           .bind(account, account.toLowerCase())
           .first();
         if (!row) return json({ error: "账号或密码错误" }, 401);
-        if (!row.salt || !row.password_hash) {
+
+        const salt = row.salt ?? row.password_salt ?? row.salt_b64 ?? null;
+        const passwordHash = row.password_hash ?? row.passwordHash ?? row.hash ?? null;
+        if (!salt || !passwordHash) {
           return json(
-            { error: "该账号密码数据不完整，请联系管理员或重新注册" },
+            {
+              error:
+                "该账号密码数据不完整（缺少 salt）。请先调用修复接口或在 D1 检查 users 表。",
+              need_repair: true,
+            },
             500
           );
         }
+
         let hash;
         try {
-          hash = await hashPassword(password, row.salt);
+          hash = await hashPassword(password, salt);
         } catch (e) {
-          return json({ error: "密码校验失败：" + (e.message || "unknown") }, 500);
+          return json(
+            { error: "密码校验失败：" + (e && e.message ? e.message : "unknown") },
+            500
+          );
         }
-        if (hash !== row.password_hash) return json({ error: "账号或密码错误" }, 401);
+        if (hash !== passwordHash) return json({ error: "账号或密码错误" }, 401);
 
         if (mode === "teacher") {
           if (!certNo) return json({ error: "请填写教师资格证号" }, 400);
@@ -378,6 +400,34 @@ export default {
           env.JWT_SECRET
         );
         return json({ ok: true, token, user: publicUser(row) });
+      }
+
+      // 修复无 salt 的旧账号（仅当 salt 为空时可用）
+      if (path === "/auth/repair-password" && request.method === "POST") {
+        const body = await request.json();
+        const account = String(body.username || body.email || body.account || "").trim();
+        const newPassword = String(body.password || body.newPassword || "");
+        if (!account || !newPassword || newPassword.length < 6) {
+          return json({ error: "请提供账号和新密码（至少6位）" }, 400);
+        }
+        const row = await env.DB.prepare(
+          "SELECT * FROM users WHERE username = ? OR email = ?"
+        )
+          .bind(account, account.toLowerCase())
+          .first();
+        if (!row) return json({ error: "账号不存在" }, 404);
+        const existingSalt = row.salt ?? row.password_salt ?? null;
+        if (existingSalt) {
+          return json({ error: "该账号密码数据正常，请直接登录，无需修复" }, 400);
+        }
+        const newSalt = randomSalt();
+        const password_hash = await hashPassword(newPassword, newSalt);
+        await env.DB.prepare(
+          "UPDATE users SET salt = ?, password_hash = ? WHERE id = ?"
+        )
+          .bind(newSalt, password_hash, row.id)
+          .run();
+        return json({ ok: true, message: "密码已重建，请用新密码登录" });
       }
 
       if (path === "/auth/me" && request.method === "GET") {
@@ -738,6 +788,10 @@ export default {
            ORDER BY created_at DESC LIMIT 80`
         ).all();
         return json({ items: rows.results || [] });
+      }
+
+      if (path === "/health" && request.method === "GET") {
+        return json({ ok: true, version: "auth-fix-20261002" });
       }
 
       return json({ error: "Not found", path }, 404);
