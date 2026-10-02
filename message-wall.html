@@ -87,9 +87,7 @@
       padding: 10px 12px; margin-bottom: 10px; border: 1px solid #eadcce;
     }
     .msg .meta { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-    .msg .meta .nick { color: var(--accent); font-weight: 600; }
     .msg .meta a.nick-link { color: var(--accent); font-weight: 600; text-decoration: none; border-bottom: 1px dashed rgba(139,118,93,.45); }
-    .msg .meta a.nick-link:hover { border-bottom-style: solid; }
     .msg .meta .nick-anon { color: var(--muted); font-weight: 600; cursor: default; }
     .msg .body { font-size: 14px; color: #3a322c; white-space: pre-wrap; word-break: break-word; }
     .msg .actions { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 6px; }
@@ -135,95 +133,141 @@
           </div>
         </div>
       </div>
-      <div class="msg-list" id="list"><div class="hint">加载中…</div></div>
+      <div class="msg-list" id="list"><div class="hint">正在加载留言…</div></div>
     </div>
   </div>
   <div class="toast" id="toast"></div>
 <script>
 const API_BASE = "https://school-auth.pyun3708.workers.dev";
-function token() { return localStorage.getItem("school_token") || ""; }
+function token() {
+  try { return localStorage.getItem("school_token") || ""; }
+  catch (e) { return ""; }
+}
 function user() {
   try { return JSON.parse(localStorage.getItem("school_user") || "null"); }
-  catch { return null; }
+  catch (e) { return null; }
 }
 let messages = [];
 let replyToId = null;
 let me = user();
 function toast(m) {
   const el = document.getElementById("toast");
+  if (!el) return;
   el.textContent = m;
   el.classList.add("show");
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove("show"), 2200);
+  toast._t = setTimeout(function () { el.classList.remove("show"); }, 2200);
 }
 function esc(s) {
-  return String(s).replace(/[&<>"']/g, c => ({
-    "&":"&","<":"<",">":">","\"":""","'":"&#39;"
-  }[c]));
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+    if (c === "&") return "&";
+    if (c === "<") return "<";
+    if (c === ">") return ">";
+    if (c === '"') return """;
+    if (c === "'") return "&#39;";
+    return c;
+  });
 }
 function fmtTime(ts) {
-  if (!ts) return "";
-  const d = new Date(ts);
-  const p = n => String(n).padStart(2, "0");
-  return d.getFullYear() + "-" + p(d.getMonth()+1) + "-" + p(d.getDate()) + " " +
+  if (ts == null || ts === "") return "";
+  var d = new Date(typeof ts === "number" ? ts : ts);
+  if (isNaN(d.getTime())) return String(ts);
+  function p(n) { return String(n).padStart(2, "0"); }
+  return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " +
     p(d.getHours()) + ":" + p(d.getMinutes());
 }
 function refreshGate() {
   me = user();
-  const logged = !!(token() && me);
-  document.getElementById("gate").style.display = logged ? "none" : "block";
-  document.getElementById("composer").style.display = logged ? "block" : "none";
+  var logged = !!(token() && me);
+  var gate = document.getElementById("gate");
+  var composer = document.getElementById("composer");
+  if (gate) gate.style.display = logged ? "none" : "block";
+  if (composer) composer.style.display = logged ? "block" : "none";
 }
-async function api(path, opts = {}) {
-  const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+function normalizeMsg(m) {
+  if (!m || typeof m !== "object") return null;
+  var anon = m.anonymous === 1 || m.anonymous === true || m.is_anonymous === 1 || m.is_anonymous === true;
+  var nick = anon ? "匿名" : (m.nick_display || m.username || "用户");
+  return {
+    id: m.id,
+    user_id: m.user_id,
+    username: m.username || "",
+    nick_display: nick,
+    is_anonymous: anon ? 1 : 0,
+    anonymous: anon ? 1 : 0,
+    text: m.text || m.content || "",
+    content: m.content || m.text || "",
+    reply_to: m.reply_to || m.replyTo || null,
+    created_at: m.created_at,
+    likes: Number(m.likes || m.like_count || 0),
+    like_count: Number(m.like_count || m.likes || 0),
+    liked_by_me: !!m.liked_by_me
+  };
+}
+function api(path, opts) {
+  opts = opts || {};
+  var headers = { "Content-Type": "application/json" };
+  if (opts.headers) { for (var k in opts.headers) headers[k] = opts.headers[k]; }
   if (token()) headers.Authorization = "Bearer " + token();
-  const res = await fetch(API_BASE + path, { ...opts, headers });
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
-  return data;
+  var ctrl = new AbortController();
+  var timer = setTimeout(function () { ctrl.abort(); }, 12000);
+  return fetch(API_BASE + path, {
+    method: opts.method || "GET",
+    headers: headers,
+    body: opts.body,
+    signal: ctrl.signal
+  }).then(function (res) {
+    return res.json().catch(function () { return {}; }).then(function (data) {
+      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+      return data;
+    });
+  }).finally(function () { clearTimeout(timer); });
 }
 function render() {
-  const box = document.getElementById("list");
+  var box = document.getElementById("list");
+  if (!box) return;
   if (!messages.length) {
     box.innerHTML = '<div class="hint">还没有留言，来当第一个吧～</div>';
     return;
   }
-  const byId = {};
-  messages.forEach(m => { byId[m.id] = m; });
-  const roots = messages.filter(m => !m.reply_to || !byId[m.reply_to])
-    .sort((a, b) => (b.created_at || 0) - (a.created_at || 0));
-  const children = {};
-  messages.forEach(m => {
-    if (m.reply_to && byId[m.reply_to]) {
-      (children[m.reply_to] || (children[m.reply_to] = [])).push(m);
+  var byId = {};
+  messages.forEach(function (m) { if (m && m.id) byId[m.id] = m; });
+  var roots = messages.filter(function (m) {
+    return m && m.id && (!m.reply_to || !byId[m.reply_to]);
+  }).sort(function (a, b) { return Number(b.created_at || 0) - Number(a.created_at || 0); });
+  var children = {};
+  messages.forEach(function (m) {
+    if (m && m.reply_to && byId[m.reply_to]) {
+      if (!children[m.reply_to]) children[m.reply_to] = [];
+      children[m.reply_to].push(m);
     }
   });
-  Object.keys(children).forEach(k => {
-    children[k].sort((a, b) => (a.created_at || 0) - (b.created_at || 0));
+  Object.keys(children).forEach(function (k) {
+    children[k].sort(function (a, b) { return Number(a.created_at || 0) - Number(b.created_at || 0); });
   });
-  const myId = me && me.id;
+  var myId = me && (me.id || me.user_id);
   function card(m, isReply) {
-    const likes = m.like_count || m.likes || 0;
-    const liked = !!m.liked_by_me;
-    const isOwn = myId && m.user_id === myId;
-    const nick = m.nick_display || m.username || "匿名";
-    const isAnon = (nick === "匿名") || m.anonymous === 1 || m.anonymous === true || m.is_anonymous === 1 || m.is_anonymous === true;
-    const nickHtml = isAnon
-      ? ('<span class="nick-anon" title="匿名留言不可查看主页">' + esc(nick) + '</span>')
-      : ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(nick) + '" title="查看主页">' + esc(nick) + '</a>');
-    let replyHtml = '';
+    var likes = m.like_count || m.likes || 0;
+    var liked = !!m.liked_by_me;
+    var isOwn = myId && m.user_id === myId;
+    var nick = m.nick_display || "匿名";
+    var isAnon = !!m.is_anonymous || nick === "匿名";
+    var nickHtml = isAnon
+      ? ('<span class="nick-anon">' + esc(nick) + "</span>")
+      : ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(nick) + '">' + esc(nick) + "</a>");
+    var replyHtml = "";
     if (m.reply_to && byId[m.reply_to]) {
-      const rn = byId[m.reply_to].nick_display || byId[m.reply_to].username || '匿名';
-      const ra = (rn === '匿名') || byId[m.reply_to].anonymous === 1 || byId[m.reply_to].is_anonymous === 1;
+      var rn = byId[m.reply_to].nick_display || "匿名";
+      var ra = !!byId[m.reply_to].is_anonymous || rn === "匿名";
       replyHtml = ra
-        ? (' · 回复 <span class="nick-anon">' + esc(rn) + '</span>')
-        : (' · 回复 <a class="nick-link" href="profile.html?u=' + encodeURIComponent(rn) + '">' + esc(rn) + '</a>');
+        ? (" · 回复 <span class=\"nick-anon\">" + esc(rn) + "</span>")
+        : (" · 回复 <a class=\"nick-link\" href=\"profile.html?u=" + encodeURIComponent(rn) + "\">" + esc(rn) + "</a>");
     }
+    var body = m.text || m.content || "";
     return (
       '<div class="msg' + (isReply ? " reply" : "") + '" data-id="' + esc(m.id) + '">' +
-        '<div class="meta">' + nickHtml + ' · ' + fmtTime(m.created_at) + replyHtml +
-        '</div>' +
-        '<div class="body">' + esc(m.content || m.text || '') + '</div>' +
+        '<div class="meta">' + nickHtml + " · " + fmtTime(m.created_at) + replyHtml + "</div>" +
+        '<div class="body">' + esc(body) + "</div>" +
         '<div class="actions">' +
           '<button type="button" class="btn-like" data-act="like">' + (liked ? "已赞 " : "点赞 ") + likes + "</button>" +
           (token() ? '<button type="button" class="btn-reply" data-act="reply">回复</button>' : "") +
@@ -231,82 +275,90 @@ function render() {
         "</div></div>"
     );
   }
-  let html = "";
-  roots.forEach(m => {
+  var html = "";
+  roots.forEach(function (m) {
     html += card(m, false);
-    (children[m.id] || []).forEach(c => { html += card(c, true); });
+    (children[m.id] || []).forEach(function (c) { html += card(c, true); });
   });
-  box.innerHTML = html;
-  box.querySelectorAll(".msg").forEach(el => {
-    const id = el.getAttribute("data-id");
-    const m = byId[id];
+  box.innerHTML = html || '<div class="hint">还没有留言，来当第一个吧～</div>';
+  box.querySelectorAll(".msg").forEach(function (el) {
+    var id = el.getAttribute("data-id");
+    var m = byId[id];
     if (!m) return;
-    el.querySelector('[data-act="like"]')?.addEventListener("click", () => like(m.id));
-    el.querySelector('[data-act="reply"]')?.addEventListener("click", () => setReply(m));
-    el.querySelector('[data-act="del"]')?.addEventListener("click", () => delOwn(m.id));
+    var likeBtn = el.querySelector('[data-act="like"]');
+    var replyBtn = el.querySelector('[data-act="reply"]');
+    var delBtn = el.querySelector('[data-act="del"]');
+    if (likeBtn) likeBtn.onclick = function () { like(m.id); };
+    if (replyBtn) replyBtn.onclick = function () { setReply(m); };
+    if (delBtn) delBtn.onclick = function () { delOwn(m.id); };
   });
 }
-async function pull() {
-  try {
-    const data = await api("/wall/messages");
-    messages = data.messages || data.items || [];
-    document.getElementById("sync").textContent = "● 已同步";
-    document.getElementById("sync").className = "sync ok";
+function pull() {
+  var box = document.getElementById("list");
+  var sync = document.getElementById("sync");
+  return api("/wall/messages").then(function (data) {
+    var raw = data.messages || data.items || data.data || [];
+    messages = (Array.isArray(raw) ? raw : []).map(normalizeMsg).filter(Boolean);
+    if (sync) { sync.textContent = "● 已同步 " + messages.length + " 条"; sync.className = "sync ok"; }
     render();
-  } catch (e) {
-    document.getElementById("sync").textContent = "连接失败";
-    document.getElementById("sync").className = "sync err";
-    document.getElementById("list").innerHTML =
-      '<div class="hint">无法加载留言。<br>' + esc(e.message) + "</div>";
-  }
+  }).catch(function (e) {
+    console.error("wall pull", e);
+    if (sync) { sync.textContent = "连接失败"; sync.className = "sync err"; }
+    if (box) {
+      box.innerHTML = '<div class="hint">无法加载留言<br>' + esc(e.message || e) +
+        '<br><button type="button" class="btn-send" style="margin-top:10px" id="btnRetry">重试</button></div>';
+      var r = document.getElementById("btnRetry");
+      if (r) r.onclick = pull;
+    }
+  });
 }
-async function postMsg() {
+function postMsg() {
   if (!token()) { toast("请先登录"); return; }
-  const text = document.getElementById("msg").value.trim();
+  var input = document.getElementById("msg");
+  var text = ((input && input.value) || "").trim();
   if (!text) { toast("写点内容再发吧"); return; }
-  const anonymous = document.getElementById("anonymous").checked;
-  try {
-    await api("/wall/messages", {
-      method: "POST",
-      body: JSON.stringify({ content: text, text, anonymous, replyTo: replyToId || null }),
-    });
-    document.getElementById("msg").value = "";
+  var anonEl = document.getElementById("anonymous");
+  var anonymous = !!(anonEl && anonEl.checked);
+  api("/wall/messages", {
+    method: "POST",
+    body: JSON.stringify({ content: text, text: text, anonymous: anonymous, replyTo: replyToId || null })
+  }).then(function () {
+    if (input) input.value = "";
     clearReply();
     toast("已发送");
-    await pull();
-  } catch (e) { toast(e.message || "发送失败"); }
+    return pull();
+  }).catch(function (e) { toast(e.message || "发送失败"); });
 }
 function setReply(m) {
   if (!token()) { toast("请先登录"); return; }
   replyToId = m.id;
-  document.getElementById("msg").value = "@" + (m.nick_display || m.username || "匿名") + " ";
-  document.getElementById("cancelReply").classList.add("show");
-  document.getElementById("msg").focus();
+  var input = document.getElementById("msg");
+  if (input) { input.value = "@" + (m.nick_display || "匿名") + " "; input.focus(); }
+  var c = document.getElementById("cancelReply");
+  if (c) c.classList.add("show");
 }
 function clearReply() {
   replyToId = null;
-  document.getElementById("cancelReply").classList.remove("show");
+  var c = document.getElementById("cancelReply");
+  if (c) c.classList.remove("show");
 }
-async function like(id) {
+function like(id) {
   if (!token()) { toast("请先登录再点赞"); return; }
-  try {
-    await api("/wall/like", { method: "POST", body: JSON.stringify({ messageId: id }) });
-    await pull();
-  } catch (e) { toast(e.message); }
+  api("/wall/like", { method: "POST", body: JSON.stringify({ messageId: id }) })
+    .then(function () { return pull(); })
+    .catch(function (e) { toast(e.message); });
 }
-async function delOwn(id) {
+function delOwn(id) {
   if (!confirm("确定删除这条留言？")) return;
-  try {
-    await api("/wall/delete", { method: "POST", body: JSON.stringify({ messageId: id }) });
-    toast("已删除");
-    await pull();
-  } catch (e) { toast(e.message); }
+  api("/wall/delete", { method: "POST", body: JSON.stringify({ messageId: id }) })
+    .then(function () { toast("已删除"); return pull(); })
+    .catch(function (e) { toast(e.message); });
 }
 document.getElementById("btnSend").onclick = postMsg;
 document.getElementById("cancelReply").onclick = clearReply;
 refreshGate();
 pull();
-setInterval(pull, 8000);
+setInterval(pull, 10000);
 </script>
 </body>
 </html>
