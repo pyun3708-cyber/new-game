@@ -158,7 +158,7 @@ function toast(m) {
 }
 function esc(s) {
   return String(s).replace(/[&<>"']/g, c => ({
-    "&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"
+    "&":"&","<":"<",">":">","\"":""","'":"&#39;"
   }[c]));
 }
 function fmtTime(ts) {
@@ -203,18 +203,18 @@ function render() {
   });
   const myId = me && me.id;
   function card(m, isReply) {
-    const likes = m.like_count || 0;
+    const likes = m.like_count || m.likes || 0;
     const liked = !!m.liked_by_me;
     const isOwn = myId && m.user_id === myId;
-    const nick = m.nick_display || "匿名";
-    const isAnon = (nick === "匿名") || m.is_anonymous === 1 || m.is_anonymous === true;
+    const nick = m.nick_display || m.username || "匿名";
+    const isAnon = (nick === "匿名") || m.anonymous === 1 || m.anonymous === true || m.is_anonymous === 1 || m.is_anonymous === true;
     const nickHtml = isAnon
       ? ('<span class="nick-anon" title="匿名留言不可查看主页">' + esc(nick) + '</span>')
       : ('<a class="nick-link" href="profile.html?u=' + encodeURIComponent(nick) + '" title="查看主页">' + esc(nick) + '</a>');
     let replyHtml = '';
     if (m.reply_to && byId[m.reply_to]) {
-      const rn = byId[m.reply_to].nick_display || '匿名';
-      const ra = (rn === '匿名') || byId[m.reply_to].is_anonymous === 1 || byId[m.reply_to].is_anonymous === true;
+      const rn = byId[m.reply_to].nick_display || byId[m.reply_to].username || '匿名';
+      const ra = (rn === '匿名') || byId[m.reply_to].anonymous === 1 || byId[m.reply_to].is_anonymous === 1;
       replyHtml = ra
         ? (' · 回复 <span class="nick-anon">' + esc(rn) + '</span>')
         : (' · 回复 <a class="nick-link" href="profile.html?u=' + encodeURIComponent(rn) + '">' + esc(rn) + '</a>');
@@ -223,7 +223,7 @@ function render() {
       '<div class="msg' + (isReply ? " reply" : "") + '" data-id="' + esc(m.id) + '">' +
         '<div class="meta">' + nickHtml + ' · ' + fmtTime(m.created_at) + replyHtml +
         '</div>' +
-        '<div class="body">' + esc(m.text) + '</div>' +
+        '<div class="body">' + esc(m.content || m.text || '') + '</div>' +
         '<div class="actions">' +
           '<button type="button" class="btn-like" data-act="like">' + (liked ? "已赞 " : "点赞 ") + likes + "</button>" +
           (token() ? '<button type="button" class="btn-reply" data-act="reply">回复</button>' : "") +
@@ -249,7 +249,7 @@ function render() {
 async function pull() {
   try {
     const data = await api("/wall/messages");
-    messages = data.messages || [];
+    messages = data.messages || data.items || [];
     document.getElementById("sync").textContent = "● 已同步";
     document.getElementById("sync").className = "sync ok";
     render();
@@ -268,7 +268,7 @@ async function postMsg() {
   try {
     await api("/wall/messages", {
       method: "POST",
-      body: JSON.stringify({ text, anonymous, replyTo: replyToId || null }),
+      body: JSON.stringify({ content: text, text, anonymous, replyTo: replyToId || null }),
     });
     document.getElementById("msg").value = "";
     clearReply();
@@ -279,7 +279,7 @@ async function postMsg() {
 function setReply(m) {
   if (!token()) { toast("请先登录"); return; }
   replyToId = m.id;
-  document.getElementById("msg").value = "@" + (m.nick_display || "匿名") + " ";
+  document.getElementById("msg").value = "@" + (m.nick_display || m.username || "匿名") + " ";
   document.getElementById("cancelReply").classList.add("show");
   document.getElementById("msg").focus();
 }
