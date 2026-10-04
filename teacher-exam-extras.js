@@ -32,191 +32,179 @@
       pv.muted = true;
       pv.playsInline = true;
       pv.setAttribute("playsinline", "");
+      pv.setAttribute("webkit-playsinline", "");
       pv.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px";
       document.body.appendChild(pv);
     }
-    if (!document.getElementById("sexNoiseBtn")) {
+    if (!document.getElementById("sexNoiseAudio")) {
+      var au = document.createElement("audio");
+      au.id = "sexNoiseAudio";
+      au.loop = true;
+      au.preload = "auto";
+      au.style.display = "none";
+      document.body.appendChild(au);
+    }
+    if (!document.getElementById("sexNoiseToggle")) {
       var btn = document.createElement("button");
-      btn.id = "sexNoiseBtn";
+      btn.id = "sexNoiseToggle";
       btn.type = "button";
-      btn.textContent = "性噪声：开";
+      btn.textContent = "性噪声: 开";
       btn.style.cssText =
-        "position:fixed;right:12px;bottom:12px;z-index:200;padding:8px 12px;border:1px solid #c06090;background:rgba(20,10,16,.85);color:#f5d0e0;font:12px/1.2 Microsoft YaHei,sans-serif;border-radius:6px;cursor:pointer;display:none;letter-spacing:.05em";
-      btn.onclick = toggleSexNoise;
+        "display:none;position:fixed;right:12px;bottom:12px;z-index:10001;padding:8px 12px;border:1px solid #4c565b;background:#0a0d0f;color:#c8ced1;border-radius:8px;font:12px Microsoft YaHei,sans-serif;cursor:pointer";
       document.body.appendChild(btn);
     }
-    var resultPanel = document.querySelector("#resultScreen .panel");
-    if (resultPanel && !document.getElementById("resultExtra")) {
+    if (!document.getElementById("resultExtra")) {
       var extra = document.createElement("div");
       extra.id = "resultExtra";
       extra.style.cssText =
-        "max-width:720px;margin:16px auto 0;color:#c8ced1;font:14px/1.7 Microsoft YaHei,sans-serif;text-align:left";
-      resultPanel.appendChild(extra);
+        "max-width:720px;margin:16px auto 0;color:#c8ced1;font:14px/1.7 Microsoft YaHei,sans-serif;padding:0 12px 24px";
+      var rs = document.getElementById("resultScreen");
+      if (rs) rs.appendChild(extra);
+      else document.body.appendChild(extra);
     }
+  }
+
+  function token() {
+    return localStorage.getItem("school_token") || "";
+  }
+  function me() {
+    try {
+      return JSON.parse(localStorage.getItem("school_user") || "null");
+    } catch (e) {
+      return null;
+    }
+  }
+  async function api(path, opts) {
+    opts = opts || {};
+    var headers = { "Content-Type": "application/json" };
+    if (token()) headers.Authorization = "Bearer " + token();
+    var res = await fetch(API_BASE + path, {
+      method: opts.method || "GET",
+      headers: headers,
+      body: opts.body,
+    });
+    var data = await res.json().catch(function () {
+      return {};
+    });
+    if (!res.ok) throw new Error(data.error || "HTTP " + res.status);
+    return data;
   }
 
   function preloadQ20Video() {
-    var pv = document.getElementById("q20PreloadVideo");
-    if (pv && !pv.src) {
-      pv.src = Q20_VIDEO_SRC;
-      try { pv.load(); } catch (e) {}
-    }
-    if (q20BlobUrl || q20Ready) return;
-    fetch(Q20_VIDEO_SRC)
-      .then(function (r) {
-        if (!r.ok) throw new Error("video http " + r.status);
-        return r.blob();
-      })
-      .then(function (blob) {
-        q20BlobUrl = URL.createObjectURL(blob);
-        q20Ready = true;
-        if (pv) {
-          pv.src = q20BlobUrl;
-          try { pv.load(); } catch (e) {}
-        }
-        var main = document.getElementById("transVideo");
-        if (main) {
-          main.src = q20BlobUrl;
-          main.preload = "auto";
-          try { main.load(); } catch (e) {}
-        }
-        console.log("[exam] Q20 video preloaded", Math.round(blob.size / 1024) + "KB");
-      })
-      .catch(function (err) {
-        console.warn("[exam] Q20 video preload failed", err);
-        var main = document.getElementById("transVideo");
-        if (main) {
-          main.src = Q20_VIDEO_SRC;
-          main.preload = "auto";
-          try { main.load(); } catch (e) {}
-        }
-      });
-  }
-
-  function preloadSexNoise() {
-    try {
-      var a = new Audio();
-      a.preload = "auto";
-      a.src = SEX_NOISE_SRC;
-      a.load();
-    } catch (e) {}
-  }
-
-  var sexNoiseAudio = null;
-  var sexNoiseOn = true;
-  window.startSexNoise = function startSexNoise() {
-    var btn = document.getElementById("sexNoiseBtn");
-    if (btn) btn.style.display = "block";
-    if (!sexNoiseAudio) {
-      sexNoiseAudio = new Audio(SEX_NOISE_SRC);
-      sexNoiseAudio.loop = true;
-      sexNoiseAudio.volume = 0.55;
-    }
-    if (sexNoiseOn) sexNoiseAudio.play().catch(function () {});
-  };
-  window.stopSexNoise = function stopSexNoise() {
-    if (sexNoiseAudio) {
+    var vid = document.getElementById("q20PreloadVideo");
+    if (!vid) return;
+    var src = Q20_VIDEO_SRC;
+    if (typeof resolveMediaSrc === "function") src = resolveMediaSrc(src);
+    if (vid.dataset.src === src && q20Ready) return;
+    vid.dataset.src = src;
+    vid.src = src;
+    vid.load();
+    var mark = function () {
+      q20Ready = true;
       try {
-        sexNoiseAudio.pause();
-        sexNoiseAudio.currentTime = 0;
+        if (!q20BlobUrl && vid.captureStream) {
+          /* keep element src */
+        }
       } catch (e) {}
-    }
-    var btn = document.getElementById("sexNoiseBtn");
-    if (btn) btn.style.display = "none";
-  };
-  function toggleSexNoise() {
-    sexNoiseOn = !sexNoiseOn;
-    var btn = document.getElementById("sexNoiseBtn");
-    if (btn) btn.textContent = sexNoiseOn ? "性噪声：开" : "性噪声：关";
-    if (!sexNoiseAudio) return;
-    if (sexNoiseOn) sexNoiseAudio.play().catch(function () {});
-    else sexNoiseAudio.pause();
+    };
+    vid.addEventListener("canplaythrough", mark, { once: true });
+    vid.addEventListener("loadeddata", mark, { once: true });
   }
 
-  window.playQ20VideoTransition = function playQ20VideoTransition(done) {
+  function playQ20Transition(done) {
+    ensureUI();
     var wrap = document.getElementById("transVideoWrap");
     var vid = document.getElementById("transVideo");
+    if (!wrap || !vid) {
+      if (done) done();
+      return;
+    }
+    var src = Q20_VIDEO_SRC;
+    if (typeof resolveMediaSrc === "function") src = resolveMediaSrc(src);
     var finished = false;
-    function finish(useImageFallback) {
+    var finish = function () {
       if (finished) return;
       finished = true;
-      if (wrap) wrap.style.display = "none";
-      var tr = document.getElementById("blackTransition");
-      if (tr) tr.style.display = "none";
-      if (vid) {
-        try {
-          vid.onended = null;
-          vid.onerror = null;
-          vid.pause();
-          vid.currentTime = 0;
-        } catch (e) {}
-      }
-      if (useImageFallback && typeof doTransition === "function") doTransition(done);
-      else if (typeof done === "function") done();
-    }
-    if (!wrap || !vid) { finish(true); return; }
-    var src = q20BlobUrl || Q20_VIDEO_SRC;
-    wrap.style.zIndex = "9999";
+      try {
+        vid.pause();
+      } catch (e) {}
+      wrap.style.display = "none";
+      if (done) done();
+    };
     wrap.style.display = "flex";
-    var tr = document.getElementById("blackTransition");
-    if (tr) tr.style.display = "none";
-    vid.setAttribute("playsinline", "");
-    vid.setAttribute("webkit-playsinline", "");
-    vid.playsInline = true;
-    vid.muted = true;
+    vid.onended = finish;
+    vid.onerror = finish;
     vid.src = src;
-    try { vid.load(); } catch (e) {}
-    try { vid.currentTime = 0; } catch (e) {}
-    vid.onended = function () { console.log("[exam] Q20 video ended"); finish(false); };
-    vid.onerror = function () { finish(true); };
-    function tryPlay() {
+    vid.currentTime = 0;
+    var tryPlay = function () {
       var p = vid.play();
-      if (p && p.then) {
-        p.then(function () { try { vid.muted = false; } catch (e) {}; }).catch(function () {
-          vid.muted = true;
-          var p2 = vid.play();
-          if (p2 && p2.catch) p2.catch(function () { finish(true); });
-        });
-      }
-    }
+      if (p && p.catch) p.catch(function () {
+        finish();
+      });
+    };
     if (vid.readyState >= 2) tryPlay();
     else {
-      var onReady = function () { vid.removeEventListener("canplay", onReady); tryPlay(); };
-      vid.addEventListener("canplay", onReady);
-      setTimeout(function () { if (!finished && vid.paused) tryPlay(); }, 800);
-    }
-    setTimeout(function () { if (!finished) finish(false); }, 10000);
-  };
-
-  function installNextQuiz() {
-    if (typeof window.nextQuiz !== "function") return;
-    window.nextQuiz = function nextQuiz() {
-      var selected = [...document.querySelectorAll("#qOptions .option.selected")].map(function (x) { return x.textContent; });
-      answers[qIdx] = selected;
-      addScores(quiz[qIdx], selected);
-      var finishedQ20 = qIdx === 19;
-      var goNext = function () {
-        if (qIdx < quiz.length - 1) { qIdx++; renderQuiz(); }
-        else {
-          document.getElementById("quizScreen").classList.add("hidden");
-          if (typeof applyPinkPhase === "function") applyPinkPhase();
-          document.getElementById("interviewScreen").style.display = "flex";
-          dialogueStep = 0;
-          showDialogue();
-        }
+      var onReady = function () {
+        vid.removeEventListener("canplay", onReady);
+        tryPlay();
       };
-      if (finishedQ20) { startSexNoise(); playQ20VideoTransition(goNext); }
-      else doTransition(goNext);
-    };
+      vid.addEventListener("canplay", onReady);
+      setTimeout(function () {
+        if (!finished && vid.paused) tryPlay();
+      }, 800);
+    }
+    setTimeout(function () {
+      if (!finished) finish();
+    }, 120000);
   }
 
-  function installRenderQuiz() {
-    if (typeof window.renderQuiz !== "function") return;
-    var orig = window.renderQuiz;
-    window.renderQuiz = function () {
-      orig.apply(this, arguments);
-      if (typeof qIdx !== "undefined" && qIdx >= 19) startSexNoise();
-      if (typeof qIdx !== "undefined" && qIdx >= 15) preloadQ20Video();
+  var sexNoiseOn = true;
+  var sexNoiseStarted = false;
+  function startSexNoise() {
+    ensureUI();
+    var au = document.getElementById("sexNoiseAudio");
+    var btn = document.getElementById("sexNoiseToggle");
+    if (!au) return;
+    if (!sexNoiseStarted) {
+      var src = SEX_NOISE_SRC;
+      if (typeof resolveMediaSrc === "function") src = resolveMediaSrc(src);
+      au.src = src;
+      sexNoiseStarted = true;
+    }
+    if (btn) btn.style.display = "block";
+    if (!sexNoiseOn) return;
+    au.volume = 0.55;
+    var p = au.play();
+    if (p && p.catch) p.catch(function () {});
+  }
+  function stopSexNoise() {
+    var au = document.getElementById("sexNoiseAudio");
+    if (au) {
+      try {
+        au.pause();
+        au.currentTime = 0;
+      } catch (e) {}
+    }
+    var btn = document.getElementById("sexNoiseToggle");
+    if (btn) btn.style.display = "none";
+  }
+  function bindSexNoiseToggle() {
+    var btn = document.getElementById("sexNoiseToggle");
+    var au = document.getElementById("sexNoiseAudio");
+    if (!btn || btn._bound) return;
+    btn._bound = true;
+    btn.onclick = function () {
+      sexNoiseOn = !sexNoiseOn;
+      btn.textContent = sexNoiseOn ? "性噪声: 开" : "性噪声: 关";
+      if (!au) return;
+      if (sexNoiseOn) {
+        var p = au.play();
+        if (p && p.catch) p.catch(function () {});
+      } else {
+        try {
+          au.pause();
+        } catch (e) {}
+      }
     };
   }
 
@@ -226,7 +214,9 @@
   var VIRTUE_ATTRS = ["宽容", "善良", "热心", "公正", "纯洁"];
   var PERSON_ATTRS = ["自信", "自卑", "严厉", "责任心"];
   function sumAttrs(list) {
-    return list.reduce(function (s, k) { return s + (totalScore[k] || 0); }, 0);
+    return list.reduce(function (s, k) {
+      return s + (totalScore[k] || 0);
+    }, 0);
   }
 
   function buildResultExtra() {
@@ -244,215 +234,195 @@
       html += '<p style="color:#7dcea0;font-weight:700">恭喜您通过了反媚黑高校教师资格证考试♠，欢迎成为反媚黑事业的高贵战士的一员❤</p>';
       html += "<h2 style='font-size:16px;color:#e8a0d0;margin:12px 0 6px'>领取教师资格证</h2>";
       html += '<p style="font-size:13px;color:#99a">请填写课程与自我介绍。通过后生成<strong>仅绑定本账号</strong>的九位教师编号（如 202600001）。</p>';
-      html += '<label>主要负责的课程</label><input id="certCourse" maxlength="40" placeholder="例如：反差婊洗脑课程" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0">';
-      html += '<label>自我介绍</label><textarea id="certBio" maxlength="120" placeholder="写在证书「自我介绍」栏" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;min-height:64px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0;font:inherit"></textarea>';
-      html += '<label>上传教师资格证头像</label><input id="certPhoto" type="file" accept="image/*" style="width:100%;margin:6px 0;color:#d8dde0">';
-      html += '<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="certPublic"> 愿意将教师资格证展示在学校官网「老师介绍」</label>';
-      html += '<div><button type="button" id="btnIssueCert" style="margin:8px 6px 8px 0;padding:10px 14px;border:1px solid #4c565b;background:#0a0d0f;color:#c8ced1;cursor:pointer">生成教师资格证</button></div>';
-      html += '<canvas id="certCanvas" width="784" height="1168" style="display:none"></canvas>';
-      html += '<img id="certPreview" alt="教师资格证预览" style="display:none;max-width:100%;margin-top:12px;border:1px solid #3c454a">';
-      html += '<div id="certMsg" style="margin-top:8px;font-size:13px;color:#e8a0d0"></div>';
+      html += '<label>主要负责的课程</label><input id="certCourse" maxlength="40" placeholder="例如：反媚黑洗脑课程" style="width:100%;padding:8px;margin:6px 0;background:#0a0d0f;border:1px solid #3c454a;color:#c8ced1">';
+      html += '<label>自我介绍（可选）</label><textarea id="certBio" maxlength="200" placeholder="一句话介绍自己" style="width:100%;min-height:64px;padding:8px;margin:6px 0;background:#0a0d0f;border:1px solid #3c454a;color:#c8ced1"></textarea>';
+      html += '<label>教师资格证头像</label><input id="certAvatar" type="file" accept="image/*" style="margin:6px 0;color:#c8ced1">';
+      html += '<label><input id="certPublic" type="checkbox"> 愿意将教师资格证展示在学校官网「老师介绍」</label>';
+      html += '<div style="margin-top:10px"><button type="button" id="btnIssueCert" style="padding:10px 16px;border:none;border-radius:8px;background:#c45c7a;color:#fff;cursor:pointer">生成教师资格证</button></div>';
+      html += '<div id="certMsg" style="margin-top:8px;font-size:13px;color:#99a"></div>';
+      html += '<canvas id="certCanvas" width="900" height="560" style="max-width:100%;margin-top:12px;display:none;border:1px solid #3c454a"></canvas>';
+      html += '<div id="certActions" style="display:none;margin-top:8px;gap:8px"><button type="button" id="btnDlCert" style="padding:8px 12px;border:1px solid #4c565b;background:#0a0d0f;color:#c8ced1;cursor:pointer">下载资格证</button></div>';
     } else {
-      html += '<p style="color:#e74c3c;font-weight:700">很遗憾，你未能通过本次教师资格证考试。请再接再厉。</p>';
+      html += '<p style="color:#e74c3c">很遗憾尚未达到通过标准，请再接再厉。</p>';
     }
-    html += '<div style="margin-top:18px"><a href="school.html" style="display:inline-block;padding:10px 16px;border:1px solid #4c565b;color:#c8ced1;text-decoration:none">返回学校官网</a></div>';
+    html += '<p style="margin-top:16px"><a href="school.html" style="color:#e8a0d0">返回学校官网</a></p>';
     box.innerHTML = html;
-    var b = document.getElementById("btnIssueCert");
-    if (b) b.onclick = issueTeacherCert;
+    if (passed) bindCertUI();
   }
 
-  function compressImageFile(file, maxW, quality) {
-    return new Promise(function (resolve, reject) {
-      var reader = new FileReader();
-      reader.onload = function () {
-        var img = new Image();
-        img.onload = function () {
-          var scale = Math.min(1, maxW / img.width);
-          var c = document.createElement("canvas");
-          c.width = Math.round(img.width * scale);
-          c.height = Math.round(img.height * scale);
-          c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-          resolve(c.toDataURL("image/jpeg", quality));
-        };
-        img.onerror = reject;
-        img.src = reader.result;
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  }
-
-  async function issueTeacherCert() {
-    var course = (document.getElementById("certCourse") || {}).value || "";
-    var bio = (document.getElementById("certBio") || {}).value || "";
-    var fileInput = document.getElementById("certPhoto");
-    var pub = !!(document.getElementById("certPublic") || {}).checked;
-    var msg = document.getElementById("certMsg");
-    if (!course.trim()) { if (msg) msg.textContent = "请填写主要负责的课程"; return; }
-    var token = localStorage.getItem("school_token") || sessionStorage.getItem("school_token") || "";
-    if (!token) { if (msg) msg.textContent = "请先登录学生账号后再领取教师编号"; return; }
-    if (msg) msg.textContent = "正在向校方申请教师编号…";
-    var photoData = "";
-    if (fileInput && fileInput.files && fileInput.files[0]) {
-      photoData = await compressImageFile(fileInput.files[0], 320, 0.72);
-    }
-    var profile = { name: typeof candidateName !== "undefined" && candidateName ? candidateName : "考生", gender: "", age: "" };
-    try {
-      var saved = JSON.parse(sessionStorage.getItem("teacherExamInfo") || "null");
-      if (saved) {
-        if (saved.name) profile.name = saved.name;
-        if (saved.gender) profile.gender = saved.gender;
-        if (saved.age) profile.age = String(saved.age);
+  function bindCertUI() {
+    var btn = document.getElementById("btnIssueCert");
+    if (!btn || btn._bound) return;
+    btn._bound = true;
+    btn.onclick = async function () {
+      var msg = document.getElementById("certMsg");
+      msg.textContent = "";
+      var course = (document.getElementById("certCourse").value || "").trim();
+      var bio = (document.getElementById("certBio").value || "").trim();
+      var pub = document.getElementById("certPublic").checked;
+      if (!course) {
+        msg.textContent = "请填写主要负责的课程";
+        return;
       }
-    } catch (e0) {}
-    var teacherId = "";
-    try {
-      var me = await fetch(API_BASE + "/auth/me", { headers: { Authorization: "Bearer " + token } }).then(function (r) { return r.json(); });
-      if (me && me.user) {
-        if (!profile.name || profile.name === "考生")
-          profile.name = me.user.display_name || me.user.username || profile.name;
-        if (!profile.gender) profile.gender = me.user.gender || "";
-      }
-      var res = await fetch(API_BASE + "/teacher/cert/issue", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ course: course.trim(), public_display: pub, scores: typeof totalScore !== "undefined" ? totalScore : {}, name: profile.name, gender: profile.gender, bio: bio.trim() }),
-      });
-      var data = await res.json();
-      if (!res.ok) throw new Error(data.error || "发证失败");
-      teacherId = data.teacher_id;
-      if (!teacherId) throw new Error("服务器未返回教师编号");
-    } catch (e) {
-      if (msg) msg.textContent = "发证失败：" + (e.message || e) + "。请确认已登录且 Worker 已部署后重试（不会使用随机编号）。";
-      return;
-    }
-    if (msg) msg.textContent = "编号 " + teacherId + " 已下发，正在生成证书图…";
-    var dataUrl = await drawTeacherCert({ name: profile.name, gender: profile.gender || "—", age: profile.age || "—", course: course.trim(), teacherId: teacherId, photoData: photoData, bio: bio.trim() });
-    if (dataUrl) {
-      try {
-        var uploadUrl = dataUrl;
+      var file = document.getElementById("certAvatar").files && document.getElementById("certAvatar").files[0];
+      var avatarData = "";
+      if (file) {
         try {
-          var im = new Image();
-          uploadUrl = await new Promise(function (res) {
-            im.onload = function () {
-              var c = document.createElement("canvas");
-              var maxW = 520;
-              var sc = Math.min(1, maxW / im.width);
-              c.width = Math.round(im.width * sc);
-              c.height = Math.round(im.height * sc);
-              c.getContext("2d").drawImage(im, 0, 0, c.width, c.height);
-              res(c.toDataURL("image/jpeg", 0.72));
-            };
-            im.onerror = function () { res(dataUrl); };
-            im.src = dataUrl;
-          });
-        } catch (e3) {}
-        await fetch(API_BASE + "/teacher/cert/issue", {
+          avatarData = await compressImage(file, 400, 0.72);
+        } catch (e) {
+          msg.textContent = e.message || "头像读取失败";
+          return;
+        }
+      }
+      try {
+        msg.textContent = "生成中…";
+        var info = {};
+        try {
+          info = JSON.parse(sessionStorage.getItem("teacherExamInfo") || "{}");
+        } catch (e) {}
+        var data = await api("/teachers/issue", {
           method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-          body: JSON.stringify({ course: course.trim(), public_display: pub, cert_image: uploadUrl, name: profile.name, gender: profile.gender }),
+          body: JSON.stringify({
+            course: course,
+            bio: bio,
+            public_display: pub ? 1 : 0,
+            avatar: avatarData,
+            name: info.name || "",
+            gender: info.gender || "",
+            age: info.age || "",
+          }),
         });
-      } catch (e2) {}
-    }
-    if (msg) msg.textContent = "教师编号 " + teacherId + " 已绑定本账号，请长按/右键保存证书图。此编号是注册教师账号的唯一凭证。";
+        msg.textContent = "已生成教师编号：" + (data.cert_no || "") + "（请妥善保管，用于注册教师账号）";
+        await drawCert(data, info, avatarData, course);
+      } catch (e) {
+        msg.textContent = e.message || "生成失败";
+      }
+    };
   }
 
-  function drawTeacherCert(info) {
-    return new Promise(function (resolve) {
-      var canvas = document.getElementById("certCanvas");
-      var preview = document.getElementById("certPreview");
-      if (!canvas) { resolve(""); return; }
-      var ctx = canvas.getContext("2d");
-      var bg = new Image();
-      bg.onload = function () {
-        var w = bg.width, h = bg.height;
-        canvas.width = w; canvas.height = h;
-        ctx.drawImage(bg, 0, 0);
-        var ax = w * 0.072, ay = h * 0.205, aw = w * 0.315, ah = h * 0.385;
-        function fillText() {
-          ctx.fillStyle = "#1a1020";
-          ctx.textAlign = "left";
-          ctx.textBaseline = "middle";
-          var fontMain = "bold " + Math.round(h * 0.025) + "px Microsoft YaHei,sans-serif";
-          var fontSmall = Math.round(h * 0.021) + "px Microsoft YaHei,sans-serif";
-          ctx.font = fontMain;
-          ctx.fillText(String(info.name || "").slice(0, 12), w * 0.545, h * 0.238);
-          ctx.fillText(String(info.gender || "—").slice(0, 8), w * 0.545, h * 0.288);
-          ctx.fillText(String(info.age || "—").slice(0, 12), w * 0.545, h * 0.338);
-          ctx.font = fontSmall;
-          var course = String(info.course || "");
-          var maxW = w * 0.44;
-          var cx = w * 0.42;
-          var cy = h * 0.455;
-          if (ctx.measureText(course).width <= maxW) ctx.fillText(course, cx, cy);
-          else {
-            var line1 = course;
-            while (ctx.measureText(line1).width > maxW && line1.length > 1) line1 = line1.slice(0, -1);
-            ctx.fillText(line1, cx, cy);
-            ctx.fillText(course.slice(line1.length).slice(0, 24), cx, cy + h * 0.03);
-          }
-          ctx.font = "bold " + Math.round(h * 0.03) + "px Microsoft YaHei,sans-serif";
-          ctx.fillStyle = "#8b2252";
-          ctx.fillText(String(info.teacherId || ""), w * 0.42, h * 0.60);
-          ctx.fillStyle = "#1a1020";
-          ctx.font = fontSmall;
-          var bio = String(info.bio || "");
-          var bioX = w * 0.12, bioY = h * 0.78, bioMax = w * 0.76;
-          if (bio) {
-            var chars = bio.split(""), line = "", lines = [];
-            for (var i = 0; i < chars.length; i++) {
-              var test = line + chars[i];
-              if (ctx.measureText(test).width > bioMax) { lines.push(line); line = chars[i]; if (lines.length >= 3) break; }
-              else line = test;
-            }
-            if (line && lines.length < 3) lines.push(line);
-            lines.forEach(function (ln, idx) { ctx.fillText(ln, bioX, bioY + idx * (h * 0.032)); });
-          }
-          ctx.font = Math.round(h * 0.024) + "px 'Segoe Script','Brush Script MT',cursive,Microsoft YaHei";
-          ctx.fillStyle = "#2a1520";
-          ctx.fillText(String(info.name || ""), w * 0.12, h * 0.72);
-          ctx.font = Math.round(h * 0.02) + "px Microsoft YaHei,sans-serif";
-          ctx.fillStyle = "#8b2252";
-          ctx.textAlign = "right";
-          ctx.fillText("草莓酱老师审批通过", w * 0.92, h * 0.88);
-          ctx.textAlign = "left";
-        }
-        function finish() {
-          var url = canvas.toDataURL("image/png");
-          canvas.style.display = "none";
-          if (preview) { preview.src = url; preview.style.display = "block"; }
-          resolve(url);
-        }
-        if (info.photoData) {
-          var p = new Image();
-          p.onload = function () {
-            ctx.save();
-            ctx.beginPath();
-            ctx.rect(ax, ay, aw, ah);
-            ctx.clip();
-            var sc = Math.max(aw / p.width, ah / p.height);
-            var pw = p.width * sc, ph = p.height * sc;
-            ctx.drawImage(p, ax + (aw - pw) / 2, ay + (ah - ph) / 2, pw, ph);
-            ctx.restore();
-            fillText();
-            finish();
-          };
-          p.onerror = function () { fillText(); finish(); };
-          p.src = info.photoData;
-        } else { fillText(); finish(); }
+  function compressImage(file, maxSide, quality) {
+    return new Promise(function (resolve, reject) {
+      if (!file || !file.type.startsWith("image/")) return reject(new Error("请选择图片"));
+      var img = new Image();
+      var url = URL.createObjectURL(file);
+      img.onload = function () {
+        var w = img.width,
+          h = img.height;
+        var scale = Math.min(1, maxSide / Math.max(w, h));
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+        var canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", quality));
       };
-      bg.onerror = function () {
-        if (preview) { preview.alt = "模板加载失败，请确认 media/jszgz.png 已上传"; preview.style.display = "block"; }
-        resolve("");
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error("图片读取失败"));
       };
-      bg.src = "media/jszgz.png";
+      img.src = url;
     });
   }
 
-  function installShowRadar() {
+  async function drawCert(data, info, avatarData, course) {
+    var canvas = document.getElementById("certCanvas");
+    if (!canvas) return;
+    var ctx = canvas.getContext("2d");
+    var W = canvas.width,
+      H = canvas.height;
+    var tpl = new Image();
+    tpl.crossOrigin = "anonymous";
+    await new Promise(function (resolve) {
+      tpl.onload = resolve;
+      tpl.onerror = resolve;
+      tpl.src = "jszgz.png";
+    });
+    ctx.clearRect(0, 0, W, H);
+    if (tpl.complete && tpl.naturalWidth) ctx.drawImage(tpl, 0, 0, W, H);
+    else {
+      ctx.fillStyle = "#1a1020";
+      ctx.fillRect(0, 0, W, H);
+    }
+    // avatar box approximate
+    if (avatarData) {
+      var av = new Image();
+      await new Promise(function (resolve) {
+        av.onload = resolve;
+        av.onerror = resolve;
+        av.src = avatarData;
+      });
+      if (av.naturalWidth) ctx.drawImage(av, 118, 168, 168, 210);
+    }
+    ctx.fillStyle = "#2c1a1f";
+    ctx.font = "22px Microsoft YaHei,sans-serif";
+    ctx.textAlign = "left";
+    var name = (info && info.name) || (me() && me().username) || "";
+    ctx.fillText(name, 420, 210);
+    ctx.fillText((info && info.gender) || "", 420, 255);
+    ctx.fillText(String((info && info.age) || ""), 420, 300);
+    ctx.fillText(course || "", 420, 360);
+    ctx.font = "20px Microsoft YaHei,sans-serif";
+    ctx.fillText(data.cert_no || "", 420, 430);
+    ctx.font = "18px Microsoft YaHei,sans-serif";
+    ctx.fillText(name, 80, 520);
+    ctx.fillText("草莓酱老师审批通过", 620, 520);
+    canvas.style.display = "block";
+    var actions = document.getElementById("certActions");
+    if (actions) actions.style.display = "flex";
+    var dl = document.getElementById("btnDlCert");
+    if (dl && !dl._bound) {
+      dl._bound = true;
+      dl.onclick = function () {
+        var a = document.createElement("a");
+        a.download = "教师资格证_" + (data.cert_no || "cert") + ".png";
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+      };
+    }
+  }
+
+  function hookTransitions() {
+    if (typeof window.doTransition === "function" && !window.doTransition._extrasHooked) {
+      var orig = window.doTransition;
+      window.doTransition = function (nextIdx) {
+        // Q20 special video
+        if (typeof qIdx !== "undefined" && qIdx === 19) {
+          playQ20Transition(function () {
+            if (typeof showQuestion === "function") showQuestion(nextIdx);
+            else orig(nextIdx);
+          });
+          return;
+        }
+        if (typeof qIdx !== "undefined" && qIdx >= 19) startSexNoise();
+        return orig.apply(this, arguments);
+      };
+      window.doTransition._extrasHooked = true;
+    }
+    if (typeof window.showQuestion === "function" && !window.showQuestion._extrasHooked) {
+      var origShow = window.showQuestion;
+      window.showQuestion = function (idx) {
+        origShow.apply(this, arguments);
+        if (typeof idx !== "undefined" && idx >= 19) startSexNoise();
+        if (typeof qIdx !== "undefined" && qIdx >= 15) preloadQ20Video();
+      };
+      window.showQuestion._extrasHooked = true;
+    }
+  }
+
+  function hookShowRadar() {
     if (typeof window.showRadar !== "function") return;
     var orig = window.showRadar;
     window.showRadar = function () {
+      // 女版（含雌竞）保底：关键色色属性不足 100 则补到 100，避免无法通过
+      try {
+        if (typeof totalScore === "object" && totalScore && SEX_ATTRS.indexOf("雌竞") >= 0) {
+          ["媚黑", "淫荡", "雌竞", "阳具崇拜"].forEach(function (k) {
+            if ((totalScore[k] || 0) < 100) totalScore[k] = 100;
+          });
+        }
+      } catch (e) {}
       orig.apply(this, arguments);
       stopSexNoise();
       buildResultExtra();
@@ -461,37 +431,26 @@
 
   async function checkLoginGate() {
     var gate = document.getElementById("loginGate");
-    var token = localStorage.getItem("school_token") || sessionStorage.getItem("school_token") || "";
-    if (!token) { if (gate) gate.style.display = "flex"; return; }
-    try {
-      var res = await fetch(API_BASE + "/auth/me", { headers: { Authorization: "Bearer " + token } });
-      if (!res.ok) { if (gate) gate.style.display = "flex"; return; }
-      var data = await res.json();
-      if (!data || !data.user) { if (gate) gate.style.display = "flex"; return; }
-      if (gate) gate.style.display = "none";
-      if (data.user.display_name || data.user.username) {
-        try { candidateName = data.user.display_name || data.user.username; } catch (e) {}
-      }
-    } catch (e) { if (gate) gate.style.display = "flex"; }
+    if (!gate) return;
+    if (!token() || !me()) {
+      gate.style.display = "flex";
+      return;
+    }
+    gate.style.display = "none";
   }
 
   function boot() {
     ensureUI();
-    installNextQuiz();
-    installRenderQuiz();
-    installShowRadar();
+    bindSexNoiseToggle();
+    hookTransitions();
+    hookShowRadar();
     checkLoginGate();
+    // re-hook if showRadar defined later
+    setTimeout(hookShowRadar, 500);
+    setTimeout(hookShowRadar, 2000);
     preloadQ20Video();
-    preloadSexNoise();
   }
+
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
-  window.addEventListener("load", function () {
-    ensureUI();
-    installNextQuiz();
-    installRenderQuiz();
-    installShowRadar();
-    preloadQ20Video();
-    preloadSexNoise();
-  });
 })();
