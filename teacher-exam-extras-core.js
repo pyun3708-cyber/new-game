@@ -54,56 +54,26 @@
     var virtue = sumAttrs(VIRTUE_ATTRS);
     var person = sumAttrs(PERSON_ATTRS);
     var passed = sex >= 500 && virtue >= 100 && person >= 100;
-    var html =
-      "<h2 style='font-size:16px;letter-spacing:.08em;margin:12px 0 6px;color:#e8a0d0'>属性汇总</h2>";
-    html +=
-      '<div style="margin:4px 0">色色属性（' +
-      SEX_ATTRS_LABEL +
-      "）：<b>" +
-      sex +
-      "</b> " +
-      (sex >= 500 ? "✓" : "（需≥500）") +
-      "</div>";
-    html +=
-      '<div style="margin:4px 0">美德属性：<b>' +
-      virtue +
-      "</b> " +
-      (virtue >= 100 ? "✓" : "（需≥100）") +
-      "</div>";
-    html +=
-      '<div style="margin:4px 0">人格属性：<b>' +
-      person +
-      "</b> " +
-      (person >= 100 ? "✓" : "（需≥100）") +
-      "</div>";
+    var html = "<h2 style='font-size:16px;color:#e8a0d0;margin:12px 0 6px'>属性汇总</h2>";
+    html += "<div>色色属性：<b>" + sex + "</b> " + (sex >= 500 ? "✓" : "（需≥500）") + "</div>";
+    html += "<div>美德属性：<b>" + virtue + "</b> " + (virtue >= 100 ? "✓" : "（需≥100）") + "</div>";
+    html += "<div>人格属性：<b>" + person + "</b> " + (person >= 100 ? "✓" : "（需≥100）") + "</div>";
     if (passed) {
-      html +=
-        '<p style="color:#7dcea0;font-weight:700">恭喜您通过了反媚黑高校教师资格证考试♠</p>';
-      html +=
-        "<h2 style='font-size:16px;color:#e8a0d0;margin:12px 0 6px'>领取教师资格证</h2>";
-      html +=
-        '<p style="font-size:13px;color:#99a">将读取诚信宣言中的<strong>姓名/性别/年龄</strong>。请填写课程后生成。</p>';
-      html +=
-        '<label>主要负责的课程</label><input id="certCourse" maxlength="40" placeholder="例如：反差婊洗脑课程" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0">';
-      html +=
-        '<label>自我介绍</label><textarea id="certBio" maxlength="120" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;min-height:64px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0;font:inherit"></textarea>';
-      html +=
-        '<label>上传教师资格证头像</label><input id="certPhoto" type="file" accept="image/*" style="width:100%;margin:6px 0;color:#d8dde0">';
-      html +=
-        '<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="certPublic"> 愿意展示在「老师介绍」</label>';
-      html +=
-        '<div><button type="button" id="btnIssueCert" style="margin:8px 6px 8px 0;padding:10px 14px;border:none;border-radius:8px;background:#c45c7a;color:#fff;cursor:pointer">生成教师资格证</button></div>';
-      html +=
-        '<canvas id="certCanvas" width="784" height="1168" style="display:none"></canvas>';
-      html +=
-        '<img id="certPreview" alt="预览" style="display:none;max-width:100%;margin-top:12px;border:1px solid #3c454a">';
+      html += '<p style="color:#7dcea0;font-weight:700">恭喜您通过了反媚黑高校教师资格证考试♠</p>';
+      html += "<h2 style='font-size:16px;color:#e8a0d0;margin:12px 0 6px'>领取教师资格证</h2>";
+      html += '<p style="font-size:13px;color:#99a">读取诚信宣言中的姓名/性别/年龄。请填写课程与自我介绍后生成。</p>';
+      html += '<label>主要负责的课程</label><input id="certCourse" maxlength="40" placeholder="例如：反差婊洗脑课程" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0">';
+      html += '<label>自我介绍</label><textarea id="certBio" maxlength="120" style="width:100%;box-sizing:border-box;margin:6px 0;padding:8px;min-height:64px;background:#0b0f11;border:1px solid #3c454a;color:#d8dde0;font:inherit"></textarea>';
+      html += '<label>上传教师资格证头像</label><input id="certPhoto" type="file" accept="image/*" style="width:100%;margin:6px 0;color:#d8dde0">';
+      html += '<label style="display:flex;align-items:center;gap:8px;margin-top:8px"><input type="checkbox" id="certPublic"> 愿意展示在「老师介绍」</label>';
+      html += '<div><button type="button" id="btnIssueCert" style="margin:8px 0;padding:10px 14px;border:none;border-radius:8px;background:#c45c7a;color:#fff;cursor:pointer">生成教师资格证</button></div>';
+      html += '<canvas id="certCanvas" width="784" height="1168" style="display:none"></canvas>';
+      html += '<img id="certPreview" alt="预览" style="display:none;max-width:100%;margin-top:12px;border:1px solid #3c454a">';
       html += '<div id="certMsg" style="margin-top:8px;font-size:13px;color:#e8a0d0"></div>';
     } else {
-      html +=
-        '<p style="color:#e74c3c;font-weight:700">很遗憾，你未能通过本次考试。请再接再厉。</p>';
+      html += '<p style="color:#e74c3c;font-weight:700">很遗憾，你未能通过本次考试。</p>';
     }
-    html +=
-      '<div style="margin-top:18px"><a href="school.html" style="display:inline-block;padding:10px 16px;border:1px solid #4c565b;color:#c8ced1;text-decoration:none">返回学校官网</a></div>';
+    html += '<div style="margin-top:18px"><a href="school.html" style="color:#e8a0d0">返回学校官网</a></div>';
     box.innerHTML = html;
     var b = document.getElementById("btnIssueCert");
     if (b) b.onclick = issueTeacherCert;
@@ -122,14 +92,10 @@
           c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
           resolve(c.toDataURL("image/jpeg", quality));
         };
-        img.onerror = function () {
-          reject(new Error("图片读取失败"));
-        };
+        img.onerror = function () { reject(new Error("图片读取失败")); };
         img.src = reader.result;
       };
-      reader.onerror = function () {
-        reject(new Error("文件读取失败"));
-      };
+      reader.onerror = function () { reject(new Error("文件读取失败")); };
       reader.readAsDataURL(file);
     });
   }
@@ -159,19 +125,10 @@
     var fileInput = document.getElementById("certPhoto");
     var pub = !!(document.getElementById("certPublic") || {}).checked;
     var msg = document.getElementById("certMsg");
-    if (!course.trim()) {
-      if (msg) msg.textContent = "请填写主要负责的课程";
-      return;
-    }
-    var token =
-      localStorage.getItem("school_token") ||
-      sessionStorage.getItem("school_token") ||
-      "";
-    if (!token) {
-      if (msg) msg.textContent = "请先登录学生账号后再领取教师编号";
-      return;
-    }
-    if (msg) msg.textContent = "正在向校方申请教师编号…";
+    if (!course.trim()) { if (msg) msg.textContent = "请填写主要负责的课程"; return; }
+    var token = localStorage.getItem("school_token") || sessionStorage.getItem("school_token") || "";
+    if (!token) { if (msg) msg.textContent = "请先登录学生账号"; return; }
+    if (msg) msg.textContent = "正在申请教师编号…";
     var photoData = "";
     try {
       if (fileInput && fileInput.files && fileInput.files[0]) {
@@ -181,17 +138,11 @@
       if (msg) msg.textContent = "头像处理失败：" + (e.message || e);
       return;
     }
-
     var profile = readOathProfile();
     try {
-      var me = await fetch(API_BASE + "/auth/me", {
-        headers: { Authorization: "Bearer " + token },
-      }).then(function (r) {
-        return r.json();
-      });
+      var me = await fetch(API_BASE + "/auth/me", { headers: { Authorization: "Bearer " + token } }).then(function (r) { return r.json(); });
       if (me && me.user) {
-        if (!profile.name || profile.name === "考生")
-          profile.name = me.user.display_name || me.user.username || profile.name;
+        if (!profile.name || profile.name === "考生") profile.name = me.user.display_name || me.user.username || profile.name;
         if (!profile.gender) profile.gender = me.user.gender || "";
       }
     } catch (e1) {}
@@ -200,30 +151,23 @@
     try {
       var res = await fetch(API_BASE + "/teacher/cert/issue", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + token,
-        },
+        headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
         body: JSON.stringify({
-          course: course.trim(),
-          public_display: pub,
+          course: course.trim(), public_display: pub,
           scores: typeof totalScore !== "undefined" ? totalScore : {},
-          name: profile.name,
-          gender: profile.gender,
-          age: profile.age,
-          bio: bio.trim(),
-        }),
+          name: profile.name, gender: profile.gender, age: profile.age, bio: bio.trim()
+        })
       });
       var data = await res.json();
       if (!res.ok) throw new Error(data.error || "发证失败");
       teacherId = data.teacher_id || data.cert_no;
-      if (!teacherId) throw new Error("服务器未返回教师编号");
+      if (!teacherId) throw new Error("未返回教师编号");
     } catch (e) {
       if (msg) msg.textContent = "发证失败：" + (e.message || e);
       return;
     }
 
-    if (msg) msg.textContent = "编号 " + teacherId + " 已下发，正在生成证书图…";
+    if (msg) msg.textContent = "编号 " + teacherId + " 已下发，正在生成证书…";
     try {
       var dataUrl = await drawTeacherCert({
         name: profile.name,
@@ -232,39 +176,21 @@
         course: course.trim(),
         teacherId: teacherId,
         photoData: photoData,
-        bio: bio.trim(),
+        bio: bio.trim()
       });
       if (dataUrl) {
         try {
           await fetch(API_BASE + "/teacher/cert/issue", {
             method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: "Bearer " + token,
-            },
+            headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
             body: JSON.stringify({
-              course: course.trim(),
-              public_display: pub,
-              cert_image: dataUrl,
-              name: profile.name,
-              gender: profile.gender,
-            }),
+              course: course.trim(), public_display: pub, cert_image: dataUrl,
+              name: profile.name, gender: profile.gender
+            })
           });
         } catch (e3) {}
-        if (msg)
-          msg.textContent =
-            "教师编号 " +
-            teacherId +
-            " 已生成（" +
-            profile.name +
-            " / " +
-            (profile.gender || "—") +
-            " / " +
-            (profile.age || "—") +
-            "）。长按保存下方证书图。";
-      } else {
-        if (msg) msg.textContent = "编号已下发，但证书图生成失败";
-      }
+        if (msg) msg.textContent = "教师编号 " + teacherId + " 已生成（" + profile.name + " / " + (profile.gender || "—") + " / " + (profile.age || "—") + "）。长按保存证书图。";
+      } else if (msg) msg.textContent = "编号已下发，证书图生成失败";
     } catch (e2) {
       if (msg) msg.textContent = "编号已下发，绘制出错：" + (e2.message || e2);
     }
@@ -274,75 +200,69 @@
     return new Promise(function (resolve) {
       var canvas = document.getElementById("certCanvas");
       var preview = document.getElementById("certPreview");
-      if (!canvas) {
-        resolve("");
-        return;
-      }
+      if (!canvas) { resolve(""); return; }
       var ctx = canvas.getContext("2d");
       var bg = new Image();
       bg.crossOrigin = "anonymous";
       bg.onload = function () {
-        var W = 784,
-          H = 1168;
+        var W = 784, H = 1168;
         canvas.width = W;
         canvas.height = H;
         ctx.drawImage(bg, 0, 0, W, H);
 
-        // 模板已印标签，只填数值
-        var ax = 68,
-          ay = 220,
-          aw = 220,
-          ah = 360;
+        // 模板已印标签，只写冒号后的值（坐标按 784x1168 实测）
+        var ax = 70, ay = 225, aw = 215, ah = 350;
+
+        function wrapText(text, x, y, maxW, lineH, maxLines) {
+          text = String(text || "");
+          var line = "", lines = 0;
+          for (var i = 0; i < text.length; i++) {
+            var test = line + text[i];
+            if (ctx.measureText(test).width > maxW && line) {
+              ctx.fillText(line, x, y);
+              line = text[i];
+              y += lineH;
+              lines++;
+              if (lines >= maxLines) return y;
+            } else line = test;
+          }
+          if (line) { ctx.fillText(line, x, y); y += lineH; }
+          return y;
+        }
 
         function fillText() {
           ctx.fillStyle = "#1a1020";
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
+          ctx.font = "bold 28px Microsoft YaHei,sans-serif";
+          // 姓名 / 性别 / 年龄 —— 标签右侧
+          ctx.fillText(String(info.name || ""), 455, 248);
+          ctx.fillText(String(info.gender || ""), 455, 315);
+          ctx.fillText(String(info.age || ""), 455, 395);
+          // 课程 —— 「主要负责的课程：」下方
+          ctx.font = "22px Microsoft YaHei,sans-serif";
+          wrapText(info.course || "", 320, 535, 420, 30, 3);
+          // 教师编号 —— 红色标签右侧
           ctx.font = "bold 26px Microsoft YaHei,sans-serif";
-          ctx.fillText(String(info.name || ""), 455, 250);
-          ctx.fillText(String(info.gender || ""), 455, 320);
-          ctx.fillText(String(info.age || ""), 455, 392);
-
+          ctx.fillText(String(info.teacherId || ""), 455, 690);
+          // 自我介绍 —— 标签下方
           ctx.font = "20px Microsoft YaHei,sans-serif";
-          var course = String(info.course || "");
-          var maxW = 420;
-          var cx = 320,
-            cy = 520;
-          var line = "";
-          for (var i = 0; i < course.length; i++) {
-            var test = line + course[i];
-            if (ctx.measureText(test).width > maxW && line) {
-              ctx.fillText(line, cx, cy);
-              line = course[i];
-              cy += 28;
-              if (cy > 600) break;
-            } else {
-              line = test;
-            }
-          }
-          if (line && cy <= 600) ctx.fillText(line, cx, cy);
-
-          ctx.font = "bold 24px Microsoft YaHei,sans-serif";
-          ctx.fillText(String(info.teacherId || ""), 455, 640);
-
-          ctx.font =
-            "28px 'Segoe Script','Brush Script MT',cursive,Microsoft YaHei";
+          wrapText(info.bio || "", 90, 830, 600, 28, 4);
+          // 签名
+          ctx.font = "30px 'Segoe Script','Brush Script MT',cursive,Microsoft YaHei";
           ctx.fillStyle = "#2a1520";
-          ctx.fillText(String(info.name || ""), 70, 920);
-
+          ctx.fillText(String(info.name || ""), 80, 980);
+          // 审批
           ctx.font = "20px Microsoft YaHei,sans-serif";
           ctx.fillStyle = "#8b2252";
           ctx.textAlign = "right";
-          ctx.fillText("草莓酱老师审批通过", 740, 1020);
+          ctx.fillText("草莓酱老师审批通过", 740, 1050);
         }
 
         function finish() {
           canvas.style.display = "none";
-          var url = canvas.toDataURL("image/jpeg", 0.82);
-          if (preview) {
-            preview.src = url;
-            preview.style.display = "block";
-          }
+          var url = canvas.toDataURL("image/jpeg", 0.85);
+          if (preview) { preview.src = url; preview.style.display = "block"; }
           resolve(url);
         }
 
@@ -354,17 +274,13 @@
             ctx.rect(ax, ay, aw, ah);
             ctx.clip();
             var s = Math.max(aw / p.width, ah / p.height);
-            var pw = p.width * s,
-              ph = p.height * s;
+            var pw = p.width * s, ph = p.height * s;
             ctx.drawImage(p, ax + (aw - pw) / 2, ay + (ah - ph) / 2, pw, ph);
             ctx.restore();
             fillText();
             finish();
           };
-          p.onerror = function () {
-            fillText();
-            finish();
-          };
+          p.onerror = function () { fillText(); finish(); };
           p.src = info.photoData;
         } else {
           fillText();
@@ -372,29 +288,13 @@
         }
       };
       bg.onerror = function () {
-        canvas.width = 784;
-        canvas.height = 1168;
-        ctx.fillStyle = "#fffef8";
-        ctx.fillRect(0, 0, 784, 1168);
-        ctx.fillStyle = "#1a1020";
-        ctx.font = "22px Microsoft YaHei,sans-serif";
-        ctx.textAlign = "left";
-        var y = 200;
-        [
-          "姓名：" + (info.name || ""),
-          "性别：" + (info.gender || ""),
-          "年龄：" + (info.age || ""),
-          "课程：" + (info.course || ""),
-          "编号：" + (info.teacherId || ""),
-        ].forEach(function (line) {
-          ctx.fillText(line, 60, y);
-          y += 48;
-        });
+        canvas.width = 784; canvas.height = 1168;
+        ctx.fillStyle = "#fffef8"; ctx.fillRect(0, 0, 784, 1168);
+        ctx.fillStyle = "#1a1020"; ctx.font = "22px Microsoft YaHei,sans-serif"; ctx.textAlign = "left";
+        var y = 180;
+        ["姓名："+(info.name||""),"性别："+(info.gender||""),"年龄："+(info.age||""),"课程："+(info.course||""),"编号："+(info.teacherId||""),"介绍："+(info.bio||"")].forEach(function(line){ ctx.fillText(line,60,y); y+=48; });
         var url = canvas.toDataURL("image/jpeg", 0.85);
-        if (preview) {
-          preview.src = url;
-          preview.style.display = "block";
-        }
+        if (preview) { preview.src = url; preview.style.display = "block"; }
         resolve(url);
       };
       bg.src = "media/jszgz.png";
@@ -403,10 +303,47 @@
 
   function stopSexNoise() {
     var au = document.getElementById("sexNoiseAudio");
-    if (au)
-      try {
-        au.pause();
-      } catch (e) {}
+    if (au) try { au.pause(); } catch (e) {}
+  }
+
+  window.__quickTestToResult = function () {
+    try {
+      if (typeof ATTRS !== "undefined" && typeof totalScore !== "undefined") {
+        ATTRS.forEach(function (a) { totalScore[a] = 100; });
+      }
+    } catch (e) {}
+    try {
+      var info = {};
+      try { info = JSON.parse(sessionStorage.getItem("teacherExamInfo") || "{}") || {}; } catch (e2) { info = {}; }
+      if (!info.name) info.name = "测试考生";
+      if (!info.gender) info.gender = "女";
+      if (!info.age) info.age = "22";
+      sessionStorage.setItem("teacherExamInfo", JSON.stringify(info));
+      try { if (typeof candidateName !== "undefined") candidateName = info.name; } catch (e3) {}
+    } catch (e4) {}
+    ["bootScreen","startScreen","quizScreen","interviewScreen","matchScreen","transition"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) { el.style.display = "none"; }
+    });
+    if (typeof showRadar === "function") showRadar();
+    else alert("结果页未就绪，请稍后再试");
+  };
+
+  function injectQuickTestButton() {
+    if (document.getElementById("quickTestBtn")) return;
+    var b = document.createElement("button");
+    b.id = "quickTestBtn";
+    b.type = "button";
+    b.textContent = "快速测试通道";
+    b.style.cssText =
+      "position:fixed;right:12px;bottom:12px;z-index:9998;padding:8px 12px;border:1px solid #4c565b;background:rgba(10,13,15,.88);color:#9aa;border-radius:8px;font:12px Microsoft YaHei,sans-serif;cursor:pointer";
+    b.onclick = function () {
+      var p = prompt("请输入快速测试密码");
+      if (p === null) return;
+      if (String(p).trim() !== "5200") { alert("密码错误"); return; }
+      window.__quickTestToResult();
+    };
+    document.body.appendChild(b);
   }
 
   function installShowRadar() {
@@ -416,22 +353,14 @@
     window.showRadar = function () {
       try {
         var info = {};
-        try {
-          info = JSON.parse(sessionStorage.getItem("teacherExamInfo") || "{}") || {};
-        } catch (e) {
-          info = {};
-        }
+        try { info = JSON.parse(sessionStorage.getItem("teacherExamInfo") || "{}") || {}; } catch (e) { info = {}; }
         if (typeof candidateName !== "undefined" && candidateName) {
           if (!info.name) info.name = String(candidateName);
         }
         sessionStorage.setItem("teacherExamInfo", JSON.stringify(info));
       } catch (eInfo) {}
       try {
-        if (
-          typeof totalScore === "object" &&
-          totalScore &&
-          (window.SEX_ATTRS || []).indexOf("雌竞") >= 0
-        ) {
+        if (typeof totalScore === "object" && totalScore && (window.SEX_ATTRS || []).indexOf("雌竞") >= 0) {
           ["媚黑", "淫荡", "雌竞", "阳具崇拜"].forEach(function (k) {
             if ((totalScore[k] || 0) < 100) totalScore[k] = 100;
           });
@@ -451,14 +380,16 @@
 
   function boot() {
     ensureUI();
+    injectQuickTestButton();
     installShowRadar();
     setTimeout(installShowRadar, 500);
     setTimeout(installShowRadar, 2000);
+    setTimeout(injectQuickTestButton, 800);
   }
-  if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", boot);
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
   else boot();
   window.addEventListener("load", function () {
     installShowRadar();
+    injectQuickTestButton();
   });
 })();
