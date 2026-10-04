@@ -89,14 +89,23 @@ function esc(s){
   return d.innerHTML;
 }
 function qs(name){ return new URLSearchParams(location.search).get(name); }
+function toDate(ts){
+  if(ts==null||ts==="") return null;
+  if(typeof ts === "number") return new Date(ts);
+  var s = String(ts).trim();
+  if(/^\d+$/.test(s)) return new Date(Number(s));
+  var d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
 function daysSince(ts){
-  if(!ts) return "—";
-  var d = Math.floor((Date.now()-Number(ts))/86400000);
-  return d<0?0:d;
+  var d = toDate(ts);
+  if(!d) return "—";
+  var n = Math.floor((Date.now()-d.getTime())/86400000);
+  return n<0?0:n;
 }
 function fmtDate(ts){
-  if(!ts) return "—";
-  var d=new Date(Number(ts));
+  var d = toDate(ts);
+  if(!d) return "—";
   var p=function(n){return String(n).padStart(2,"0");};
   return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate());
 }
