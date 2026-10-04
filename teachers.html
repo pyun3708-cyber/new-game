@@ -71,7 +71,7 @@ function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
 function esc(s){
   return String(s??"").replace(/[&<>"']/g, function(c){
-    return ({'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'})[c];
+    return ({"&":"&"+"amp;","<":"&"+"lt;",">":"&"+"gt;",'"':"&"+"quot;","'":"&#39;"})[c];
   });
 }
 function isAdmin(){
@@ -121,8 +121,11 @@ function buildCard(item){
   const card = document.createElement("div");
   card.className = "card";
   card.id = "cert-" + item.cert_no;
-  const profileHref = item.user_id ? ("profile.html?id=" + encodeURIComponent(item.user_id)) : "#";
   const uname = item.username || item.display_name || "老师";
+  // 优先用用户名跳转个人主页（profile.html 认 ?u=）；没有用户名时再退回 id
+  let profileHref = "#";
+  if (item.username) profileHref = "profile.html?u=" + encodeURIComponent(item.username);
+  else if (item.user_id) profileHref = "profile.html?id=" + encodeURIComponent(item.user_id);
   card.innerHTML =
     '<div class="meta">编号 <b>' + esc(item.cert_no) + '</b><br>账号 <a href="' + profileHref + '">' + esc(uname) + '</a>' +
     (item.course ? (' · 课程 ' + esc(item.course)) : '') + '</div>' +
