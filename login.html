@@ -23,7 +23,8 @@
       background:linear-gradient(135deg,#a08060,#8b765d);color:#fff;font-size:15px;
       font-weight:600;cursor:pointer;font-family:inherit}
     .btn:disabled{opacity:.6}
-    .err{color:#c62828;font-size:13px;margin-top:10px;min-height:1.2em}
+    .err{color:#c62828;font-size:13px;margin-top:10px;min-height:1.2em;line-height:1.5}
+    .err a{color:#c45c7a;font-weight:700;text-decoration:underline}
     .links{text-align:center;margin-top:16px;font-size:13px}
     .links a{color:#8b765d;text-decoration:none}
     .links a:hover{text-decoration:underline}
@@ -50,7 +51,11 @@
     </div>
     <div class="err" id="err"></div>
     <button class="btn" id="btn" type="button">登录</button>
-    <p class="links"><a href="register.html">注册学生账号</a> · <a href="school.html">返回官网</a></p>
+    <p class="links">
+      <a href="repair.html">修复旧账号</a> ·
+      <a href="register.html">注册学生账号</a> ·
+      <a href="school.html">返回官网</a>
+    </p>
   </div>
 <script>
 const API_BASE = "https://school-auth.pyun3708.workers.dev";
@@ -103,7 +108,14 @@ document.getElementById("btn").onclick = async () => {
     localStorage.setItem("school_user", JSON.stringify(data.user));
     location.href = "school.html";
   } catch (e) {
-    err.textContent = e.message || "网络错误";
+    var msg = e.message || "网络错误";
+    if (msg.indexOf("salt") >= 0 || msg.indexOf("密码数据不完整") >= 0) {
+      err.innerHTML = "该账号密码数据不完整（缺少 salt）。请 " +
+        '<a href="repair.html">点此修复密码</a>' +
+        "，设置新密码后再登录。";
+    } else {
+      err.textContent = msg;
+    }
   } finally {
     btn.disabled = false;
   }
