@@ -5,40 +5,102 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>反媚黑洗脑成人高校教师资格证考试♠️</title>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;height:100%;background:#020304;color:#d8dde0;font-family:"Courier New","Microsoft YaHei",monospace;overflow:hidden}
+html,body{width:100%;height:100%;margin:0;background:#020304;color:#d8dde0;font-family:Microsoft YaHei,sans-serif}
+.boot{display:flex;align-items:center;justify-content:center;height:100%;letter-spacing:.12em;font-size:14px;color:#889}
 </style>
 </head>
 <body>
+<div class="boot" id="boot">正在载入考试模块…</div>
 <script>
-// TEMP bootstrap: pull full exam from historical commit then strip lock
-(async function(){
-  try{
-    const urls=[
-      'https://cdn.jsdelivr.net/gh/pyun3708-cyber/new-game@fc279876/teacher-exam-male.html',
-      'https://raw.githubusercontent.com/pyun3708-cyber/new-game/fc279876/teacher-exam-male.html'
+(async function () {
+  var boot = document.getElementById("boot");
+  function fail(msg) {
+    if (boot) boot.textContent = msg;
+    else document.body.innerHTML = '<p style="color:#fff;padding:20px">' + msg + "</p>";
+  }
+  try {
+    var urls = [
+      "https://cdn.jsdelivr.net/gh/pyun3708-cyber/new-game@fc279876/teacher-exam-male.html",
+      "https://raw.githubusercontent.com/pyun3708-cyber/new-game/fc279876/teacher-exam-male.html",
     ];
-    let html=null;
-    for (const u of urls){
-      try{
-        const r=await fetch(u,{cache:'no-store'});
-        if(r.ok){html=await r.text(); if(html&&html.length>10000) break;}
-      }catch(e){}
+    var html = null;
+    for (var i = 0; i < urls.length; i++) {
+      try {
+        var r = await fetch(urls[i], { cache: "no-store" });
+        if (r.ok) {
+          var t = await r.text();
+          if (t && t.length > 10000) {
+            html = t;
+            break;
+          }
+        }
+      } catch (e) {}
     }
-    if(!html){document.body.innerHTML='<p style="color:#fff;padding:20px">考试加载失败，请从学校官网-教师招聘-诚信宣誓进入，或稍后重试。</p>';return;}
-    // strip password lock block
-    html=html.replace(/<div id="examLock"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/,'');
-    html=html.replace(/<script>\s*\(function\(\)\{[\s\S]*?5200[\s\S]*?\}\)\(\);\s*<\/script>/,'');
+    if (!html) {
+      fail("考试加载失败，请稍后重试或从学校官网重新进入");
+      return;
+    }
+    html = html.replace(/<div id="examLock"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/, "");
+    html = html.replace(
+      /<script>\s*\(function\(\)\{\s*var unlocked[\s\S]*?5200[\s\S]*?\}\)\(\);\s*<\/script>/,
+      ""
+    );
+    var injectCss =
+      "<style id=\"mobile-result-fix\">" +
+      "html,body{overflow:auto!important;height:auto!important;min-height:100%!important}" +
+      "#resultScreen{align-items:flex-start!important;justify-content:center!important;" +
+      "overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;" +
+      "padding:12px 12px 40px!important}" +
+      "#resultScreen .panel{width:min(720px,100%)!important;margin:8px auto 24px!important;max-width:100%!important}" +
+      "#radarCanvas{width:min(92vw,420px)!important;height:auto!important;aspect-ratio:1!important;" +
+      "max-width:96vw!important;display:block!important;margin:0 auto!important}" +
+      "#resultExtra{max-width:100%!important;text-align:left!important}" +
+      "</style>";
+    if (html.indexOf("</head>") >= 0) html = html.replace("</head>", injectCss + "</head>");
+    else html = injectCss + html;
+
+    if (html.indexOf('id="resultExtra"') < 0) {
+      html = html.replace(
+        /(<div style="margin-top:16px"><button class="ctrl" onclick="location\.reload\(\)">重新开始<\/button><\/div>\s*<\/div>\s*<\/div>)/,
+        '<div id="resultExtra" style="max-width:100%;margin:12px auto 0;color:#c8ced1;font:14px/1.7 Microsoft YaHei,sans-serif;text-align:left"></div>$1'
+      );
+    }
+
+    var hook =
+      "<script>(function(){\n" +
+      "function patchRadar(){\n" +
+      "  if(typeof window.showRadar!=='function'||window.showRadar._mobilePatched) return;\n" +
+      "  var orig=window.showRadar;\n" +
+      "  window.showRadar=function(){\n" +
+      "    try{\n" +
+      "      document.documentElement.style.overflow='auto';\n" +
+      "      document.body.style.overflow='auto';\n" +
+      "      document.body.style.height='auto';\n" +
+      "    }catch(e){}\n" +
+      "    return orig.apply(this,arguments);\n" +
+      "  };\n" +
+      "  window.showRadar._mobilePatched=true;\n" +
+      "}\n" +
+      "patchRadar();\n" +
+      "setTimeout(patchRadar,300);\n" +
+      "setTimeout(patchRadar,1500);\n" +
+      "try{sessionStorage.setItem('teacherExamUnlocked','1');}catch(e){}\n" +
+      "var el=document.getElementById('examLock'); if(el) el.remove();\n" +
+      "})();<\/script>";
+
+    if (html.indexOf("teacher-exam-extras.js") < 0) {
+      html = html.replace(
+        "</body>",
+        '<script src="teacher-exam-extras.js"><\/script></body>'
+      );
+    }
+    html = html.replace("</body>", hook + "</body>");
+
     document.open();
     document.write(html);
     document.close();
-    try{sessionStorage.setItem('teacherExamUnlocked','1');}catch(e){}
-    setTimeout(function(){
-      var el=document.getElementById('examLock');
-      if(el) el.remove();
-    },50);
-  }catch(err){
-    document.body.innerHTML='<p style="color:#fff;padding:20px">'+String(err)+'</p>';
+  } catch (err) {
+    fail(String(err && err.message ? err.message : err));
   }
 })();
 </script>
