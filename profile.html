@@ -83,7 +83,7 @@
 const API_BASE = "https://school-auth.pyun3708.workers.dev";
 function token(){ return localStorage.getItem("school_token")||""; }
 function me(){ try{return JSON.parse(localStorage.getItem("school_user")||"null");}catch{return null;} }
-function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c])); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g,c=>({"&":"&","<":"<",">":">","\"":""","'":"&#39;"}[c])); }
 function qs(name){ return new URLSearchParams(location.search).get(name); }
 function daysSince(ts){
   if(!ts) return "—";
@@ -130,7 +130,8 @@ function compressImage(file, maxSide, quality){
 }
 let profile=null, isSelf=false, editMode=false, draftAvatar=null, draftBg=null;
 async function load(){
-  const u=qs("u");
+  // 支持 ?u=用户名 或 ?id=用户id（老师介绍等入口）
+  const u = qs("u") || qs("id");
   const self=me();
   try{
     let data;
