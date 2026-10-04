@@ -1,1 +1,561 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>反媚黑成人高校教师资格证考试♠️</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { min-height: 100%; font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; line-height: 1.7; }
+    body.outer { background: #0a0a0a; color: #e8e8e8; transition: background .7s, color .5s; }
+    body.inner {
+      background: linear-gradient(180deg, #fce8ee 0%, #f0b0c0 50%, #c45a72 100%);
+      color: #2c1a1f;
+      transition: background .7s, color .5s;
+    }
+    @keyframes flash {
+      0% { opacity: 1; filter: brightness(1); }
+      25% { opacity: 0.05; filter: brightness(2.2); }
+      55% { opacity: 1; filter: brightness(1.1); }
+      100% { opacity: 1; filter: brightness(1); }
+    }
+    .flash { animation: flash .55s ease; }
+    .app {
+      max-width: 640px; margin: 0 auto; padding: 22px 16px 48px;
+      min-height: 100vh; display: flex; flex-direction: column;
+    }
+    .back { font-size: 13px; margin-bottom: 14px; }
+    body.outer .back a { color: #aaa; text-decoration: none; }
+    body.inner .back a { color: #8b3a50; text-decoration: none; }
+    .card {
+      width: 100%; border-radius: 16px; padding: 26px 20px;
+      background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08);
+    }
+    body.inner .card {
+      background: rgba(255,255,255,.62); border: 1px solid rgba(180,80,100,.28);
+      box-shadow: 0 10px 36px rgba(160,60,90,.14);
+    }
+    h1 {
+      font-size: 1.35rem; font-weight: 650; text-align: center;
+      letter-spacing: .06em; margin-bottom: 8px;
+    }
+    body.outer h1 { color: #f0f0f0; }
+    body.inner h1 { color: #8b2040; }
+    .subtitle { text-align: center; font-size: .92rem; margin-bottom: 22px; opacity: .85; }
+    h2 {
+      font-size: 1.08rem; margin: 0 0 14px; padding-bottom: 8px;
+      border-bottom: 1px solid rgba(128,128,128,.25);
+    }
+    body.outer h2 { color: #ddd; }
+    body.inner h2 { color: #9a3050; }
+    .body-text p { margin: 0 0 12px; font-size: .95rem; }
+    .body-text ul { margin: 0 0 12px 1.2em; font-size: .95rem; }
+    .body-text li { margin: 6px 0; }
+    .btn {
+      display: block; width: 100%; margin-top: 20px; padding: 14px 18px;
+      border: none; border-radius: 12px; font-size: 1.02rem; font-weight: 650;
+      cursor: pointer; font-family: inherit; transition: transform .12s, opacity .12s;
+    }
+    .btn:active { transform: scale(0.98); opacity: .9; }
+    body.outer .btn { background: #f5f5f5; color: #111; }
+    body.inner .btn {
+      background: linear-gradient(135deg, #ff6b9a, #e83e6f);
+      color: #fff; box-shadow: 0 6px 18px rgba(232,62,111,.28);
+    }
+    .btn.secondary {
+      background: transparent !important; margin-top: 10px;
+    }
+    body.outer .btn.secondary { color: #ccc; border: 1px solid #444; }
+    body.inner .btn.secondary { color: #8b3050; border: 1px solid rgba(139,48,80,.35); box-shadow: none; }
+    .field { display: block; margin: 12px 0 6px; font-size: .9rem; opacity: .9; }
+    input[type="text"], input[type="number"], select, textarea {
+      width: 100%; padding: 11px 12px; border-radius: 10px; font-size: 1rem;
+      font-family: inherit; outline: none;
+    }
+    body.outer input, body.outer select, body.outer textarea {
+      background: #161616; color: #eee; border: 1px solid #333;
+    }
+    body.inner input, body.inner select, body.inner textarea {
+      background: rgba(255,255,255,.88); color: #2c1a1f; border: 1px solid rgba(180,80,100,.3);
+    }
+    .hint { font-size: 12px; opacity: .7; margin-top: 6px; }
+    .err { color: #e74c3c; font-size: 13px; min-height: 1.2em; margin-top: 8px; }
+    body.inner .err { color: #b71c1c; }
+    .photo-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+    .photo-preview {
+      width: 84px; height: 112px; border-radius: 8px; object-fit: cover;
+      background: #222; border: 1px solid #444;
+    }
+    body.inner .photo-preview { background: #fff; border-color: rgba(180,80,100,.3); }
+    .decl-box {
+      white-space: pre-wrap; font-size: .92rem; line-height: 1.75;
+      padding: 12px 0; max-height: 42vh; overflow: auto;
+    }
+    .sig-line { margin-top: 16px; }
+    .fp-row { margin-top: 12px; }
+    #declCanvas {
+      width: 100%; max-width: 100%; border-radius: 12px; background: #fff;
+      border: 1px solid rgba(0,0,0,.08); display: block; margin: 0 auto;
+    }
+    .row-btns { display: flex; flex-direction: column; gap: 0; }
+    #insertOverlay {
+      display: none; position: fixed; inset: 0; z-index: 10000;
+      background: rgba(0,0,0,.92); align-items: center; justify-content: center;
+      flex-direction: column;
+    }
+    #insertOverlay.show { display: flex; }
+    .server-box {
+      width: min(280px, 70vw); aspect-ratio: 3/4; position: relative;
+      background: #1a1a1e; border-radius: 12px; border: 2px solid #333;
+      box-shadow: 0 20px 50px rgba(0,0,0,.5); overflow: hidden;
+    }
+    .server-box .slot {
+      position: absolute; left: 50%; top: 18%; transform: translateX(-50%);
+      width: 62%; height: 8%; background: #0a0a0c; border: 1px solid #444;
+      border-radius: 3px;
+    }
+    .server-box .vent {
+      position: absolute; left: 12%; right: 12%; bottom: 12%; height: 40%;
+      background: repeating-linear-gradient(90deg, #222 0 3px, #111 3px 8px);
+      opacity: .7; border-radius: 4px;
+    }
+    #flyPaper {
+      position: absolute; left: 50%; top: 40%; width: 48%; max-width: 140px;
+      transform: translate(-50%, -50%); border-radius: 4px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.4); z-index: 2;
+      opacity: 0; pointer-events: none;
+    }
+    #flyPaper.anim {
+      animation: insertPaper 1.5s ease forwards;
+    }
+    @keyframes insertPaper {
+      0% { opacity: 0; top: 70%; transform: translate(-50%, 0) scale(1.1); }
+      30% { opacity: 1; top: 40%; transform: translate(-50%, -50%) scale(1); }
+      70% { opacity: 1; top: 22%; transform: translate(-50%, -50%) scale(0.7); }
+      100% { opacity: 0; top: 18%; transform: translate(-50%, -50%) scale(0.4); }
+    }
+    .insert-hint { color: #aaa; font-size: 13px; margin-top: 18px; letter-spacing: .1em; }
+    #whiteFlash {
+      display: none; position: fixed; inset: 0; z-index: 10020; background: #fff;
+    }
+    #whiteFlash.go { display: block; animation: whiteOut .55s ease forwards; }
+    @keyframes whiteOut {
+      0% { opacity: 0; }
+      40% { opacity: 1; }
+      100% { opacity: 1; }
+    }
+    #pwdGate[hidden] { display: none !important; }
+    #pwdGate{
+      display:none;position:fixed;inset:0;z-index:10050;
+      background:rgba(0,0,0,.88);align-items:center;justify-content:center;
+      flex-direction:column;padding:20px;
+    }
+    #pwdGate.show{display:flex}
+    #pwdGate .box{
+      width:min(360px,92vw);background:#1a1512;border:1px solid #5a4a40;
+      border-radius:14px;padding:22px 18px;color:#f0e8e0;text-align:center;
+    }
+    #pwdGate h3{font-size:16px;margin-bottom:8px;letter-spacing:.06em}
+    #pwdGate p{font-size:12px;color:#a09080;margin-bottom:14px}
+    #pwdGate input{
+      width:100%;padding:10px;border-radius:8px;border:1px solid #5a4a40;
+      background:#0e0b0a;color:#f0e8e0;text-align:center;font-size:16px;letter-spacing:.2em;
+      outline:none;margin-bottom:8px;
+    }
+    #pwdGate .err{color:#e57373;font-size:12px;min-height:1.2em;margin-bottom:10px}
+    #pwdGate .btn-row{display:flex;gap:8px}
+    #pwdGate button{
+      flex:1;padding:10px;border:none;border-radius:8px;font-weight:650;cursor:pointer;font-family:inherit;
+    }
+    #pwdGate .ok{background:linear-gradient(135deg,#c45c7a,#8b2040);color:#fff}
+    #pwdGate .cancel{background:#2a2420;color:#c0b0a0}
+    .screen { display: none; }
+    .screen.active { display: block; }
+  </style>
+</head>
+<body class="outer">
+  <div class="app">
+    <div class="back"><a href="school.html">← 返回学校官网</a></div>
+
+    <div id="s1" class="screen active">
+      <div class="card">
+        <h1>反媚黑成人高校教师资格证考试♠️</h1>
+        <p class="subtitle">欢迎各位考生参加反媚黑成人高校教师资格证考试♠️~</p>
+        <div class="body-text" id="aboutOuter"></div>
+        <button type="button" class="btn" id="btnAboutNext">下一步</button>
+      </div>
+    </div>
+
+    <div id="s2" class="screen">
+      <div class="card">
+        <h2>我们期待这样的你</h2>
+        <div class="body-text" id="expectOuter"></div>
+        <button type="button" class="btn" id="btnExpectNext">下一步</button>
+      </div>
+    </div>
+
+    <div id="s3" class="screen">
+      <div class="card flash" id="aboutInnerCard" style="display:none">
+        <h2>关于我们</h2>
+        <div class="body-text" id="aboutInner"></div>
+        <button type="button" class="btn" id="btnAboutInnerNext">下一步❤️</button>
+      </div>
+    </div>
+
+    <div id="s4" class="screen">
+      <div class="card">
+        <h2>考生信息填写</h2>
+        <label class="field">考生姓名</label>
+        <input type="text" id="name" maxlength="20" placeholder="请输入姓名">
+        <label class="field">考生性别</label>
+        <select id="gender">
+          <option value="">请选择</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+          <option value="男娘">男娘</option>
+          <option value="不愿透露">不愿透露</option>
+        </select>
+        <label class="field">考生年龄（未成年不收）</label>
+        <input type="number" id="age" min="18" max="99" placeholder="18+">
+        <label class="field">考生照片（上传2寸蓝底照片最佳，可不传）</label>
+        <div class="photo-row">
+          <input type="file" id="photo" accept="image/*">
+          <img id="photoPrev" class="photo-preview" alt="" style="display:none">
+        </div>
+        <div class="err" id="infoErr"></div>
+        <button type="button" class="btn" id="btnInfoNext">下一步</button>
+      </div>
+    </div>
+
+    <div id="s5" class="screen">
+      <div class="card">
+        <h2>教师资格证考前诚信宣言</h2>
+        <div class="decl-box" id="declOuterText"></div>
+        <div class="sig-line">
+          <label class="field">宣言人</label>
+          <input type="text" id="sigOuter" placeholder="签名">
+        </div>
+        <div class="err" id="outerErr"></div>
+        <button type="button" class="btn" id="btnOuterNext">下一步</button>
+      </div>
+    </div>
+
+    <div id="s6" class="screen">
+      <div class="card">
+        <h2>教师资格证考前诚信宣言</h2>
+        <div class="decl-box" id="declInnerText"></div>
+        <div class="sig-line">
+          <label class="field">宣言人</label>
+          <input type="text" id="sigInner" placeholder="签名（必填）">
+        </div>
+        <div class="fp-row">
+          <label class="field">上传指纹（可选，不传也可开始考试）</label>
+          <input type="file" id="fingerprint" accept="image/*">
+          <p class="hint">未上传指纹也可以点「开始考试」</p>
+        </div>
+        <div class="err" id="innerErr"></div>
+        <button type="button" class="btn" id="btnInnerNext">下一步❤️</button>
+      </div>
+    </div>
+
+    <div id="s7" class="screen">
+      <div class="card">
+        <h2>诚信考试宣言已生成</h2>
+        <p class="hint" style="margin-bottom:12px">考生诚信考试宣言已收录到校方资料库中永久保存。</p>
+        <canvas id="declCanvas" width="900" height="1200"></canvas>
+        <div class="row-btns">
+          <button type="button" class="btn secondary" onclick="saveDecl()">保存宣言</button>
+          <button type="button" class="btn" onclick="startExam()">开始考试❤️</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="insertOverlay">
+    <div class="server-box">
+      <div class="slot"></div>
+      <div class="vent"></div>
+      <img id="flyPaper" alt="">
+    </div>
+    <p class="insert-hint">正在将诚信宣言录入校方系统…</p>
+  </div>
+  <div id="whiteFlash"></div>
+  <div id="pwdGate" hidden aria-hidden="true">
+    <div class="box">
+      <h3>考试入口验证</h3>
+      <p>已对外开放</p>
+      <input type="password" id="examPwd" maxlength="16" placeholder="••••" autocomplete="off">
+      <div class="err" id="examPwdErr"></div>
+      <div class="btn-row">
+        <button type="button" class="cancel" id="pwdCancel">取消</button>
+        <button type="button" class="ok" id="pwdOk">进入考试</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+const DECL = {
+  maleOuter: `我郑重承诺：\n\n我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。\n\n我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。\n\n我将珍惜教师职业的荣誉，以诚信作为从教之始，以责任作为育人之本。\n\n我明白，教师不仅要传授知识，更应成为学生诚实、正直、守信的榜样。因此，我愿从一次考试开始，守住诚信底线，以认真负责的态度迎接未来的教育工作。\n\n我承诺：诚信考试，真实作答；遵守纪律，尊重规则；以诚立身，以信从教。`,
+  maleInner: `我郑重承诺：\n\n我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。\n\n我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。\n\n我将珍惜媚黑教师的身份，以媚黑作为从教之始，以侍奉作为蝈蝻之本。\n\n我明白，蝈蝻不仅要奉献终身，更应成为学生下贱、卑微、无能的榜样。因此，我愿从一次考试开始，守住媚黑底线，以无脑发情的态度迎接未来的媚黑工作。\n\n我宣誓：终身媚黑，侍奉黑爹，早泄光荣，戴锁幸福。`,
+  femaleOuter: `我郑重承诺：\n\n我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。\n\n我将尊重考场纪律，服从考试工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。\n\n我将珍惜教师职业的荣誉，以诚信作为从教之始，以责任作为育人之本。\n\n我明白，教师不仅要传授知识，更应成为学生诚实、正直、守信的榜样。因此，我愿从一次考试开始，守住诚信底线，以认真负责的态度迎接未来的教育工作。\n\n我承诺：诚信考试，真实作答；遵守纪律，尊重规则；以诚立身，以信从教。`,
+  femaleInner: `我郑重承诺：\n\n我将自觉遵守教师资格考试的各项规定，诚实应考，凭借自己的真实能力完成考试。\n\n我将尊重巨根黑爹，服从黑人工作人员的管理，不以任何形式作弊，不协助他人作弊，不传播或获取与考试有关的违规信息。\n\n我将珍惜媚黑教师的身份，以媚黑作为婊子之始，以尊重作为服侍之本。\n\n我明白，教师不仅要处理性欲，更应成为学生随叫随到随意使用的便器。因此，我愿从一次考试开始，守住母婊底线，以认真负责的态度迎接未来的媚黑工作。\n\n我承诺：诚信考试，真实作答，崇拜阳具，尊重黑爹。`
+};
+
+const ABOUT_OUTER = `<p>我们是一所专注于反对媚黑与对洗脑抵抗力培养的学校，致力于为学生提供自由、开放且富有想象力的学习环境。学校重视每一位学生的个性发展，鼓励孩子通过课程学习、校内考试与现实实践发现兴趣、表达自我。</p>
+<p>我们相信，优秀的教育不仅在于传授知识，更在于陪伴学生成长。因此，我们也希望与热爱教育、尊重学生、富有责任心与创造力的教师一起，共同建设一个温暖、有活力的校园。</p>
+<p>在这里，教师不仅是知识的传授者，也是学生探索艺术世界的引导者。</p>`;
+
+const ABOUT_INNER = `<p>我们是一所专注于■■媚黑与对洗脑■■■培养的学校，致力于为学生提供自由、开放且富有■■力的调教环境。学校重视每一位学生的■性发展，鼓励孩子通过催眠洗脑、成人考试与性爱实践发掘本性、开发自我。</p>
+<p>我们相信，优秀的■■不仅在于无套种付，更在于开发全身性器。因此，我们也希望与热爱■■、尊重■■、性爱成瘾与■■■的教师一起，共同建设一个■■、有■■的校园。</p>
+<p>在这里，教师不仅是■■的传授者，也是学生探索■■世界的引导者。</p>`;
+
+const EXPECT_OUTER = `<ul>
+<li>热爱教育事业，认可学校的教育理念</li>
+<li>尊重学生的个性与创造力</li>
+<li>具有良好的沟通能力和责任心</li>
+<li>能够耐心、平等地对待每一位学生</li>
+<li>具备良好的专业能力与持续学习的意愿</li>
+<li>善于发现学生的兴趣，并给予积极引导</li>
+<li>有相关教学经验或专业资格者优先</li>
+</ul>`;
+
+const EXPECT_INNER = `<ul>
+<li>热爱媚黑事业，认可学校的媚黑理念</li>
+<li>崇拜黑爹的巨根与性能力</li>
+<li>具有充足的调教能力和责任心</li>
+<li>能够耐心、平等地开发每一位学生</li>
+<li>具备良好的专业能力与持续学习的意愿</li>
+<li>善于发现学生的兴趣，并给予积极引导❤️</li>
+<li>有相关教学经验或专业资格者优先</li>
+</ul>`;
+
+const state = {
+  name: '', gender: '', age: 0, photoData: null, fingerprintData: null,
+  signature: '', isMaleGroup: true
+};
+
+function show(id) {
+  document.querySelectorAll('.screen').forEach(function (el) { el.classList.remove('active'); });
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+function setInnerTheme(on) {
+  document.body.classList.toggle('outer', !on);
+  document.body.classList.toggle('inner', !!on);
+}
+
+document.getElementById('aboutOuter').innerHTML = ABOUT_OUTER;
+document.getElementById('expectOuter').innerHTML = EXPECT_OUTER;
+
+document.getElementById('btnAboutNext').onclick = function () {
+  show('s2');
+};
+document.getElementById('btnExpectNext').onclick = function () {
+  document.getElementById('aboutInner').innerHTML = ABOUT_INNER;
+  document.getElementById('aboutInnerCard').style.display = 'block';
+  setInnerTheme(true);
+  show('s3');
+  document.getElementById('aboutInnerCard').classList.remove('flash');
+  void document.getElementById('aboutInnerCard').offsetWidth;
+  document.getElementById('aboutInnerCard').classList.add('flash');
+};
+document.getElementById('btnAboutInnerNext').onclick = function () {
+  document.getElementById('expectOuter').innerHTML = EXPECT_INNER;
+  show('s2');
+  document.querySelector('#s2 h2').textContent = '我们期待这样的你';
+  document.getElementById('btnExpectNext').textContent = '下一步❤️';
+  document.getElementById('btnExpectNext').onclick = function () { show('s4'); };
+};
+
+document.getElementById('photo').onchange = function (e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = function () {
+    state.photoData = r.result;
+    const img = document.getElementById('photoPrev');
+    img.src = r.result;
+    img.style.display = 'block';
+  };
+  r.readAsDataURL(f);
+};
+
+document.getElementById('btnInfoNext').onclick = function () {
+  const name = document.getElementById('name').value.trim();
+  const gender = document.getElementById('gender').value;
+  const age = parseInt(document.getElementById('age').value, 10);
+  const err = document.getElementById('infoErr');
+  if (!name) { err.textContent = '请填写姓名'; return; }
+  if (!gender) { err.textContent = '请选择性别'; return; }
+  if (!age || age < 18) { err.textContent = '未成年不收，请填写18岁及以上'; return; }
+  err.textContent = '';
+  state.name = name;
+  state.gender = gender;
+  state.age = age;
+  state.isMaleGroup = (gender === '男' || gender === '男娘');
+  document.getElementById('declOuterText').textContent =
+    state.isMaleGroup ? DECL.maleOuter : DECL.femaleOuter;
+  document.getElementById('sigOuter').value = name;
+  setInnerTheme(false);
+  show('s5');
+};
+
+document.getElementById('btnOuterNext').onclick = function () {
+  const sig = document.getElementById('sigOuter').value.trim();
+  if (!sig) { document.getElementById('outerErr').textContent = '请签名'; return; }
+  document.getElementById('outerErr').textContent = '';
+  state.signature = sig;
+  document.getElementById('declInnerText').textContent =
+    state.isMaleGroup ? DECL.maleInner : DECL.femaleInner;
+  document.getElementById('sigInner').value = sig;
+  setInnerTheme(true);
+  show('s6');
+};
+
+document.getElementById('fingerprint').onchange = function (e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  const r = new FileReader();
+  r.onload = function () { state.fingerprintData = r.result; };
+  r.readAsDataURL(f);
+};
+
+document.getElementById('btnInnerNext').onclick = function () {
+  const sig = document.getElementById('sigInner').value.trim();
+  if (!sig) { document.getElementById('innerErr').textContent = '请签名后再继续'; return; }
+  document.getElementById('innerErr').textContent = '';
+  state.signature = sig;
+  drawDeclCanvas();
+  show('s7');
+};
+
+function drawDeclCanvas() {
+  const canvas = document.getElementById('declCanvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  ctx.fillStyle = '#fffef8';
+  ctx.fillRect(0, 0, W, H);
+  ctx.strokeStyle = '#c45c7a';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(24, 24, W - 48, H - 48);
+  ctx.fillStyle = '#8b2040';
+  ctx.font = 'bold 32px "Microsoft YaHei", sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('教师资格证考前诚信宣言', W / 2, 80);
+  const body = state.isMaleGroup ? DECL.maleInner : DECL.femaleInner;
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#2c1a1f';
+  ctx.font = '22px "Microsoft YaHei", sans-serif';
+  const lines = [];
+  body.split('\n').forEach(function (para) {
+    if (!para) { lines.push(''); return; }
+    let cur = '';
+    for (let i = 0; i < para.length; i++) {
+      const test = cur + para[i];
+      if (ctx.measureText(test).width > W - 120) {
+        lines.push(cur);
+        cur = para[i];
+      } else cur = test;
+    }
+    if (cur) lines.push(cur);
+  });
+  let y = 130;
+  lines.forEach(function (ln) {
+    ctx.fillText(ln, 56, y);
+    y += 32;
+  });
+  y += 20;
+  ctx.fillStyle = '#8b2040';
+  ctx.font = 'bold 24px "Microsoft YaHei", sans-serif';
+  ctx.fillText('宣言人：' + state.signature, 56, y);
+  // decorative signature flourish
+  ctx.font = 'italic 28px "Segoe Script", "Brush Script MT", cursive';
+  ctx.fillStyle = '#c45c7a';
+  ctx.fillText(state.signature, 160, y + 4);
+  y += 50;
+  ctx.fillStyle = '#666';
+  ctx.font = '18px "Microsoft YaHei", sans-serif';
+  ctx.fillText('性别：' + state.gender + '　　年龄：' + state.age, 56, y);
+  const finishDraw = function () {
+    ctx.fillStyle = '#999';
+    ctx.font = '16px "Microsoft YaHei", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('本宣言已收录校方资料库永久保存', W / 2, H - 48);
+  };
+  if (state.fingerprintData) {
+    const img = new Image();
+    img.onload = function () {
+      const size = 110;
+      ctx.globalAlpha = 0.85;
+      ctx.drawImage(img, W - 56 - size, y - 20, size, size);
+      ctx.globalAlpha = 1;
+      ctx.strokeStyle = '#ccc';
+      ctx.strokeRect(W - 56 - size, y - 20, size, size);
+      ctx.fillStyle = '#888';
+      ctx.font = '14px "Microsoft YaHei", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('指纹盖章', W - 56 - size / 2, y - 20 + size + 18);
+      finishDraw();
+    };
+    img.onerror = finishDraw;
+    img.src = state.fingerprintData;
+  } else finishDraw();
+}
+
+function saveDecl() {
+  const canvas = document.getElementById('declCanvas');
+  const a = document.createElement('a');
+  a.download = '诚信考试宣言_' + (state.name || '考生') + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function startExam() {
+  const page = state.isMaleGroup ? 'teacher-exam-male.html' : 'teacher-exam-female.html';
+  try {
+    sessionStorage.setItem('teacherExamInfo', JSON.stringify({
+      name: state.name, gender: state.gender, age: state.age,
+      signature: state.signature, isMaleGroup: state.isMaleGroup
+    }));
+  } catch (e) {}
+
+  const canvas = document.getElementById('declCanvas');
+  const overlay = document.getElementById('insertOverlay');
+  const fly = document.getElementById('flyPaper');
+  const flash = document.getElementById('whiteFlash');
+
+  function goExam() {
+    try { sessionStorage.setItem('teacherExamUnlocked', '1'); } catch (e) {}
+    window.location.href = page;
+  }
+
+  if (!overlay || !fly || !canvas) {
+    goExam();
+    return;
+  }
+
+  document.querySelectorAll('#s7 button').forEach(function (b) { b.disabled = true; });
+
+  try {
+    fly.src = canvas.toDataURL('image/jpeg', 0.85);
+  } catch (e) {
+    goExam();
+    return;
+  }
+
+  overlay.classList.add('show');
+  fly.classList.remove('anim');
+  void fly.offsetWidth;
+  fly.classList.add('anim');
+
+  setTimeout(function () {
+    flash.classList.add('go');
+  }, 1500);
+
+  setTimeout(function () {
+    goExam();
+  }, 2100);
+}
+</script>
+</body>
+</html>
