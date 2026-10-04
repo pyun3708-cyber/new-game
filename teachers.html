@@ -22,8 +22,8 @@ a{color:var(--accent);text-decoration:none}
 .card .meta{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
 .card .meta a{font-weight:600}
 .cert-wrap{position:relative;width:100%;background:#1a1020;border-radius:8px;overflow:hidden;line-height:0}
-.cert-wrap img.cert{width:100%;height:auto;display:block;vertical-align:top;background:#1a1020}
-.cert-wrap canvas.draw{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.cert-wrap img.cert{width:100%;height:auto;display:block;vertical-align:top;background:#1a1020;object-fit:contain}
+.cert-wrap canvas.draw{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;cursor:crosshair;background:transparent}
 .tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .tools label{font-size:12px;color:var(--muted)}
 .comments{margin-top:8px;max-height:160px;overflow:auto;font-size:13px;border-top:1px solid var(--line);padding-top:8px}
@@ -122,7 +122,6 @@ function buildCard(item){
   card.className = "card";
   card.id = "cert-" + item.cert_no;
   const uname = item.username || item.display_name || "老师";
-  // 优先用用户名跳转个人主页（profile.html 认 ?u=）；没有用户名时再退回 id
   let profileHref = "#";
   if (item.username) profileHref = "profile.html?u=" + encodeURIComponent(item.username);
   else if (item.user_id) profileHref = "profile.html?id=" + encodeURIComponent(item.user_id);
@@ -153,7 +152,7 @@ function buildCard(item){
   card.querySelector(".btn-save-draw").onclick = async () => {
     try {
       if (!token()) { alert("请先登录再涂鸦"); return; }
-      const data = canvas.toDataURL("image/png");
+      const data = canvas.toDataURL("image/jpeg", 0.75);
       await api("/teachers/draw", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, image: data }) });
       alert("涂鸦已保存（约每周自动清理一次）");
     } catch (e) { alert(e.message); }
@@ -205,6 +204,7 @@ function setupCanvas(canvas, wrap, drawingDataUrl){
     canvas.style.height = r.height + "px";
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,r.width,r.height);
     if (drawingDataUrl) {
       const im = new Image();
       im.onload = () => ctx.drawImage(im, 0, 0, r.width, r.height);
