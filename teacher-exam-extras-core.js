@@ -53,7 +53,7 @@
     var sex = sumAttrs(SEX_ATTRS);
     var virtue = sumAttrs(VIRTUE_ATTRS);
     var person = sumAttrs(PERSON_ATTRS);
-    var passed = sex >= 500 && virtue >= 100 && person >= 100;
+    var passed = (sex >= 500 && virtue >= 100 && person >= 100) || !!window.__quickTestMode;
     var html = "<h2 style='font-size:16px;color:#e8a0d0;margin:12px 0 6px'>属性汇总</h2>";
     html += "<div>色色属性：<b>" + sex + "</b> " + (sex >= 500 ? "✓" : "（需≥500）") + "</div>";
     html += "<div>美德属性：<b>" + virtue + "</b> " + (virtue >= 100 ? "✓" : "（需≥100）") + "</div>";
@@ -209,10 +209,7 @@
         canvas.width = W;
         canvas.height = H;
         ctx.drawImage(bg, 0, 0, W, H);
-
-        // 模板已印标签，只写冒号后的值（坐标按 784x1168 实测）
         var ax = 70, ay = 225, aw = 215, ah = 350;
-
         function wrapText(text, x, y, maxW, lineH, maxLines) {
           text = String(text || "");
           var line = "", lines = 0;
@@ -229,43 +226,34 @@
           if (line) { ctx.fillText(line, x, y); y += lineH; }
           return y;
         }
-
         function fillText() {
           ctx.fillStyle = "#1a1020";
           ctx.textAlign = "left";
           ctx.textBaseline = "middle";
           ctx.font = "bold 28px Microsoft YaHei,sans-serif";
-          // 姓名 / 性别 / 年龄 —— 标签右侧
           ctx.fillText(String(info.name || ""), 455, 248);
           ctx.fillText(String(info.gender || ""), 455, 315);
           ctx.fillText(String(info.age || ""), 455, 395);
-          // 课程 —— 「主要负责的课程：」下方
           ctx.font = "22px Microsoft YaHei,sans-serif";
           wrapText(info.course || "", 320, 535, 420, 30, 3);
-          // 教师编号 —— 红色标签右侧
           ctx.font = "bold 26px Microsoft YaHei,sans-serif";
           ctx.fillText(String(info.teacherId || ""), 455, 690);
-          // 自我介绍 —— 标签下方
           ctx.font = "20px Microsoft YaHei,sans-serif";
           wrapText(info.bio || "", 90, 830, 600, 28, 4);
-          // 签名
           ctx.font = "30px 'Segoe Script','Brush Script MT',cursive,Microsoft YaHei";
           ctx.fillStyle = "#2a1520";
           ctx.fillText(String(info.name || ""), 80, 980);
-          // 审批
           ctx.font = "20px Microsoft YaHei,sans-serif";
           ctx.fillStyle = "#8b2252";
           ctx.textAlign = "right";
           ctx.fillText("草莓酱老师审批通过", 740, 1050);
         }
-
         function finish() {
           canvas.style.display = "none";
           var url = canvas.toDataURL("image/jpeg", 0.85);
           if (preview) { preview.src = url; preview.style.display = "block"; }
           resolve(url);
         }
-
         if (info.photoData) {
           var p = new Image();
           p.onload = function () {
@@ -307,9 +295,17 @@
   }
 
   window.__quickTestToResult = function () {
+    window.__quickTestMode = true;
     try {
-      if (typeof ATTRS !== "undefined" && typeof totalScore !== "undefined") {
+      if (typeof totalScore === "undefined" || !totalScore) {
+        try { window.totalScore = {}; } catch (e0) {}
+      }
+      if (typeof ATTRS !== "undefined" && ATTRS && ATTRS.length) {
         ATTRS.forEach(function (a) { totalScore[a] = 100; });
+      } else {
+        ["媚黑","宽容","善良","热心","公正","自信","自卑","纯洁","淫荡","绿帽","雌竞","严厉","S属性","M属性","责任心","阳具崇拜"].forEach(function (a) {
+          try { totalScore[a] = 100; } catch (e1) {}
+        });
       }
     } catch (e) {}
     try {
@@ -323,10 +319,28 @@
     } catch (e4) {}
     ["bootScreen","startScreen","quizScreen","interviewScreen","matchScreen","transition"].forEach(function (id) {
       var el = document.getElementById(id);
-      if (el) { el.style.display = "none"; }
+      if (el) el.style.display = "none";
     });
-    if (typeof showRadar === "function") showRadar();
-    else alert("结果页未就绪，请稍后再试");
+    try { installShowRadar(); } catch (e5) {}
+    function goResult() {
+      if (typeof showRadar === "function") showRadar();
+      else {
+        var rs = document.getElementById("resultScreen");
+        if (rs) rs.style.display = "flex";
+      }
+      try { buildResultExtra(); } catch (e6) {}
+      try {
+        document.documentElement.style.overflow = "auto";
+        document.body.style.overflow = "auto";
+        document.body.style.height = "auto";
+      } catch (e7) {}
+      setTimeout(function () {
+        var box = document.getElementById("resultExtra");
+        if (box) box.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    }
+    goResult();
+    setTimeout(goResult, 300);
   };
 
   function injectQuickTestButton() {
@@ -378,6 +392,7 @@
     window.showRadar._extrasCore = true;
   }
 
+  window.buildResultExtra = buildResultExtra;
   function boot() {
     ensureUI();
     injectQuickTestButton();
