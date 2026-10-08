@@ -40,11 +40,15 @@ html,body{width:100%;height:100%;margin:0;background:#020304;color:#d8dde0;font-
       fail("考试加载失败，请稍后重试或从学校官网重新进入");
       return;
     }
+
+    // 去密码锁
     html = html.replace(/<div id="examLock"[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/, "");
     html = html.replace(
       /<script>\s*\(function\(\)\{\s*var unlocked[\s\S]*?5200[\s\S]*?\}\)\(\);\s*<\/script>/,
       ""
     );
+
+    // 手机结果页可滚动 + 快速测试按钮样式
     var injectCss =
       "<style id=\"mobile-result-fix\">" +
       "html,body{overflow:auto!important;height:auto!important;min-height:100%!important}" +
@@ -55,6 +59,9 @@ html,body{width:100%;height:100%;margin:0;background:#020304;color:#d8dde0;font-
       "#radarCanvas{width:min(92vw,420px)!important;height:auto!important;aspect-ratio:1!important;" +
       "max-width:96vw!important;display:block!important;margin:0 auto!important}" +
       "#resultExtra{max-width:100%!important;text-align:left!important}" +
+      "#quickTestBtn{position:fixed;right:12px;bottom:12px;z-index:9998;padding:8px 12px;" +
+      "border:1px solid #4c565b;background:rgba(10,13,15,.88);color:#9aa;border-radius:8px;" +
+      "font:12px Microsoft YaHei,sans-serif;cursor:pointer}" +
       "</style>";
     if (html.indexOf("</head>") >= 0) html = html.replace("</head>", injectCss + "</head>");
     else html = injectCss + html;
@@ -66,10 +73,11 @@ html,body{width:100%;height:100%;margin:0;background:#020304;color:#d8dde0;font-
       );
     }
 
+    // 加载后：解锁 + 手机雷达 + 快速测试通道（与女生卷一致）
     var hook =
       "<script>(function(){\n" +
       "function patchRadar(){\n" +
-      "  if(typeof window.showRadar!=='function'||window.showRadar._mobilePatched) return;\n" +
+      "  if(typeof window.showRadar!=='function'||window.showRadar._mobilePatched)return;\n" +
       "  var orig=window.showRadar;\n" +
       "  window.showRadar=function(){\n" +
       "    try{\n" +
@@ -81,11 +89,50 @@ html,body{width:100%;height:100%;margin:0;background:#020304;color:#d8dde0;font-
       "  };\n" +
       "  window.showRadar._mobilePatched=true;\n" +
       "}\n" +
+      "function openQuickTestGate(){\n" +
+      "  var p=prompt('请输入快速测试密码');\n" +
+      "  if(p===null)return;\n" +
+      "  if(String(p).trim()!=='5200'){alert('密码错误');return;}\n" +
+      "  if(typeof window.__quickTestToResult==='function'){\n" +
+      "    window.__quickTestToResult();\n" +
+      "    return;\n" +
+      "  }\n" +
+      "  try{\n" +
+      "    if(typeof ATTRS!=='undefined'&&typeof totalScore!=='undefined'){\n" +
+      "      ATTRS.forEach(function(a){totalScore[a]=100;});\n" +
+      "    }\n" +
+      "    var info={name:'测试考生',gender:'男',age:'22'};\n" +
+      "    try{\n" +
+      "      var old=JSON.parse(sessionStorage.getItem('teacherExamInfo')||'{}')||{};\n" +
+      "      if(old.name)info.name=old.name;\n" +
+      "      if(old.gender)info.gender=old.gender;\n" +
+      "      if(old.age)info.age=old.age;\n" +
+      "    }catch(e0){}\n" +
+      "    sessionStorage.setItem('teacherExamInfo',JSON.stringify(info));\n" +
+      "    try{candidateName=info.name;}catch(e1){}\n" +
+      "  }catch(e){}\n" +
+      "  ['bootScreen','startScreen','quizScreen','interviewScreen','matchScreen','transition'].forEach(function(id){\n" +
+      "    var el=document.getElementById(id);if(el)el.style.display='none';\n" +
+      "  });\n" +
+      "  if(typeof showRadar==='function')showRadar();\n" +
+      "  else alert('结果页未就绪，请稍后再试');\n" +
+      "}\n" +
+      "window.openQuickTestGate=openQuickTestGate;\n" +
+      "function injectQuickBtn(){\n" +
+      "  if(document.getElementById('quickTestBtn'))return;\n" +
+      "  var b=document.createElement('button');\n" +
+      "  b.id='quickTestBtn';b.type='button';b.textContent='快速测试通道';\n" +
+      "  b.onclick=openQuickTestGate;\n" +
+      "  document.body.appendChild(b);\n" +
+      "}\n" +
       "patchRadar();\n" +
+      "injectQuickBtn();\n" +
       "setTimeout(patchRadar,300);\n" +
       "setTimeout(patchRadar,1500);\n" +
+      "setTimeout(injectQuickBtn,500);\n" +
+      "setTimeout(injectQuickBtn,2000);\n" +
       "try{sessionStorage.setItem('teacherExamUnlocked','1');}catch(e){}\n" +
-      "var el=document.getElementById('examLock'); if(el) el.remove();\n" +
+      "var el=document.getElementById('examLock');if(el)el.remove();\n" +
       "})();<\/script>";
 
     if (html.indexOf("teacher-exam-extras.js") < 0) {
