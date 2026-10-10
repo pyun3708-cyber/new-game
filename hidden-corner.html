@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>隐蔽角落 · 反媚黑高校</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      color: #e8e0f0;
+      background: linear-gradient(180deg, #1a1028 0%, #0d0814 100%);
+    }
+    .card {
+      width: 100%;
+      max-width: 360px;
+      padding: 28px 24px;
+      border-radius: 16px;
+      background: rgba(40, 28, 56, 0.92);
+      border: 1px solid rgba(180, 140, 220, 0.25);
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.35);
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.15rem;
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+      color: #e8d5ff;
+    }
+    .sub {
+      font-size: 12px;
+      color: #9a8ab0;
+      margin-bottom: 22px;
+      line-height: 1.5;
+    }
+    label {
+      display: block;
+      text-align: left;
+      font-size: 13px;
+      color: #c4b4d8;
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 10px;
+      border: 1.5px solid rgba(180, 140, 220, 0.35);
+      background: rgba(20, 12, 32, 0.8);
+      color: #f0e8ff;
+      font-size: 16px;
+      outline: none;
+      letter-spacing: 0.15em;
+      text-align: center;
+    }
+    input:focus { border-color: #b48de0; }
+    .btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 12px;
+      border: none;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #9b6bc9, #6b3fa0);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 0.12em;
+    }
+    .btn:active { transform: scale(0.98); }
+    .err {
+      min-height: 1.3em;
+      margin-top: 12px;
+      font-size: 13px;
+      color: #f08090;
+    }
+    .back {
+      display: inline-block;
+      margin-top: 18px;
+      font-size: 13px;
+      color: #9a8ab0;
+      text-decoration: none;
+    }
+    .back:hover { color: #e8d5ff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>隐蔽角落</h1>
+    <p class="sub">此处内容不对普通访客开放。<br>请输入通行密码继续。</p>
+    <label for="pwd">通行密码</label>
+    <input id="pwd" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" maxlength="16">
+    <button class="btn" id="btn" type="button">进入</button>
+    <div class="err" id="err"></div>
+    <a class="back" href="school.html">← 返回学校官网</a>
+  </div>
+  <script>
+    (function () {
+      var TARGET = "ruofu/_____.html";
+      var PASS = "1314";
+      var input = document.getElementById("pwd");
+      var err = document.getElementById("err");
+      var btn = document.getElementById("btn");
+
+      function go() {
+        err.textContent = "";
+        var v = (input.value || "").trim();
+        if (v === PASS) {
+          // 可选：短时记住，避免反复输入
+          try { sessionStorage.setItem("hiddenCornerOk", "1"); } catch (e) {}
+          location.href = TARGET;
+          return;
+        }
+        err.textContent = "密码错误";
+        input.value = "";
+        input.focus();
+      }
+
+      // 本会话已通过则直接进入
+      try {
+        if (sessionStorage.getItem("hiddenCornerOk") === "1") {
+          location.replace(TARGET);
+          return;
+        }
+      } catch (e) {}
+
+      btn.onclick = go;
+      input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") go();
+      });
+      input.focus();
+    })();
+  </script>
+</body>
+</html>
