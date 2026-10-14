@@ -50,6 +50,20 @@
       backdrop-filter: blur(10px);
     }
     .board-sub { font-size: 12px; color: var(--pink); margin-bottom: 12px; line-height: 1.5; }
+    .sort-bar {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .sort-bar .label { font-size: 12px; color: var(--muted); }
+    .sort-btn {
+      border: 1px solid #d8c8b8; background: rgba(255,255,255,.7);
+      color: #6a5a4a; border-radius: 999px; padding: 6px 12px;
+      font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit;
+    }
+    .sort-btn.active {
+      background: linear-gradient(135deg, #a08060, #8b765d);
+      color: #fff; border-color: transparent;
+    }
     .login-gate {
       text-align: center; padding: 18px 12px; background: rgba(255,255,255,.5);
       border-radius: 12px; margin-bottom: 14px; border: 1px dashed #d0c0b0;
@@ -115,6 +129,11 @@
     </div>
     <div class="panel">
       <p class="board-sub">必须登录才能发送。勾选「匿名发言」后公开展示为「匿名」，且无法点进主页。非匿名名字可点击查看对方主页。禁止发图。</p>
+      <div class="sort-bar" id="sortBar">
+        <span class="label">排序：</span>
+        <button type="button" class="sort-btn active" data-sort="time" id="sortTime">按时间顺序</button>
+        <button type="button" class="sort-btn" data-sort="likes" id="sortLikes">按点赞数量</button>
+      </div>
       <div id="gate" class="login-gate" style="display:none">
         <div>登录后才能发言</div>
         <a href="login.html">去登录</a>
@@ -150,6 +169,12 @@ function user() {
 let messages = [];
 let replyToId = null;
 let me = user();
+let sortMode = "time";
+try {
+  var saved = localStorage.getItem("wall_sort_mode");
+  if (saved === "time" || saved === "likes") sortMode = saved;
+} catch (e) {}
+
 function toast(m) {
   const el = document.getElementById("toast");
   if (!el) return;
@@ -186,6 +211,19 @@ function refreshGate() {
   var composer = document.getElementById("composer");
   if (gate) gate.style.display = logged ? "none" : "block";
   if (composer) composer.style.display = logged ? "block" : "none";
+}
+function updateSortButtons() {
+  var timeBtn = document.getElementById("sortTime");
+  var likeBtn = document.getElementById("sortLikes");
+  if (timeBtn) timeBtn.classList.toggle("active", sortMode === "time");
+  if (likeBtn) likeBtn.classList.toggle("active", sortMode === "likes");
+}
+function setSortMode(mode) {
+  if (mode !== "time" && mode !== "likes") return;
+  sortMode = mode;
+  try { localStorage.setItem("wall_sort_mode", sortMode); } catch (e) {}
+  updateSortButtons();
+  render();
 }
 function normalizeMsg(m) {
   if (!m || typeof m !== "object") return null;
@@ -227,9 +265,21 @@ function api(path, opts) {
     });
   }).finally(function () { clearTimeout(timer); });
 }
+function sortRoots(roots) {
+  return roots.slice().sort(function (a, b) {
+    if (sortMode === "likes") {
+      var la = Number(a.like_count || a.likes || 0);
+      var lb = Number(b.like_count || b.likes || 0);
+      if (lb !== la) return lb - la;
+      return Number(b.created_at || 0) - Number(a.created_at || 0);
+    }
+    return Number(b.created_at || 0) - Number(a.created_at || 0);
+  });
+}
 function render() {
   var box = document.getElementById("list");
   if (!box) return;
+  updateSortButtons();
   if (!messages.length) {
     box.innerHTML = '<div class="hint">还没有留言，来当第一个吧～</div>';
     return;
@@ -238,7 +288,8 @@ function render() {
   messages.forEach(function (m) { if (m && m.id) byId[m.id] = m; });
   var roots = messages.filter(function (m) {
     return m && m.id && (!m.reply_to || !byId[m.reply_to]);
-  }).sort(function (a, b) { return Number(b.created_at || 0) - Number(a.created_at || 0); });
+  });
+  roots = sortRoots(roots);
   var children = {};
   messages.forEach(function (m) {
     if (m && m.reply_to && byId[m.reply_to]) {
@@ -366,6 +417,9 @@ function delOwn(id) {
 }
 document.getElementById("btnSend").onclick = postMsg;
 document.getElementById("cancelReply").onclick = clearReply;
+document.getElementById("sortTime").onclick = function () { setSortMode("time"); };
+document.getElementById("sortLikes").onclick = function () { setSortMode("likes"); };
+updateSortButtons();
 refreshGate();
 pull();
 setInterval(pull, 10000);
