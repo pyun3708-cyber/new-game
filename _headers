@@ -1,0 +1,11 @@
+# Cloudflare Pages headers — Godot HTML5 needs cross-origin isolation for threads
+/CampusRPG/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin
+
+/CampusRPG/CampusRPG.wasm
+  Content-Type: application/wasm
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin
