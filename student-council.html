@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f3ec">
+  <title>反媚黑高校 · 学生会</title>
+  <style>
+    :root {
+      --paper:#f7f3ec; --ink:#292824; --muted:#777268;
+      --line:rgba(41,40,36,.15); --accent:#8b765d; --card:rgba(255,255,255,.7);
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      min-height:100vh;color:var(--ink);
+      background:radial-gradient(circle at 15% 10%,rgba(139,118,93,.08),transparent 30%),
+        radial-gradient(circle at 85% 90%,rgba(139,118,93,.07),transparent 32%),var(--paper);
+      font-family:"Noto Serif SC","Songti SC","SimSun",serif;letter-spacing:.04em;
+    }
+    a{color:inherit;text-decoration:none}
+    .wrap{width:min(720px,92%);margin:0 auto;padding:20px 0 48px}
+    .back{display:inline-block;color:var(--accent);font-size:13px;letter-spacing:.12em;margin-bottom:28px}
+    header{text-align:center;margin-bottom:36px}
+    .eyebrow{font-family:Arial,sans-serif;font-size:11px;color:var(--muted);letter-spacing:.28em;text-transform:uppercase;margin-bottom:10px}
+    h1{font-size:clamp(28px,6vw,40px);font-weight:500;letter-spacing:.18em}
+    .line{width:48px;height:1px;background:var(--accent);margin:18px auto 0}
+    .sub{margin-top:14px;font-size:13px;color:var(--muted);letter-spacing:.1em}
+    .grid{display:grid;gap:14px}
+    .card{
+      display:block;padding:22px 22px 20px;border:1px solid var(--line);
+      background:var(--card);border-radius:4px;position:relative;
+      transition:transform .2s,box-shadow .2s,background .2s;
+    }
+    .card::before{
+      content:"";position:absolute;left:22px;top:18px;width:36px;height:1px;background:var(--accent);
+    }
+    .card:not(.disabled):hover{
+      transform:translateY(-3px);background:rgba(255,255,255,.92);
+      box-shadow:0 12px 28px rgba(50,45,38,.08);
+    }
+    .card .num{position:absolute;right:18px;top:16px;font:12px Arial,sans-serif;color:rgba(41,40,36,.22)}
+    .card h2{font-size:18px;font-weight:500;letter-spacing:.12em;margin:12px 0 8px}
+    .card p{font-size:13px;color:#5c564c;line-height:1.7}
+    .card.disabled{opacity:.55;cursor:not-allowed}
+    .tag{
+      display:inline-block;margin-top:10px;font-size:11px;letter-spacing:.1em;
+      color:var(--accent);border:1px solid rgba(139,118,93,.35);padding:3px 8px;border-radius:999px;
+    }
+    footer{margin-top:40px;text-align:center;font-size:11px;color:var(--muted);letter-spacing:.12em}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="back" href="school.html">← 返回学校官网</a>
+    <header>
+      <div class="eyebrow">STUDENT COUNCIL</div>
+      <h1>学生会</h1>
+      <div class="line"></div>
+      <p class="sub">校园自治 · 日常签运 · 社团与考核</p>
+    </header>
+    <div class="grid">
+      <a class="card" href="daily-lot.html">
+        <span class="num">01</span>
+        <h2>每日一签</h2>
+        <p>每日免费求一签。男生卷 / 女生卷可选，收集签文，加抽需回答或赞助。</p>
+        <span class="tag">已开放</span>
+      </a>
+      <a class="card disabled" href="javascript:void(0)" onclick="alert('加入社团功能暂未开放，敬请期待~');return false;">
+        <span class="num">02</span>
+        <h2>加入社团</h2>
+        <p>浏览与申请校内社团。内容筹备中。</p>
+        <span class="tag">暂未开放</span>
+      </a>
+      <a class="card disabled" href="javascript:void(0)" onclick="alert('学生会考核暂未开放，敬请期待~');return false;">
+        <span class="num">03</span>
+        <h2>学生会考核</h2>
+        <p>学生会成员定期考核入口。内容筹备中。</p>
+        <span class="tag">暂未开放</span>
+      </a>
+    </div>
+    <footer>反媚黑高校 · 学生会</footer>
+  </div>
+</body>
+</html>
