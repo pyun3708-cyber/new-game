@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>反媚黑高校 · 校园探索</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0c;touch-action:none}
+  #wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
+  canvas#game{display:block;background:#111;image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;max-height:100%}
+  #hud{
+    position:absolute;left:0;right:0;top:0;padding:8px 12px;
+    color:#f0e6d8;font:12px/1.4 "Courier New",monospace;
+    pointer-events:none;text-shadow:0 1px 2px #000;
+    display:flex;justify-content:space-between;gap:8px;
+  }
+  #controls{
+    position:absolute;inset:0;pointer-events:none;
+    display:none;
+  }
+  #controls.show{display:block}
+  #stickZone{
+    position:absolute;left:12px;bottom:12px;
+    width:140px;height:140px;pointer-events:auto;
+  }
+  #stickBase{
+    position:absolute;inset:0;border-radius:50%;
+    background:rgba(20,16,24,.45);
+    border:3px solid rgba(230,200,160,.55);
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.5);
+  }
+  #stickKnob{
+    position:absolute;left:50%;top:50%;
+    width:56px;height:56px;margin:-28px 0 0 -28px;
+    border-radius:50%;
+    background:rgba(240,220,180,.75);
+    border:3px solid rgba(40,30,20,.8);
+  }
+  #btnJump,#btnInteract{
+    position:absolute;pointer-events:auto;
+    width:64px;height:64px;border-radius:12px;
+    background:rgba(20,16,24,.55);
+    border:3px solid rgba(230,200,160,.6);
+    color:#f5e6c8;
+    display:flex;align-items:center;justify-content:center;
+    padding:0;
+  }
+  #btnJump{right:88px;bottom:20px}
+  #btnInteract{right:16px;bottom:20px}
+  #btnJump:active,#btnInteract:active{filter:brightness(1.25);transform:scale(.96)}
+  .pix-icon{width:70%;height:70%;display:block;image-rendering:pixelated}
+  #loading{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    background:#0a0a0c;color:#e8dcc8;font:14px/1.6 "Songti SC",serif;z-index:5;
+    letter-spacing:.12em;
+  }
+  #loading.hide{display:none}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="loading">加载校园资源中…</div>
+  <canvas id="game" width="960" height="540"></canvas>
+  <div id="hud">
+    <span id="hint">键盘：A/D 移动 · 空格跳跃 · E 互动</span>
+    <span id="sceneLabel">场景 1</span>
+  </div>
+  <div id="controls">
+    <div id="stickZone">
+      <div id="stickBase"></div>
+      <div id="stickKnob"></div>
+    </div>
+    <button id="btnJump" type="button" aria-label="跳跃"></button>
+    <button id="btnInteract" type="button" aria-label="互动"></button>
+  </div>
+</div>
+<script>
+(function(){
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  ctx.imageSmoothingEnabled = false;
+
+  const PATH = {
+    idle: 'character.png',
+    run: 'run.png',
+    jump: 'jump.png',
+    bg1: 'xiaoyuan1.png',
+    bg2: 'xiaoyuan2.png'
+  };
+
+  const ANIM = {
+    idle: { frames: 60, fps: 60 },
+    run:  { frames: 6,  fps: 3  },
+    jump: { frames: 5,  fps: 5  }
+  };
+
+  const GROUND_FROM_BOTTOM = 0.08;
+  const MOVE_SPEED = 220;
+  const JUMP_V = 420;
+  const GRAVITY = 1100;
+  const PLAYER_DRAW_H = 110;
+
+  let assets = {};
+  let ready = false;
+  let scene = 1;
+  let lastT = 0;
+
+  const keys = { left:false, right:false, jump:false, interact:false };
+  let jumpPressed = false;
+  let interactPressed = false;
+
+  const stick = { active:false, dx:0, id:null };
+
+  const player = {
+    x: 0, y: 0,
+    vx: 0, vy: 0,
+    facing: 1,
+    onGround: true,
+    anim: 'idle',
+    frame: 0,
+    frameTime: 0
+  };
+
+  function loadImage(src){
+    return new Promise((res,rej)=>{
+      const im = new Image();
+      im.onload = ()=>res(im);
+      im.onerror = ()=>rej(new Error('load fail '+src));
+      im.src = src;
+    });
+  }
+
+  async function boot(){
+    for(const [k,v] of Object.entries(PATH)){
+      assets[k] = await loadImage(v);
+    }
+    assets.idleMeta = { fw: assets.idle.width / ANIM.idle.frames, fh: assets.idle.height, count: ANIM.idle.frames };
+    assets.runMeta  = { fw: assets.run.width  / ANIM.run.frames,  fh: assets.run.height,  count: ANIM.run.frames };
+    assets.jumpMeta = { fw: assets.jump.width / 6, fh: assets.jump.height, count: 5 };
+
+    resetPlayerToScene(1, false);
+    ready = true;
+    document.getElementById('loading').classList.add('hide');
+    fitCanvas();
+    lastT = performance.now();
+    requestAnimationFrame(loop);
+  }
+
+  function worldSize(){
+    const bg = scene===1 ? assets.bg1 : assets.bg2;
+    return { w: bg.width, h: bg.height };
+  }
+
+  function groundY(){
+    const { h } = worldSize();
+    return h * (1 - GROUND_FROM_BOTTOM);
+  }
+
+  function resetPlayerToScene(s, fromOther){
+    scene = s;
+    const { w } = worldSize();
+    if(s===1){
+      player.x = fromOther ? w * 0.28 : w * 0.45;
+    } else {
+      player.x = fromOther ? w * 0.08 : w * 0.15;
+    }
+    player.y = groundY();
+    player.vx = 0; player.vy = 0;
+    player.onGround = true;
+    player.anim = 'idle';
+    player.frame = 0;
+    document.getElementById('sceneLabel').textContent = '场景 '+s;
+    fitCanvas();
+  }
+
+  function inInteractZone(){
+    const { w } = worldSize();
+    if(scene===1) return player.x < w / 3;
+    return player.x < w * 0.12;
+  }
+
+  function tryInteract(){
+    if(!inInteractZone()) return;
+    if(scene===1) resetPlayerToScene(2, true);
+    else resetPlayerToScene(1, true);
+  }
+
+  function fitCanvas(){
+    if(!assets.bg1) return;
+    const { w, h } = worldSize();
+    const viewH = Math.min(window.innerHeight, 720);
+    const viewW = Math.min(window.innerWidth, Math.floor(viewH * (16/9)));
+    canvas.style.width = Math.min(viewW, window.innerWidth) + 'px';
+    canvas.style.height = Math.min(viewH, window.innerHeight) + 'px';
+    const bufH = Math.min(h, 720);
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    canvas.width = Math.max(320, Math.min(Math.floor(bufH * aspect), w));
+    canvas.height = bufH;
+    ctx.imageSmoothingEnabled = false;
+  }
+  window.addEventListener('resize', ()=>{ if(ready) fitCanvas(); });
+
+  const isTouch = matchMedia('(pointer:coarse)').matches || 'ontouchstart' in window;
+  if(isTouch) document.getElementById('controls').classList.add('show');
+
+  window.addEventListener('keydown', e=>{
+    if(e.code==='KeyA'||e.code==='ArrowLeft') keys.left = true;
+    if(e.code==='KeyD'||e.code==='ArrowRight') keys.right = true;
+    if(e.code==='Space'||e.code==='KeyW'||e.code==='ArrowUp'){
+      if(!keys.jump) jumpPressed = true;
+      keys.jump = true;
+      e.preventDefault();
+    }
+    if(e.code==='KeyE'){
+      if(!keys.interact) interactPressed = true;
+      keys.interact = true;
+    }
+  });
+  window.addEventListener('keyup', e=>{
+    if(e.code==='KeyA'||e.code==='ArrowLeft') keys.left = false;
+    if(e.code==='KeyD'||e.code==='ArrowRight') keys.right = false;
+    if(e.code==='Space'||e.code==='KeyW'||e.code==='ArrowUp') keys.jump = false;
+    if(e.code==='KeyE') keys.interact = false;
+  });
+
+  function drawJumpIcon(btn){
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#f0d9a8';
+    g.fillRect(14,12,4,14);
+    g.fillRect(10,10,12,3);
+    g.fillRect(12,7,8,3);
+    g.fillRect(14,4,4,3);
+    c.className = 'pix-icon';
+    btn.appendChild(c);
+  }
+  function drawInteractIcon(btn){
+    const c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    const g = c.getContext('2d');
+    g.imageSmoothingEnabled = false;
+    g.fillStyle = '#f0d9a8';
+    for(let y=0;y<32;y++) for(let x=0;x<32;x++){
+      const dx=x-15.5, dy=y-15.5, r2=dx*dx+dy*dy;
+      if(r2>=10*10 && r2<=13*13) g.fillRect(x,y,1,1);
+    }
+    g.fillRect(14,14,4,4);
+    c.className = 'pix-icon';
+    btn.appendChild(c);
+  }
+  drawJumpIcon(document.getElementById('btnJump'));
+  drawInteractIcon(document.getElementById('btnInteract'));
+
+  const zone = document.getElementById('stickZone');
+  const knob = document.getElementById('stickKnob');
+  function setKnob(dx,dy){
+    const max = 40;
+    const len = Math.hypot(dx,dy) || 1;
+    const s = Math.min(1, max/len);
+    knob.style.transform = 'translate('+(dx*s)+'px,'+(dy*s)+'px)';
+  }
+  function stickStart(x,y,id){
+    const r = zone.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    stick.active = true; stick.id = id;
+    stick.dx = (x-cx) / (r.width/2);
+    setKnob(x-cx, y-cy);
+  }
+  function stickMove(x,y){
+    if(!stick.active) return;
+    const r = zone.getBoundingClientRect();
+    const cx = r.left + r.width/2, cy = r.top + r.height/2;
+    let dx = x-cx, dy = y-cy;
+    stick.dx = Math.max(-1, Math.min(1, dx / (r.width/2)));
+    setKnob(dx, dy);
+  }
+  function stickEnd(){
+    stick.active = false; stick.id = null; stick.dx = 0;
+    knob.style.transform = 'translate(0,0)';
+  }
+  zone.addEventListener('touchstart', e=>{
+    const t = e.changedTouches[0];
+    stickStart(t.clientX,t.clientY,t.identifier);
+    e.preventDefault();
+  }, {passive:false});
+  window.addEventListener('touchmove', e=>{
+    if(!stick.active) return;
+    for(const t of e.changedTouches){
+      if(t.identifier===stick.id){ stickMove(t.clientX,t.clientY); e.preventDefault(); }
+    }
+  }, {passive:false});
+  window.addEventListener('touchend', e=>{
+    for(const t of e.changedTouches){
+      if(t.identifier===stick.id) stickEnd();
+    }
+  });
+
+  document.getElementById('btnJump').addEventListener('touchstart', e=>{
+    jumpPressed = true; keys.jump = true; e.preventDefault();
+  }, {passive:false});
+  document.getElementById('btnJump').addEventListener('touchend', ()=>{ keys.jump = false; });
+  document.getElementById('btnInteract').addEventListener('touchstart', e=>{
+    interactPressed = true; e.preventDefault();
+  }, {passive:false});
+  document.getElementById('btnJump').addEventListener('mousedown', ()=>{ jumpPressed = true; keys.jump = true; });
+  document.getElementById('btnJump').addEventListener('mouseup', ()=>{ keys.jump = false; });
+  document.getElementById('btnInteract').addEventListener('mousedown', ()=>{ interactPressed = true; });
+
+  function update(dt){
+    let move = 0;
+    if(keys.left) move -= 1;
+    if(keys.right) move += 1;
+    if(stick.active) move += stick.dx;
+    move = Math.max(-1, Math.min(1, move));
+
+    player.vx = move * MOVE_SPEED;
+    if(move > 0.15) player.facing = 1;
+    else if(move < -0.15) player.facing = -1;
+
+    if(jumpPressed && player.onGround){
+      player.vy = -JUMP_V;
+      player.onGround = false;
+      player.anim = 'jump';
+      player.frame = 0;
+      player.frameTime = 0;
+    }
+    jumpPressed = false;
+
+    if(interactPressed){
+      tryInteract();
+      interactPressed = false;
+    }
+
+    if(!player.onGround) player.vy += GRAVITY * dt;
+
+    player.x += player.vx * dt;
+    player.y += player.vy * dt;
+
+    const { w } = worldSize();
+    const meta = assets.idleMeta;
+    const scaleH = PLAYER_DRAW_H / meta.fh;
+    const pw = meta.fw * scaleH;
+    const minX = pw * 0.35;
+    const maxX = w - pw * 0.35;
+    player.x = Math.max(minX, Math.min(maxX, player.x));
+
+    const gy = groundY();
+    if(player.y >= gy){
+      player.y = gy;
+      player.vy = 0;
+      player.onGround = true;
+    }
+
+    if(!player.onGround) player.anim = 'jump';
+    else if(Math.abs(move) > 0.15) player.anim = 'run';
+    else player.anim = 'idle';
+
+    const cfg = ANIM[player.anim];
+    const am = player.anim==='idle' ? assets.idleMeta
+             : player.anim==='run' ? assets.runMeta
+             : assets.jumpMeta;
+    player.frameTime += dt;
+    const spf = 1 / cfg.fps;
+    while(player.frameTime >= spf){
+      player.frameTime -= spf;
+      if(player.anim==='jump'){
+        if(player.frame < am.count - 1) player.frame++;
+        else break;
+      } else {
+        player.frame = (player.frame + 1) % am.count;
+      }
+    }
+  }
+
+  function cameraX(){
+    const { w, h } = worldSize();
+    const scale = canvas.height / h;
+    const viewWorldW = canvas.width / scale;
+    let cam = player.x - viewWorldW / 2;
+    cam = Math.max(0, Math.min(Math.max(0, w - viewWorldW), cam));
+    return { cam, scale };
+  }
+
+  function drawPixelText(text, x, y){
+    ctx.save();
+    ctx.font = '12px "Courier New", monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#1a1008';
+    ctx.strokeText(text, x, y);
+    ctx.fillStyle = '#c4a060';
+    ctx.fillText(text, x+1, y+1);
+    ctx.fillStyle = '#fff2c8';
+    ctx.fillText(text, x, y);
+    ctx.restore();
+  }
+
+  function draw(){
+    const bg = scene===1 ? assets.bg1 : assets.bg2;
+    const { w, h } = worldSize();
+    const { cam, scale } = cameraX();
+
+    ctx.fillStyle = '#0a0a0c';
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.drawImage(bg, -cam * scale, 0, w * scale, h * scale);
+
+    const anim = player.anim;
+    const sheet = anim==='idle' ? assets.idle : anim==='run' ? assets.run : assets.jump;
+    const meta = anim==='idle' ? assets.idleMeta : anim==='run' ? assets.runMeta : assets.jumpMeta;
+    const fi = Math.max(0, Math.min(meta.count-1, player.frame|0));
+    const sx = fi * meta.fw;
+
+    const worldDrawH = PLAYER_DRAW_H;
+    const worldDrawW = meta.fw * (worldDrawH / meta.fh);
+    const screenH = worldDrawH * scale;
+    const screenW = worldDrawW * scale;
+    const screenX = (player.x - cam) * scale;
+    const screenY = player.y * scale;
+
+    ctx.save();
+    ctx.translate(screenX, screenY);
+    ctx.scale(player.facing, 1);
+    ctx.drawImage(sheet, sx, 0, meta.fw, meta.fh, -screenW/2, -screenH, screenW, screenH);
+    ctx.restore();
+
+    if(inInteractZone()){
+      const label = isTouch ? '可互动' : '按E互动';
+      drawPixelText(label, screenX, screenY - screenH - 6);
+    }
+  }
+
+  function loop(t){
+    if(!ready) return;
+    let dt = (t - lastT) / 1000;
+    lastT = t;
+    if(dt > 0.05) dt = 0.05;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  boot().catch(err=>{
+    document.getElementById('loading').textContent = '资源加载失败：'+err.message;
+    console.error(err);
+  });
+})();
+</script>
+</body>
+</html>
