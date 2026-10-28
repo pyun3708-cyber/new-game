@@ -95,11 +95,13 @@
     jump: { frames: 5,  fps: 5  }
   };
 
-  const GROUND_FROM_BOTTOM = { 1: 0.15, 2: 0.30 };
+  const GROUND_FROM_BOTTOM = { 1: 0.15, 2: 0.20 };
   const MOVE_SPEED = 110;
   const JUMP_V = 360;
   const GRAVITY = 1100;
   const PLAYER_DRAW_H = 55;
+  const JUMP_DRAW_H = 55 * 1.5;
+  const VIEW_WORLD_W = 300;
 
   let assets = {};
   let ready = false;
@@ -162,7 +164,10 @@
     scene = s;
     const { w } = worldSize();
     if(s===1){
-      player.x = fromOther ? w * (1/3 + 0.05) : w * 0.55;
+      const meta = assets.idleMeta;
+      const scaleH = PLAYER_DRAW_H / meta.fh;
+      const pw = meta.fw * scaleH;
+      player.x = fromOther ? w * (1/3 + 0.05) : Math.max(pw * 0.5, pw * 0.55);
     } else {
       player.x = fromOther ? w * 0.10 : w * 0.18;
     }
@@ -194,14 +199,20 @@
   function fitCanvas(){
     if(!assets.bg1) return;
     const { w, h } = worldSize();
-    const viewH = Math.min(window.innerHeight, 720);
-    const viewW = Math.min(window.innerWidth, Math.floor(viewH * (16/9)));
-    canvas.style.width = Math.min(viewW, window.innerWidth) + 'px';
-    canvas.style.height = Math.min(viewH, window.innerHeight) + 'px';
-    const bufH = Math.min(h, 720);
-    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
-    canvas.width = Math.max(320, Math.min(Math.floor(bufH * aspect), w));
+    const bufH = h;
+    const bufW = VIEW_WORLD_W;
+    canvas.width = bufW;
     canvas.height = bufH;
+    const maxH = window.innerHeight;
+    const maxW = window.innerWidth;
+    let cssH = maxH;
+    let cssW = Math.floor(cssH * (bufW / bufH));
+    if(cssW > maxW){
+      cssW = maxW;
+      cssH = Math.floor(cssW * (bufH / bufW));
+    }
+    canvas.style.width = cssW + 'px';
+    canvas.style.height = cssH + 'px';
     ctx.imageSmoothingEnabled = false;
   }
   window.addEventListener('resize', ()=>{ if(ready) fitCanvas(); });
@@ -382,11 +393,12 @@
 
   function cameraX(){
     const { w, h } = worldSize();
-    const scale = canvas.height / h;
-    const viewWorldW = canvas.width / scale;
+    const scale = 1;
+    const viewWorldW = VIEW_WORLD_W;
     let cam = player.x - viewWorldW / 2;
-    cam = Math.max(0, Math.min(Math.max(0, w - viewWorldW), cam));
-    return { cam, scale };
+    const maxCam = Math.max(0, w - viewWorldW);
+    cam = Math.max(0, Math.min(maxCam, cam));
+    return { cam, scale, viewWorldW };
   }
 
   function drawPixelText(text, x, y){
@@ -419,7 +431,7 @@
     const fi = Math.max(0, Math.min(meta.count-1, player.frame|0));
     const sx = fi * meta.fw;
 
-    const worldDrawH = PLAYER_DRAW_H;
+    const worldDrawH = (anim==='jump') ? JUMP_DRAW_H : PLAYER_DRAW_H;
     const worldDrawW = meta.fw * (worldDrawH / meta.fh);
     const screenH = worldDrawH * scale;
     const screenW = worldDrawW * scale;
