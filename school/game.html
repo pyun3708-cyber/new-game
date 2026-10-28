@@ -95,11 +95,11 @@
     jump: { frames: 5,  fps: 5  }
   };
 
-  const GROUND_FROM_BOTTOM = 0.08;
-  const MOVE_SPEED = 220;
-  const JUMP_V = 420;
+  const GROUND_FROM_BOTTOM = { 1: 0.15, 2: 0.30 };
+  const MOVE_SPEED = 110;
+  const JUMP_V = 360;
   const GRAVITY = 1100;
-  const PLAYER_DRAW_H = 110;
+  const PLAYER_DRAW_H = 55;
 
   let assets = {};
   let ready = false;
@@ -154,16 +154,17 @@
 
   function groundY(){
     const { h } = worldSize();
-    return h * (1 - GROUND_FROM_BOTTOM);
+    const frac = GROUND_FROM_BOTTOM[scene] != null ? GROUND_FROM_BOTTOM[scene] : 0.15;
+    return h * (1 - frac);
   }
 
   function resetPlayerToScene(s, fromOther){
     scene = s;
     const { w } = worldSize();
     if(s===1){
-      player.x = fromOther ? w * 0.28 : w * 0.45;
+      player.x = fromOther ? w * (1/3 + 0.05) : w * 0.55;
     } else {
-      player.x = fromOther ? w * 0.08 : w * 0.15;
+      player.x = fromOther ? w * 0.10 : w * 0.18;
     }
     player.y = groundY();
     player.vx = 0; player.vy = 0;
@@ -176,7 +177,11 @@
 
   function inInteractZone(){
     const { w } = worldSize();
-    if(scene===1) return player.x < w / 3;
+    if(scene===1){
+      const start = w / 3;
+      const width = w * 0.08;
+      return player.x >= start && player.x <= start + width;
+    }
     return player.x < w * 0.12;
   }
 
