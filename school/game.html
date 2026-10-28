@@ -8,7 +8,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{width:100%;height:100%;overflow:hidden;background:#0a0a0c;touch-action:none}
   #wrap{position:relative;width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-  canvas#game{display:block;background:#111;image-rendering:pixelated;image-rendering:crisp-edges;max-width:100%;max-height:100%}
+  canvas#game{display:block;background:#111;image-rendering:pixelated;image-rendering:crisp-edges;-ms-interpolation-mode:nearest-neighbor;max-width:100%;max-height:100%}
   #hud{
     position:absolute;left:0;right:0;top:0;padding:8px 12px;
     color:#f0e6d8;font:12px/1.4 "Courier New",monospace;
@@ -99,9 +99,10 @@
   const MOVE_SPEED = 110;
   const JUMP_V = 360;
   const GRAVITY = 1100;
-  const PLAYER_DRAW_H = 55;
-  const JUMP_DRAW_H = 55 * 1.5;
+  const PLAYER_DRAW_H = 64;
+  const JUMP_DRAW_H = 96;
   const VIEW_WORLD_W = 300;
+  const RENDER_SCALE = 3;
 
   let assets = {};
   let ready = false;
@@ -199,17 +200,17 @@
   function fitCanvas(){
     if(!assets.bg1) return;
     const { w, h } = worldSize();
-    const bufH = h;
-    const bufW = VIEW_WORLD_W;
+    const bufW = VIEW_WORLD_W * RENDER_SCALE;
+    const bufH = h * RENDER_SCALE;
     canvas.width = bufW;
     canvas.height = bufH;
     const maxH = window.innerHeight;
     const maxW = window.innerWidth;
     let cssH = maxH;
-    let cssW = Math.floor(cssH * (bufW / bufH));
+    let cssW = Math.floor(cssH * (VIEW_WORLD_W / h));
     if(cssW > maxW){
       cssW = maxW;
-      cssH = Math.floor(cssW * (bufH / bufW));
+      cssH = Math.floor(cssW * (h / VIEW_WORLD_W));
     }
     canvas.style.width = cssW + 'px';
     canvas.style.height = cssH + 'px';
@@ -393,7 +394,7 @@
 
   function cameraX(){
     const { w, h } = worldSize();
-    const scale = 1;
+    const scale = RENDER_SCALE;
     const viewWorldW = VIEW_WORLD_W;
     let cam = player.x - viewWorldW / 2;
     const maxCam = Math.max(0, w - viewWorldW);
@@ -421,6 +422,7 @@
     const { w, h } = worldSize();
     const { cam, scale } = cameraX();
 
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = '#0a0a0c';
     ctx.fillRect(0,0,canvas.width,canvas.height);
     ctx.drawImage(bg, -cam * scale, 0, w * scale, h * scale);
@@ -433,15 +435,16 @@
 
     const worldDrawH = (anim==='jump') ? JUMP_DRAW_H : PLAYER_DRAW_H;
     const worldDrawW = meta.fw * (worldDrawH / meta.fh);
-    const screenH = worldDrawH * scale;
-    const screenW = worldDrawW * scale;
-    const screenX = (player.x - cam) * scale;
-    const screenY = player.y * scale;
+    const screenH = Math.round(worldDrawH * scale);
+    const screenW = Math.round(worldDrawW * scale);
+    const screenX = Math.round((player.x - cam) * scale);
+    const screenY = Math.round(player.y * scale);
 
     ctx.save();
+    ctx.imageSmoothingEnabled = false;
     ctx.translate(screenX, screenY);
     ctx.scale(player.facing, 1);
-    ctx.drawImage(sheet, sx, 0, meta.fw, meta.fh, -screenW/2, -screenH, screenW, screenH);
+    ctx.drawImage(sheet, sx, 0, meta.fw, meta.fh, -Math.round(screenW/2), -screenH, screenW, screenH);
     ctx.restore();
 
     if(inInteractZone()){
