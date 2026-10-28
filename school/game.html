@@ -56,12 +56,27 @@
     letter-spacing:.12em;
   }
   #loading.hide{display:none}
+  #btnMusic{
+    position:absolute;top:10px;right:12px;z-index:6;
+    min-width:72px;height:32px;padding:0 10px;
+    border:2px solid rgba(230,200,160,.65);
+    border-radius:8px;
+    background:rgba(20,16,24,.72);
+    color:#f0e6d8;
+    font:12px/1 "Courier New",monospace;
+    letter-spacing:.06em;
+    cursor:pointer;
+    pointer-events:auto;
+  }
+  #btnMusic:active{transform:scale(.97)}
+  #btnMusic.on{border-color:#c4a574;color:#fff2c8}
 </style>
 </head>
 <body>
 <div id="wrap">
   <div id="loading">加载校园资源中…</div>
   <canvas id="game" width="960" height="540"></canvas>
+  <button id="btnMusic" type="button" class="on" title="背景音乐">音乐 开</button>
   <div id="hud">
     <span id="hint">键盘：A/D 移动 · 空格跳跃 · E 互动</span>
     <span id="sceneLabel">场景 1</span>
@@ -90,7 +105,7 @@
   };
 
   const ANIM = {
-    idle: { frames: 60, fps: 60 },
+    idle: { frames: 60, fps: 30 },
     run:  { frames: 6,  fps: 3  },
     jump: { frames: 5,  fps: 5  }
   };
@@ -114,6 +129,48 @@
   let interactPressed = false;
 
   const stick = { active:false, dx:0, id:null };
+  const STICK_DEAD = 0.25;
+
+  const BGM_SRC = encodeURI('songs-without-words-op-67_2m13s-4m32s (1).mp3');
+  const bgm = new Audio(BGM_SRC);
+  bgm.loop = true;
+  bgm.preload = 'auto';
+  bgm.volume = 0.55;
+  let musicOn = true;
+  function updateMusicBtn(){
+    const b = document.getElementById('btnMusic');
+    if(!b) return;
+    b.textContent = musicOn ? '音乐 开' : '音乐 关';
+    b.classList.toggle('on', musicOn);
+  }
+  function playBgm(){
+    if(!musicOn) return;
+    const p = bgm.play();
+    if(p && p.catch) p.catch(()=>{});
+  }
+  function toggleMusic(){
+    musicOn = !musicOn;
+    if(musicOn){
+      playBgm();
+    } else {
+      bgm.pause();
+    }
+    try{ localStorage.setItem('school_game_music', musicOn ? '1' : '0'); }catch(e){}
+    updateMusicBtn();
+  }
+  try{
+    const saved = localStorage.getItem('school_game_music');
+    if(saved === '0') musicOn = false;
+  }catch(e){}
+  document.getElementById('btnMusic').addEventListener('click', toggleMusic);
+  function unlockAudioOnce(){
+    playBgm();
+    window.removeEventListener('pointerdown', unlockAudioOnce);
+    window.removeEventListener('keydown', unlockAudioOnce);
+  }
+  window.addEventListener('pointerdown', unlockAudioOnce);
+  window.addEventListener('keydown', unlockAudioOnce);
+  updateMusicBtn();
 
   const player = {
     x: 0, y: 0,
@@ -330,12 +387,15 @@
     let move = 0;
     if(keys.left) move -= 1;
     if(keys.right) move += 1;
-    if(stick.active) move += stick.dx;
+    if(stick.active){
+      if(stick.dx <= -STICK_DEAD) move = -1;
+      else if(stick.dx >= STICK_DEAD) move = 1;
+    }
     move = Math.max(-1, Math.min(1, move));
 
     player.vx = move * MOVE_SPEED;
-    if(move > 0.15) player.facing = 1;
-    else if(move < -0.15) player.facing = -1;
+    if(move > 0) player.facing = 1;
+    else if(move < 0) player.facing = -1;
 
     if(jumpPressed && player.onGround){
       player.vy = -JUMP_V;
@@ -372,7 +432,7 @@
     }
 
     if(!player.onGround) player.anim = 'jump';
-    else if(Math.abs(move) > 0.15) player.anim = 'run';
+    else if(Math.abs(move) > 0) player.anim = 'run';
     else player.anim = 'idle';
 
     const cfg = ANIM[player.anim];
