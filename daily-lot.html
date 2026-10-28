@@ -78,7 +78,7 @@
     justify-content:center;
     gap:14px;
     margin:10px 0 6px;
-    min-height:420px;
+    min-height:min(72vh, 520px);
   }
   .side-title{
     writing-mode:vertical-rl;
@@ -98,8 +98,9 @@
   }
 
   .card-scene{
-    width:min(280px,72vw);
-    height:380px;
+    width:min(320px,78vw);
+    height:min(460px,70vh);
+    min-height:360px;
     perspective:1200px;
   }
   .card{
@@ -137,7 +138,9 @@
   .face.back{
     transform:rotateY(180deg);
     justify-content:flex-start;
-    padding-top:18px;
+    padding-top:14px;
+    padding-bottom:12px;
+    gap:4px;
   }
 
   .face.front .seal{
@@ -187,10 +190,13 @@
 
   .lot-img-wrap{
     width:100%;
-    max-width:200px;
-    height:120px;
-    margin:4px 0 8px;
-    border-radius:4px;
+    max-width:min(240px, 78%);
+    flex:1 1 auto;
+    min-height:140px;
+    max-height:min(220px, 32vh);
+    height:auto;
+    margin:6px 0 8px;
+    border-radius:6px;
     border:1px solid var(--line);
     background:#1a120c;
     overflow:hidden;
@@ -201,9 +207,12 @@
     justify-content:center;
   }
   .lot-img-wrap img{
+    width:100%;
+    height:100%;
     max-width:100%;
     max-height:100%;
     object-fit:contain;
+    object-position:center;
     display:block;
   }
   .lot-img-wrap .img-fallback{
@@ -348,6 +357,18 @@
   }
   .chip .r{font-size:10px;opacity:.75;margin-left:2px}
 
+  @media (max-width:480px){
+    .card-scene{width:min(300px,86vw);height:min(440px,68vh);min-height:340px}
+    .lot-title{font-size:24px;letter-spacing:.18em}
+    .lot-verse{font-size:12px;line-height:1.65}
+    .lot-img-wrap{max-height:min(200px,30vh);min-height:120px}
+    .side-title{display:none}
+    .stage{min-height:auto;margin-top:4px}
+  }
+  @media (min-width:600px){
+    .card-scene{width:340px;height:500px}
+    .lot-img-wrap{max-width:260px;max-height:240px;min-height:160px}
+  }
   .footer-note{
     text-align:center;
     font-size:11px;
@@ -426,13 +447,10 @@
 
 <script>
 /**
- * 图片目录与命名（上传 GitHub 时保持一致）：
- *   img/m1.png … img/m15.png   男生卷
- *   img/w1.png … img/w15.png   女生卷
- * 也支持 .jpg（png 不存在会自动试 jpg）
- *
- * 编号 = 上上1-3 → 上4-6 → 中7-9 → 下10-12 → 下下13-15
- * 与 LOTS 顺序一一对应。
+ * 图片目录与命名：
+ *   img/m1.jpg … img/m15.jpg   男生卷
+ *   img/w1.jpg … img/w15.jpg   女生卷
+ * 也支持 .png（jpg 不存在会自动试 png）
  */
 const IMG_BASE = "img/";
 
@@ -565,23 +583,22 @@ function setLotImage(imgIndex){
   const base = IMG_BASE + prefix + imgIndex;
   fallback.style.display = "none";
   img.style.display = "block";
-  img.onerror = function(){
-    if(img.dataset.triedJpg){
-      img.style.display = "none";
-      fallback.style.display = "block";
-      fallback.textContent = prefix + imgIndex + " 未上传";
-      return;
-    }
-    img.dataset.triedJpg = "1";
-    img.src = base + ".jpg";
-  };
+  delete img.dataset.triedPng;
   img.onload = function(){
     fallback.style.display = "none";
     img.style.display = "block";
-    delete img.dataset.triedJpg;
   };
-  delete img.dataset.triedJpg;
-  img.src = base + ".png";
+  img.onerror = function(){
+    if(!img.dataset.triedPng){
+      img.dataset.triedPng = "1";
+      img.src = base + ".png";
+      return;
+    }
+    img.style.display = "none";
+    fallback.style.display = "block";
+    fallback.textContent = prefix + imgIndex + " 未上传";
+  };
+  img.src = base + ".jpg";
 }
 
 function canDraw(){
