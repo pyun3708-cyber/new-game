@@ -35,16 +35,11 @@ a{color:var(--accent);text-decoration:none}
 .empty{padding:40px;text-align:center;color:var(--muted)}
 .status{font-size:12px;color:var(--muted);padding:0 16px 12px;position:relative;z-index:2}
 #danmakuLayer{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
-.danmaku{
-  position:absolute;white-space:nowrap;font-weight:700;color:var(--accent);
-  text-shadow:0 0 4px #fff, 0 1px 2px rgba(0,0,0,.25);
-  will-change:transform;pointer-events:none;
-  animation: danmakuMove linear forwards;
-}
-@keyframes danmakuMove{
-  from{transform:translateX(0)}
-  to{transform:translateX(calc(-100vw - 100%))}
-}
+.pager{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:12px 16px 28px;position:relative;z-index:2}
+.pager .btn:disabled{opacity:.4;cursor:not-allowed}
+.pager .info{font-size:13px;color:var(--muted)}
+.danmaku{position:absolute;white-space:nowrap;font-weight:700;color:var(--accent);text-shadow:0 0 4px #fff, 0 1px 2px rgba(0,0,0,.25);will-change:transform;pointer-events:none;animation: danmakuMove linear forwards;}
+@keyframes danmakuMove{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}
 </style>
 </head>
 <body>
@@ -52,7 +47,7 @@ a{color:var(--accent);text-decoration:none}
 <header>
   <div>
     <h1>老师介绍 ♠</h1>
-    <div class="sub">自愿公开展示的教师资格证 · 按编号从左到右 · 弹幕约每十秒随机一条</div>
+    <div class="sub">自愿公开展示的教师资格证 · 每页最多 50 位 · 弹幕约每十秒一条</div>
   </div>
   <div class="search">
     <input id="q" placeholder="输入教师编号 如 202600001" maxlength="12">
@@ -62,24 +57,23 @@ a{color:var(--accent);text-decoration:none}
 </header>
 <div class="status" id="status">加载中…</div>
 <div class="rail" id="rail"></div>
-
+<div class="pager" id="pager" style="display:none">
+  <button type="button" class="btn ghost" id="btnPrev">上一页</button>
+  <span class="info" id="pageInfo">第 1 页</span>
+  <button type="button" class="btn ghost" id="btnNext">下一页</button>
+</div>
 <script>
 const API = "https://school-auth.pyun3708.workers.dev";
 const ADMIN_NAMES = ["草莓酱", "strawberry", "admin"];
-
+const PAGE_SIZE = 50;
+let list = [];
+let danmakuPool = [];
+let page = 1;
+let searchCert = "";
 function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
-function esc(s){
-  return String(s??"").replace(/[&<>"']/g, function(c){
-    return ({"&":"&"+"amp;","<":"&"+"lt;",">":"&"+"gt;",'"':"&"+"quot;","'":"&#39;"})[c];
-  });
-}
-function isAdmin(){
-  const u = me();
-  if (!u) return false;
-  const name = (u.username || u.display_name || "").trim();
-  return ADMIN_NAMES.includes(name) || u.role === "admin";
-}
+function esc(s){ return String(s??"").replace(/[&<>"']/g, function(c){ return ({"&":"&","<":"<",">":">",'"':""","'":"&#39;"})[c]; }); }
+function isAdmin(){ const u = me(); if (!u) return false; const name = (u.username || u.display_name || "").trim(); return ADMIN_NAMES.includes(name) || u.role === "admin"; }
 async function api(path, opts={}){
   const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers||{});
   if (token()) headers.Authorization = "Bearer " + token();
@@ -88,35 +82,71 @@ async function api(path, opts={}){
   if (!res.ok) throw new Error(data.error || ("HTTP "+res.status));
   return data;
 }
-
-let list = [];
-let danmakuPool = [];
-
-async function loadList(certNo){
+async function loadList(certNo, resetPage){
   const st = document.getElementById("status");
   st.textContent = "加载中…";
+  if (typeof certNo === "string") searchCert = certNo;
+  if (resetPage !== false) page = 1;
   try {
-    const q = certNo ? ("?cert_no=" + encodeURIComponent(certNo)) : "";
-    const data = await api("/teachers/public" + q);
-    list = data.items || [];
-    st.textContent = list.length ? ("共 " + list.length + " 位老师展示中") : "暂无公开展示的教师资格证";
-    render();
+    let q = [];
+    if (searchCert) q.push("cert_no=" + encodeURIComponent(searchCert));
+    q.push("page=" + page);
+    q.push("limit=" + PAGE_SIZE);
+    const data = await api("/teachers/public?" + q.join("&"));
+    let items = data.items || [];
+    items = items.filter(function(it){
+      if (it && typeof it.is_public !== "undefined") return !!Number(it.is_public) || it.is_public === true || it.is_public === "1";
+      if (it && typeof it.show_public !== "undefined") return !!Number(it.show_public) || it.show_public === true || it.show_public === "1";
+      if (it && typeof it.public !== "undefined") return !!Number(it.public) || it.public === true || it.public === "1";
+      return true;
+    });
+    const serverPaged = (typeof data.total === "number") || (typeof data.page === "number");
+    if (serverPaged) {
+      list = items;
+      var total = typeof data.total === "number" ? data.total : items.length;
+      var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (page > totalPages) page = totalPages;
+      st.textContent = total ? ("共 " + total + " 位自愿展示的老师 · 第 " + page + " / " + totalPages + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
+      renderPage(list, total, totalPages);
+    } else {
+      list = items;
+      var total2 = list.length;
+      var totalPages2 = Math.max(1, Math.ceil(total2 / PAGE_SIZE));
+      if (page > totalPages2) page = totalPages2;
+      var start = (page - 1) * PAGE_SIZE;
+      var slice = list.slice(start, start + PAGE_SIZE);
+      st.textContent = total2 ? ("共 " + total2 + " 位自愿展示的老师 · 第 " + page + " / " + totalPages2 + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
+      renderPage(slice, total2, totalPages2);
+    }
   } catch (e) {
-    st.textContent = "加载失败：" + e.message + "（请确认 Worker 已部署）";
+    st.textContent = "加载失败：" + e.message;
     document.getElementById("rail").innerHTML = "<div class='empty'>" + esc(e.message) + "</div>";
+    document.getElementById("pager").style.display = "none";
   }
 }
-
-function render(){
+function renderPage(pageItems, total, totalPages){
   const rail = document.getElementById("rail");
-  if (!list.length) {
+  const pager = document.getElementById("pager");
+  const pageInfo = document.getElementById("pageInfo");
+  const btnPrev = document.getElementById("btnPrev");
+  const btnNext = document.getElementById("btnNext");
+  if (!pageItems.length) {
     rail.innerHTML = "<div class='empty'>还没有老师选择公开展示资格证</div>";
+    pager.style.display = totalPages > 1 ? "flex" : "none";
     return;
   }
   rail.innerHTML = "";
-  list.forEach(item => rail.appendChild(buildCard(item)));
+  pageItems.forEach(item => rail.appendChild(buildCard(item)));
+  if (totalPages > 1) {
+    pager.style.display = "flex";
+    pageInfo.textContent = "第 " + page + " / " + totalPages + " 页";
+    btnPrev.disabled = page <= 1;
+    btnNext.disabled = page >= totalPages;
+  } else {
+    pager.style.display = "none";
+  }
+  try { rail.scrollTo({ left: 0, behavior: "smooth" }); } catch(e) { rail.scrollLeft = 0; }
 }
-
 function buildCard(item){
   const card = document.createElement("div");
   card.className = "card";
@@ -139,16 +169,11 @@ function buildCard(item){
     '</div>' +
     '<div class="comments"></div>' +
     '<div class="compose"><input placeholder="说点什么…" maxlength="200"><button type="button" class="btn btn-cmt">评论</button></div>';
-
   const wrap = card.querySelector(".cert-wrap");
   const canvas = card.querySelector("canvas.draw");
   const certImg = card.querySelector("img.cert");
   function startDraw(){ setupCanvas(canvas, wrap, item.drawing); }
-  if (certImg) {
-    if (certImg.complete && certImg.naturalHeight) startDraw();
-    else certImg.onload = startDraw;
-  } else startDraw();
-
+  if (certImg) { if (certImg.complete && certImg.naturalHeight) startDraw(); else certImg.onload = startDraw; } else startDraw();
   card.querySelector(".btn-save-draw").onclick = async () => {
     try {
       if (!token()) { alert("请先登录再涂鸦"); return; }
@@ -160,21 +185,14 @@ function buildCard(item){
   card.querySelector(".btn-clear-local").onclick = () => {
     const ctx = canvas.getContext("2d");
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    if (item.drawing) {
-      const im = new Image();
-      im.onload = () => ctx.drawImage(im,0,0,canvas.width,canvas.height);
-      im.src = item.drawing;
-    }
+    if (item.drawing) { const im = new Image(); im.onload = () => ctx.drawImage(im,0,0,canvas.width,canvas.height); im.src = item.drawing; }
   };
   const del = card.querySelector(".btn-admin-del");
   if (del) del.onclick = async () => {
     if (!confirm("确定下架该教师资格证展示？")) return;
-    try {
-      await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) });
-      await loadList();
-    } catch (e) { alert(e.message); }
+    try { await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) }); await loadList(searchCert, false); }
+    catch (e) { alert(e.message); }
   };
-
   const cbox = card.querySelector(".comments");
   loadComments(item.cert_no, cbox);
   card.querySelector(".btn-cmt").onclick = async () => {
@@ -184,15 +202,11 @@ function buildCard(item){
     try {
       if (!token()) { alert("请先登录再评论"); return; }
       await api("/teachers/comment", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, content: text }) });
-      inp.value = "";
-      loadComments(item.cert_no, cbox);
-      refreshDanmakuPool();
+      inp.value = ""; loadComments(item.cert_no, cbox); refreshDanmakuPool();
     } catch (e) { alert(e.message); }
   };
-
   return card;
 }
-
 function setupCanvas(canvas, wrap, drawingDataUrl){
   function fit(){
     const r = wrap.getBoundingClientRect();
@@ -200,105 +214,58 @@ function setupCanvas(canvas, wrap, drawingDataUrl){
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.max(1, Math.floor(r.width * dpr));
     canvas.height = Math.max(1, Math.floor(r.height * dpr));
-    canvas.style.width = r.width + "px";
-    canvas.style.height = r.height + "px";
+    canvas.style.width = r.width + "px"; canvas.style.height = r.height + "px";
     const ctx = canvas.getContext("2d");
     ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,r.width,r.height);
-    if (drawingDataUrl) {
-      const im = new Image();
-      im.onload = () => ctx.drawImage(im, 0, 0, r.width, r.height);
-      im.src = drawingDataUrl;
-    }
+    if (drawingDataUrl) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, r.width, r.height); im.src = drawingDataUrl; }
   }
-  fit();
-  window.addEventListener("resize", fit);
-
+  fit(); window.addEventListener("resize", fit);
   let drawing = false, last = null;
   const ctx = () => canvas.getContext("2d");
-  function pos(e){
-    const r = canvas.getBoundingClientRect();
-    const t = e.touches ? e.touches[0] : e;
-    return { x: t.clientX - r.left, y: t.clientY - r.top };
-  }
+  function pos(e){ const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
   function start(e){ drawing = true; last = pos(e); e.preventDefault(); }
   function move(e){
     if (!drawing) return;
     const p = pos(e);
     const pen = canvas.parentElement.parentElement.querySelector(".pen");
-    const c = ctx();
-    c.strokeStyle = pen ? pen.value : "#e91e63";
-    c.lineWidth = 2.5;
-    c.lineCap = "round";
-    c.beginPath();
-    c.moveTo(last.x, last.y);
-    c.lineTo(p.x, p.y);
-    c.stroke();
-    last = p;
-    e.preventDefault();
+    const c = ctx(); c.strokeStyle = pen ? pen.value : "#e91e63"; c.lineWidth = 2.5; c.lineCap = "round";
+    c.beginPath(); c.moveTo(last.x, last.y); c.lineTo(p.x, p.y); c.stroke(); last = p; e.preventDefault();
   }
   function end(){ drawing = false; }
-  canvas.addEventListener("mousedown", start);
-  canvas.addEventListener("mousemove", move);
-  window.addEventListener("mouseup", end);
-  canvas.addEventListener("touchstart", start, {passive:false});
-  canvas.addEventListener("touchmove", move, {passive:false});
-  canvas.addEventListener("touchend", end);
+  canvas.addEventListener("mousedown", start); canvas.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, {passive:false}); canvas.addEventListener("touchmove", move, {passive:false}); canvas.addEventListener("touchend", end);
 }
-
 async function loadComments(certNo, box){
   box.innerHTML = "加载评论…";
   try {
     const data = await api("/teachers/comments?cert_no=" + encodeURIComponent(certNo));
     const items = data.items || [];
     if (!items.length) { box.innerHTML = "<div class='sub'>还没有评论</div>"; return; }
-    box.innerHTML = items.map(c =>
-      '<div class="comment"><span class="who">' + esc(c.username||"用户") + '</span>' +
-      '<span class="when">' + esc(c.created_at||"") + '</span><div>' + esc(c.content) + '</div></div>'
-    ).join("");
-  } catch (e) {
-    box.innerHTML = "<div class='sub'>评论加载失败</div>";
-  }
+    box.innerHTML = items.map(c => '<div class="comment"><span class="who">' + esc(c.username||"用户") + '</span><span class="when">' + esc(c.created_at||"") + '</span><div>' + esc(c.content) + '</div></div>').join("");
+  } catch (e) { box.innerHTML = "<div class='sub'>评论加载失败</div>"; }
 }
-
 async function refreshDanmakuPool(){
   try {
     const data = await api("/teachers/danmaku");
-    danmakuPool = (data.items || []).map(function(x){
-      return (x.username ? (x.username + "：") : "") + (x.content || "");
-    }).filter(Boolean);
-  } catch (e) {
-    danmakuPool = danmakuPool || [];
-  }
+    danmakuPool = (data.items || []).map(function(x){ return (x.username ? (x.username + "：") : "") + (x.content || ""); }).filter(Boolean);
+  } catch (e) { danmakuPool = danmakuPool || []; }
 }
-
 function spawnDanmaku(){
   if (!danmakuPool.length) return;
   const text = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
-  const layer = document.getElementById("danmakuLayer");
-  if (!layer) return;
-  const el = document.createElement("div");
-  el.className = "danmaku";
-  el.textContent = text;
-  const size = 14 + Math.floor(Math.random() * 18);
-  const top = 8 + Math.random() * 70;
-  const dur = 8 + Math.random() * 8;
-  el.style.fontSize = size + "px";
-  el.style.top = top + "vh";
-  el.style.left = "100vw";
-  el.style.animationDuration = dur + "s";
+  const layer = document.getElementById("danmakuLayer"); if (!layer) return;
+  const el = document.createElement("div"); el.className = "danmaku"; el.textContent = text;
+  const size = 14 + Math.floor(Math.random() * 18); const top = 8 + Math.random() * 70; const dur = 8 + Math.random() * 8;
+  el.style.fontSize = size + "px"; el.style.top = top + "vh"; el.style.left = "100vw"; el.style.animationDuration = dur + "s";
   layer.appendChild(el);
   setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, dur * 1000 + 200);
 }
-
-document.getElementById("btnSearch").onclick = () => {
-  const v = document.getElementById("q").value.trim();
-  if (!v) loadList();
-  else loadList(v);
-};
+document.getElementById("btnSearch").onclick = () => { loadList(document.getElementById("q").value.trim(), true); };
 document.getElementById("q").onkeydown = e => { if (e.key === "Enter") document.getElementById("btnSearch").click(); };
-
-loadList();
+document.getElementById("btnPrev").onclick = () => { if (page > 1) { page -= 1; loadList(searchCert, false); } };
+document.getElementById("btnNext").onclick = () => { page += 1; loadList(searchCert, false); };
+loadList("", true);
 refreshDanmakuPool();
 setInterval(spawnDanmaku, 10000);
 setInterval(refreshDanmakuPool, 30000);
