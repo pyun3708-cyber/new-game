@@ -297,7 +297,7 @@
   }
   .q-block p{font-size:13px;margin-bottom:8px;text-align:center}
   .q-btns{display:flex;gap:8px;justify-content:center}
-  .q-btns button, .sponsor-btn{
+  .q-btns button{
     border:1px solid var(--gold);
     background:#fff;
     color:var(--ink);
@@ -307,13 +307,6 @@
     cursor:pointer;
     font-family:inherit;
   }
-  .sponsor-btn{
-    width:100%;
-    background:linear-gradient(180deg,#fff6e0,#f0d9a8);
-    font-weight:700;
-    letter-spacing:.1em;
-  }
-  .sponsor-btn:active{filter:brightness(.97)}
 
   .stats{
     margin-top:20px;
@@ -429,7 +422,6 @@
           <button type="button" onclick="answerClimax(true)">高潮了</button>
         </div>
       </div>
-      <button type="button" class="sponsor-btn" onclick="sponsorSchool()">赞助学校一块钱 · 再抽一次</button>
     </div>
   </div>
 
@@ -657,14 +649,6 @@ function answerClimax(yes){
   saveState();
   hideExtra();
   document.getElementById("statusLine").textContent = "未高潮 · 已获一次加抽，请点「抽签」";
-  updateUI();
-}
-
-function sponsorSchool(){
-  state.bonusReady = true;
-  saveState();
-  hideExtra();
-  document.getElementById("statusLine").textContent = "感谢赞助学校 · 已获一次加抽";
   updateUI();
 }
 
