@@ -1,1 +1,436 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>课程学习 · 反媚黑高校</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&display=swap');
+:root{
+  --paper:#f7f3ec; --ink:#292824; --muted:#777268;
+  --line:rgba(41,40,36,.15); --accent:#8b765d; --card:rgba(255,255,255,.7);
+  --danger:#a33; --ok:#2d6a4f;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  min-height:100vh;color:var(--ink);
+  background:radial-gradient(circle at 10% 10%,rgba(139,118,93,.08),transparent 28%),var(--paper);
+  font-family:"Noto Serif SC","Songti SC",serif;letter-spacing:.04em;
+}
+a{color:var(--accent);text-decoration:none}
+.top{width:min(1100px,94%);margin:0 auto;padding:16px 0;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.top .back{font-size:13px;letter-spacing:.12em}
+.wrap{width:min(1100px,94%);margin:0 auto 48px}
+h1{font-size:clamp(24px,4vw,34px);font-weight:500;letter-spacing:.14em;text-align:center;margin:12px 0 8px}
+.sub{text-align:center;color:var(--muted);font-size:13px;margin-bottom:28px}
+.hub{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+@media(max-width:700px){.hub{grid-template-columns:1fr}}
+.hub-card{
+  min-height:120px;padding:22px;border:1px solid var(--line);background:var(--card);
+  cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;
+}
+.hub-card:hover{transform:translateY(-3px);box-shadow:0 12px 28px rgba(0,0,0,.08)}
+.hub-card .n{position:absolute;right:16px;top:14px;font:12px Arial;color:rgba(0,0,0,.25)}
+.hub-card h2{font-size:18px;font-weight:500;letter-spacing:.1em;margin-bottom:8px}
+.hub-card p{font-size:13px;color:var(--muted);line-height:1.6}
+.panel{display:none}
+.panel.active{display:block}
+.toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.btn{
+  border:1px solid var(--line);background:#fff;color:var(--ink);
+  padding:8px 14px;border-radius:8px;cursor:pointer;font:13px/1 "Noto Serif SC",serif;letter-spacing:.08em;
+}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.btn.danger{background:#fff;color:var(--danger);border-color:rgba(170,50,50,.35)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;
+  display:flex;flex-direction:column;min-height:360px;
+}
+.card .media{
+  height:150px;background:#1a1816 center/cover no-repeat;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.35);font-size:13px;letter-spacing:.12em;
+}
+.card .media video{width:100%;height:100%;object-fit:cover}
+.card .body{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:17px;font-weight:500;letter-spacing:.08em}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;letter-spacing:.06em}
+.badge.req{background:rgba(170,50,50,.12);color:var(--danger)}
+.badge.el{background:rgba(45,106,79,.12);color:var(--ok)}
+.meta{font-size:12px;color:var(--muted);line-height:1.7}
+.desc{font-size:13px;line-height:1.75;color:#444;flex:1}
+.card .actions{margin-top:10px;display:flex;gap:8px}
+.notice{padding:12px 14px;border:1px solid var(--line);background:rgba(255,255,255,.65);border-radius:10px;font-size:13px;color:var(--muted);margin-bottom:14px}
+.notice.warn{border-color:rgba(170,50,50,.3);color:#6a3030;background:rgba(170,50,50,.06)}
+.notice.ok{border-color:rgba(45,106,79,.3);color:#1d4030;background:rgba(45,106,79,.06)}
+.week-nav{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:12px;background:#fff}
+table.tt{width:100%;border-collapse:collapse;min-width:800px;font-size:12px}
+table.tt th,table.tt td{border:1px solid var(--line);padding:8px;vertical-align:top}
+table.tt th{background:#f0ebe3;font-weight:500;letter-spacing:.06em}
+table.tt td.slot{width:72px;color:var(--muted);white-space:nowrap}
+.cell-course{background:rgba(139,118,93,.12);border-radius:6px;padding:6px 8px;margin-bottom:4px}
+.cell-course .cn{font-weight:500;margin-bottom:2px}
+.cell-course .cs{color:var(--muted);font-size:11px}
+.tasks-box{border:1px dashed var(--line);border-radius:12px;padding:28px;text-align:center;color:var(--muted);line-height:2}
+.credit-bar{margin:12px 0 20px;font-size:14px}
+.credit-bar strong{color:var(--accent);font-size:20px}
+.login-gate{text-align:center;padding:40px 16px;border:1px solid var(--line);border-radius:12px;background:var(--card)}
+.login-gate a.btn{display:inline-block;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="top">
+  <a class="back" href="school.html">← 返回学校官网</a>
+  <span id="userBar" style="font-size:13px;color:var(--muted)">未登录</span>
+</div>
+<div class="wrap">
+  <h1>课程学习</h1>
+  <p class="sub">选课 · 课程表 · 学习任务</p>
+
+  <div class="hub" id="hub">
+    <div class="hub-card" data-panel="select"><span class="n">01</span><h2>进入选课</h2><p>浏览课程卡片、报名与退选。时间冲突不可同选。</p></div>
+    <div class="hub-card" data-panel="table"><span class="n">02</span><h2>打开课程表</h2><p>查看本周 / 上周 / 下周或指定周次的课表。</p></div>
+    <div class="hub-card" data-panel="tasks"><span class="n">03</span><h2>学习任务</h2><p>今日任务与作业、已获学分（内容待开放）。</p></div>
+  </div>
+
+  <div id="msg" class="notice" style="display:none"></div>
+
+  <section class="panel" id="panel-select">
+    <div class="toolbar">
+      <button class="btn" type="button" id="btnBack1">← 返回</button>
+      <span style="color:var(--muted);font-size:13px">已选 <strong id="selCount">0</strong> 门 · 本周学时 <strong id="selHours">0</strong> / 70</span>
+    </div>
+    <div id="selectGate"></div>
+    <div class="grid" id="courseGrid"></div>
+  </section>
+
+  <section class="panel" id="panel-table">
+    <div class="toolbar week-nav">
+      <button class="btn" type="button" id="btnBack2">← 返回</button>
+      <button class="btn" type="button" id="btnPrevWeek">上一周</button>
+      <button class="btn" type="button" id="btnThisWeek">本周</button>
+      <button class="btn" type="button" id="btnNextWeek">下一周</button>
+      <label style="font-size:13px;color:var(--muted)">第 <input id="weekInput" type="number" min="1" max="18" value="1" style="width:52px;padding:4px 6px;border:1px solid var(--line);border-radius:6px"> 周
+        <button class="btn" type="button" id="btnGoWeek">查看</button>
+      </label>
+      <span id="weekLabel" style="font-size:13px;color:var(--muted)"></span>
+    </div>
+    <div id="tableGate"></div>
+    <div class="table-wrap"><table class="tt" id="ttable"><thead></thead><tbody></tbody></table></div>
+  </section>
+
+  <section class="panel" id="panel-tasks">
+    <div class="toolbar">
+      <button class="btn" type="button" id="btnBack3">← 返回</button>
+    </div>
+    <div class="credit-bar">已获得学分：<strong id="creditTotal">0.0</strong></div>
+    <div class="tasks-box">
+      <p>今日待完成任务：暂无（待布置）</p>
+      <p>今日已完成任务：暂无</p>
+      <p>课程作业：暂无</p>
+      <p style="margin-top:12px;font-size:12px">完成每日课程任务后将获得相应学分，本区域内容将在后续更新。</p>
+    </div>
+  </section>
+</div>
+
+<script src="courses-data.js"></script>
+<script>
+const API_BASE = "https://school-auth.pyun3708.workers.dev";
+const DAY_NAMES = ["周一","周二","周三","周四","周五","周六","周日"];
+const SEMESTER_START = new Date(2026, 8, 1);
+const CATALOG = window.COURSE_CATALOG || [];
+
+function token(){ try{ return localStorage.getItem("school_token")||""; }catch(e){ return ""; } }
+function user(){
+  try{ return JSON.parse(localStorage.getItem("school_user")||"null"); }catch(e){ return null; }
+}
+function authHeaders(){
+  const t = token();
+  const h = { "Content-Type":"application/json" };
+  if(t) h["Authorization"] = "Bearer "+t;
+  return h;
+}
+function showMsg(text, type){
+  const el = document.getElementById("msg");
+  el.style.display = text ? "block" : "none";
+  el.className = "notice" + (type?(" "+type):"");
+  el.textContent = text || "";
+}
+function timeLabel(c){
+  return DAY_NAMES[c.day] + " " + String(c.start).padStart(2,"0") + ":00–" + String(c.end).padStart(2,"0") + ":00";
+}
+function rangesOverlap(a,b){
+  return a.day===b.day && a.start < b.end && b.start < a.end;
+}
+
+let myIds = new Set();
+let weekOffset = 0;
+function isLoggedIn(){ return !!(token() && user()); }
+
+async function api(path, opts){
+  const res = await fetch(API_BASE + path, {
+    method: (opts&&opts.method)||"GET",
+    headers: authHeaders(),
+    body: opts&&opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  let data = null;
+  try{ data = await res.json(); }catch(e){}
+  if(!res.ok) throw new Error((data && data.error) || ("请求失败 "+res.status));
+  return data;
+}
+
+async function loadMine(){
+  if(!isLoggedIn()){ myIds = new Set(); return; }
+  try{
+    const data = await api("/courses/my");
+    myIds = new Set((data.courseIds||[]).map(Number));
+  }catch(e){
+    try{
+      const u = user();
+      const raw = localStorage.getItem("school_courses_"+u.id);
+      myIds = new Set(JSON.parse(raw||"[]"));
+    }catch(e2){ myIds = new Set(); }
+  }
+  updateStats();
+}
+
+function saveLocalFallback(){
+  try{
+    const u = user();
+    if(!u) return;
+    localStorage.setItem("school_courses_"+u.id, JSON.stringify([...myIds]));
+  }catch(e){}
+}
+
+function updateStats(){
+  let hours = 0, credit = 0;
+  for(const c of CATALOG){
+    if(myIds.has(c.id)){ hours += c.hours; credit += c.credit; }
+  }
+  const sc = document.getElementById("selCount");
+  const sh = document.getElementById("selHours");
+  const ct = document.getElementById("creditTotal");
+  if(sc) sc.textContent = myIds.size;
+  if(sh) sh.textContent = hours;
+  if(ct) ct.textContent = credit.toFixed(1);
+}
+
+function mediaEl(c){
+  const box = document.createElement("div");
+  box.className = "media";
+  box.textContent = "课件准备中";
+  const base = "course-media/" + c.media;
+  const tryList = [base+".jpg", base+".png", base+".webp", base+".mp4"];
+  let i = 0;
+  function next(){
+    if(i>=tryList.length) return;
+    const src = tryList[i++];
+    if(src.endsWith(".mp4")){
+      const v = document.createElement("video");
+      v.src = src; v.muted = true; v.loop = true; v.playsInline = true; v.autoplay = true;
+      v.onerror = next;
+      v.onloadeddata = ()=>{ box.innerHTML=""; box.appendChild(v); };
+    } else {
+      const img = new Image();
+      img.onload = ()=>{ box.innerHTML=""; img.style.width="100%"; img.style.height="100%"; img.style.objectFit="cover"; box.appendChild(img); };
+      img.onerror = next;
+      img.src = src;
+    }
+  }
+  next();
+  return box;
+}
+
+function renderCards(){
+  const grid = document.getElementById("courseGrid");
+  grid.innerHTML = "";
+  const gate = document.getElementById("selectGate");
+  if(!isLoggedIn()){
+    gate.innerHTML = '<div class="login-gate"><p>选课需登录学生账号</p><a class="btn primary" href="login.html">去登录</a></div>';
+    return;
+  }
+  gate.innerHTML = "";
+  for(const c of CATALOG){
+    const card = document.createElement("div");
+    card.className = "card";
+    const body = document.createElement("div");
+    body.className = "body";
+    body.innerHTML =
+      "<h3>"+c.name+"</h3>"+
+      '<div><span class="badge '+(c.required?"req":"el")+'">'+(c.required?"必修":"选修")+"</span></div>"+
+      '<div class="desc">'+c.desc+"</div>"+
+      '<div class="meta">'+
+        "上课时间："+timeLabel(c)+"<br>"+
+        "课时："+c.hours+" 学时 · 学分："+c.credit+"<br>"+
+        "教室："+c.room+" · 报名 "+c.enrolled+" 人"+
+      "</div>";
+    const actions = document.createElement("div");
+    actions.className = "actions";
+    const enrolled = myIds.has(c.id);
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = enrolled ? "btn danger" : "btn primary";
+    btn.textContent = enrolled ? "退选" : "选课";
+    btn.onclick = ()=> toggleCourse(c, btn);
+    actions.appendChild(btn);
+    body.appendChild(actions);
+    card.appendChild(mediaEl(c));
+    card.appendChild(body);
+    grid.appendChild(card);
+  }
+  updateStats();
+}
+
+function conflictWithSelected(course){
+  for(const c of CATALOG){
+    if(c.id===course.id) continue;
+    if(myIds.has(c.id) && rangesOverlap(c, course)) return c;
+  }
+  return null;
+}
+
+async function toggleCourse(c, btn){
+  if(!isLoggedIn()){ showMsg("请先登录","warn"); return; }
+  btn.disabled = true;
+  try{
+    if(myIds.has(c.id)){
+      try{ await api("/courses/drop",{ method:"POST", body:{ courseId:c.id }}); }catch(e){}
+      myIds.delete(c.id);
+      saveLocalFallback();
+      showMsg("已退选：「"+c.name+"」","ok");
+    }else{
+      const conf = conflictWithSelected(c);
+      if(conf){
+        showMsg("与已选课程「"+conf.name+"」（"+timeLabel(conf)+"）时间冲突，无法选择","warn");
+        btn.disabled = false;
+        return;
+      }
+      try{
+        await api("/courses/enroll",{ method:"POST", body:{ courseId:c.id }});
+      }catch(e){
+        if(String(e.message||"").includes("Not found")){
+          saveLocalFallback();
+        } else {
+          // still save local so UI works before worker deploy
+          saveLocalFallback();
+        }
+      }
+      myIds.add(c.id);
+      saveLocalFallback();
+      showMsg("已选课：「"+c.name+"」","ok");
+    }
+    renderCards();
+  }catch(e){
+    showMsg(e.message||"操作失败","warn");
+  }finally{
+    btn.disabled = false;
+  }
+}
+
+function startOfWeek(d){
+  const x = new Date(d); const day = (x.getDay()+6)%7;
+  x.setDate(x.getDate()-day); x.setHours(0,0,0,0); return x;
+}
+function addDays(d,n){ const x=new Date(d); x.setDate(x.getDate()+n); return x; }
+function weekIndexFromDate(d){
+  const a = startOfWeek(SEMESTER_START).getTime();
+  const b = startOfWeek(d).getTime();
+  return Math.floor((b-a)/(7*86400000))+1;
+}
+function dateOfWeekIndex(w){
+  return addDays(startOfWeek(SEMESTER_START), (w-1)*7);
+}
+function currentSemesterWeek(){
+  let w = weekIndexFromDate(new Date());
+  if(w<1) w=1; if(w>18) w=18;
+  return w;
+}
+function fmt(d){ return (d.getMonth()+1)+"/"+d.getDate(); }
+
+function renderTable(){
+  const gate = document.getElementById("tableGate");
+  const thead = document.querySelector("#ttable thead");
+  const tbody = document.querySelector("#ttable tbody");
+  const week = currentSemesterWeek() + weekOffset;
+  const clamped = Math.max(1, Math.min(18, week));
+  document.getElementById("weekInput").value = clamped;
+  const start = dateOfWeekIndex(clamped);
+  document.getElementById("weekLabel").textContent =
+    "第 "+clamped+" 周（"+fmt(start)+" 起）"+(isLoggedIn()?"":" · 登录后显示你的课表");
+
+  const hours = [8,9,10,11,14,15,16,17,20,21];
+  thead.innerHTML = "<tr><th>时段</th>"+DAY_NAMES.map((d,i)=>{
+    const dd = addDays(start,i);
+    return "<th>"+d+"<br><span style='font-size:11px'>"+fmt(dd)+"</span></th>";
+  }).join("")+"</tr>";
+
+  const selected = CATALOG.filter(c=>myIds.has(c.id));
+  tbody.innerHTML = "";
+  for(const h of hours){
+    const tr = document.createElement("tr");
+    const label = String(h).padStart(2,"0")+":00–"+String(h+1).padStart(2,"0")+":00";
+    tr.innerHTML = '<td class="slot">'+label+"</td>";
+    for(let day=0; day<7; day++){
+      const td = document.createElement("td");
+      const list = selected.filter(c=>c.day===day && c.start<=h && h<c.end);
+      if(!list.length){ td.innerHTML = '<span style="color:#ccc">·</span>'; }
+      else{
+        td.innerHTML = list.map(c=>
+          '<div class="cell-course"><div class="cn">'+c.name+'</div><div class="cs">'+c.room+' · '+c.enrolled+'人</div></div>'
+        ).join("");
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr);
+  }
+  if(!isLoggedIn()){
+    gate.innerHTML = '<div class="notice warn">未登录：课表为空。登录并选课后将显示你的课程。</div>';
+  } else if(!selected.length){
+    gate.innerHTML = '<div class="notice">本周暂无已选课程，去「进入选课」挑几门吧。</div>';
+  } else {
+    gate.innerHTML = "";
+  }
+}
+
+function showPanel(name){
+  document.querySelectorAll(".panel").forEach(p=>p.classList.remove("active"));
+  document.getElementById("hub").style.display = name ? "none" : "grid";
+  if(!name){ showMsg(""); return; }
+  document.getElementById("panel-"+name).classList.add("active");
+  if(name==="select") renderCards();
+  if(name==="table") renderTable();
+  if(name==="tasks") updateStats();
+}
+
+document.querySelectorAll(".hub-card").forEach(el=>{
+  el.onclick = ()=> showPanel(el.getAttribute("data-panel"));
+});
+document.getElementById("btnBack1").onclick = ()=> showPanel(null);
+document.getElementById("btnBack2").onclick = ()=> showPanel(null);
+document.getElementById("btnBack3").onclick = ()=> showPanel(null);
+document.getElementById("btnPrevWeek").onclick = ()=>{ weekOffset--; renderTable(); };
+document.getElementById("btnNextWeek").onclick = ()=>{ weekOffset++; renderTable(); };
+document.getElementById("btnThisWeek").onclick = ()=>{ weekOffset=0; renderTable(); };
+document.getElementById("btnGoWeek").onclick = ()=>{
+  const w = parseInt(document.getElementById("weekInput").value,10)||1;
+  weekOffset = w - currentSemesterWeek();
+  renderTable();
+};
+
+(function initUserBar(){
+  const bar = document.getElementById("userBar");
+  const u = user();
+  if(u&&token()){
+    bar.innerHTML = '已登录：<a href="profile.html">'+(u.username||"学生")+"</a>";
+  }else{
+    bar.innerHTML = '<a href="login.html">登录</a> · <a href="register.html">注册</a>';
+  }
+})();
+
+loadMine().then(()=>updateStats());
+</script>
+</body>
+</html>
