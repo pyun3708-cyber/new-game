@@ -57,6 +57,8 @@
   .q-block p{font-size:13px;margin-bottom:8px;text-align:center}
   .q-btns{display:flex;gap:8px;justify-content:center}
   .q-btns button{border:1px solid var(--gold);background:#fff;color:var(--ink);padding:7px 14px;font-size:12px;border-radius:16px;cursor:pointer;font-family:inherit}
+  .q-block.done{opacity:.45;pointer-events:none}
+  .q-block.done::after{content:"已回答";display:block;text-align:center;font-size:11px;color:var(--muted);margin-top:4px}
   .stats{margin-top:20px;padding:14px;background:rgba(255,250,242,.9);border:1px solid var(--line);border-radius:8px}
   .stats h3{font-size:13px;letter-spacing:.15em;color:var(--gold-deep);text-align:center;margin-bottom:10px}
   .stats-meta{font-size:12px;color:var(--muted);text-align:center;margin-bottom:10px}
@@ -101,19 +103,40 @@
     <div class="status-line" id="statusLine">今日尚未抽签</div>
   </div>
   <div class="extra-panel" id="extraPanel">
-    <h3>今日次数已用尽 · 想再抽一次？</h3>
-    <div class="extra-row"><div class="q-block"><p>今天你高潮了吗？</p>
-      <div class="q-btns">
-        <button type="button" onclick="answerClimax(false)">没有</button>
-        <button type="button" onclick="answerClimax(true)">高潮了</button>
-      </div></div></div>
+    <h3>今日次数已用尽 · 回答问题可加抽</h3>
+    <div class="extra-row">
+      <div class="q-block" id="qClimax">
+        <p>今天你高潮了吗？</p>
+        <div class="q-btns">
+          <button type="button" onclick="answerBonus('climax', false)">没有</button>
+          <button type="button" onclick="answerBonus('climax', true)">高潮了</button>
+        </div>
+        <p class="q-hint" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">答「没有」可加抽一次</p>
+      </div>
+      <div class="q-block" id="qMeihei">
+        <p>你今天媚黑了吗？</p>
+        <div class="q-btns">
+          <button type="button" onclick="answerBonus('meihei', true)">是</button>
+          <button type="button" onclick="answerBonus('meihei', false)">否</button>
+        </div>
+        <p class="q-hint" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">答「是」可加抽一次</p>
+      </div>
+      <div class="q-block" id="qCunzhi">
+        <p>你今天寸止了吗？</p>
+        <div class="q-btns">
+          <button type="button" onclick="answerBonus('cunzhi', true)">是</button>
+          <button type="button" onclick="answerBonus('cunzhi', false)">否</button>
+        </div>
+        <p class="q-hint" style="font-size:11px;color:var(--muted);text-align:center;margin-top:6px">答「是」可加抽一次</p>
+      </div>
+    </div>
   </div>
   <div class="stats">
     <h3>签文收集</h3>
     <div class="stats-meta" id="statsMeta">已收集 <strong>0</strong> / <strong>0</strong> · 未集齐</div>
     <div class="chip-grid" id="chipGrid"></div>
   </div>
-  <div class="footer-note">每日免费一签 · 中签罕见<br>本签仅供娱乐，自愿角色扮演向</div>
+  <div class="footer-note">每日免费一签 · 回答问题可加抽 · 中签罕见<br>本签仅供娱乐，自愿角色扮演向</div>
 </div>
 <script src="daily-achievements.js"></script>
 <script>
@@ -140,12 +163,27 @@ let gender = "male";
 let state = loadState();
 function todayKey(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
 function storageKey(){ return "anti_bbc_daily_lot_v1"; }
-function defaultState(){ return { date:todayKey(), drawsToday:0, bonusReady:false, collected:{male:{},female:{}} }; }
+function defaultState(){
+  return {
+    date: todayKey(),
+    drawsToday: 0,
+    maxDraws: 1,
+    claimed: { climax:false, meihei:false, cunzhi:false },
+    collected: { male:{}, female:{} }
+  };
+}
 function loadState(){
   try{
     const raw=localStorage.getItem(storageKey()); if(!raw) return defaultState();
     const s=JSON.parse(raw);
-    if(s.date!==todayKey()){ s.date=todayKey(); s.drawsToday=0; s.bonusReady=false; }
+    if(s.date!==todayKey()){
+      s.date=todayKey();
+      s.drawsToday=0;
+      s.maxDraws=1;
+      s.claimed={ climax:false, meihei:false, cunzhi:false };
+    }
+    if(typeof s.maxDraws!=="number") s.maxDraws = s.bonusReady ? Math.max(2, (s.drawsToday||0)+1) : 1;
+    if(!s.claimed) s.claimed={ climax:!!s.bonusReady, meihei:false, cunzhi:false };
     if(!s.collected) s.collected={male:{},female:{}};
     if(!s.collected.male) s.collected.male={};
     if(!s.collected.female) s.collected.female={};
@@ -182,12 +220,12 @@ function setLotImage(imgIndex){
   };
   img.src=base+".jpg";
 }
-function canDraw(){ if(state.drawsToday<1) return true; if(state.bonusReady) return true; return false; }
+function canDraw(){ return state.drawsToday < (state.maxDraws||1); }
+function remainingDraws(){ return Math.max(0, (state.maxDraws||1) - state.drawsToday); }
 function drawLot(){
   if(!canDraw()){ showExtra(); updateUI(); return; }
   const lot=pickLot();
-  if(state.drawsToday<1) state.drawsToday=1;
-  else if(state.bonusReady){ state.bonusReady=false; state.drawsToday+=1; }
+  state.drawsToday = (state.drawsToday||0) + 1;
   const id=lot.rank+"·"+lot.key;
   state.collected[gender][id]=true;
   saveState();
@@ -204,24 +242,52 @@ function drawLot(){
 }
 function showExtra(){ document.getElementById("extraPanel").classList.add("show"); }
 function hideExtra(){ document.getElementById("extraPanel").classList.remove("show"); }
-function answerClimax(yes){
-  if(yes){ document.getElementById("statusLine").textContent="高潮过了就守规矩 · 明日再来"; hideExtra(); updateUI(); return; }
-  state.bonusReady=true; saveState(); hideExtra();
-  document.getElementById("statusLine").textContent="未高潮 · 已获一次加抽，请点「抽签」"; updateUI();
+function answerBonus(kind, yes){
+  if(!state.claimed) state.claimed={ climax:false, meihei:false, cunzhi:false };
+  if(state.claimed[kind]){ updateUI(); return; }
+  let grant = false;
+  if(kind==="climax") grant = (yes===false);
+  else grant = (yes===true);
+  state.claimed[kind] = true;
+  if(grant){
+    state.maxDraws = (state.maxDraws||1) + 1;
+    document.getElementById("statusLine").textContent =
+      kind==="climax" ? "未高潮 · 已获一次加抽，请点「抽签」" :
+      kind==="meihei" ? "今日有媚黑 · 已获一次加抽，请点「抽签」" :
+      "今日有寸止 · 已获一次加抽，请点「抽签」";
+  } else {
+    document.getElementById("statusLine").textContent =
+      kind==="climax" ? "高潮过了就守规矩 · 此题不加抽" :
+      kind==="meihei" ? "今日未媚黑 · 此题不加抽" :
+      "今日未寸止 · 此题不加抽";
+  }
+  saveState();
+  updateUI();
+  if(canDraw()) hideExtra();
 }
 function allLotIds(g){
   const ids=[]; RANKS.forEach(r=>{ LOTS[g][r].forEach(item=> ids.push(r+"·"+item.key)); }); return ids;
 }
 function updateUI(){
   const btn=document.getElementById("btnDraw"); const status=document.getElementById("statusLine");
+  const left = remainingDraws();
+  const claimed = state.claimed || {};
+  const map = { climax:"qClimax", meihei:"qMeihei", cunzhi:"qCunzhi" };
+  Object.keys(map).forEach(k=>{
+    const el = document.getElementById(map[k]);
+    if(el) el.classList.toggle("done", !!claimed[k]);
+  });
   if(canDraw()){
     btn.disabled=false;
-    if(state.drawsToday===0) status.textContent="今日尚未抽签";
-    else if(state.bonusReady) status.textContent="加抽机会已就绪 · 可再抽一次";
+    if(state.drawsToday===0) status.textContent="今日尚未抽签（最多可至 4 次）";
+    else if(left>0) status.textContent="还可抽 "+left+" 次 · 请点「抽签」";
     else status.textContent="可以抽签";
   } else {
-    btn.disabled=true; status.textContent="今日次数已用尽";
-    document.getElementById("extraPanel").classList.add("show");
+    btn.disabled=true;
+    status.textContent="今日次数已用尽";
+    const allClaimed = claimed.climax && claimed.meihei && claimed.cunzhi;
+    if(!allClaimed) document.getElementById("extraPanel").classList.add("show");
+    else hideExtra();
   }
   const ids=allLotIds(gender); const got=state.collected[gender]||{};
   let count=0; ids.forEach(id=>{ if(got[id]) count++; });
