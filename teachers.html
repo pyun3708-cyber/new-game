@@ -47,7 +47,7 @@ a{color:var(--accent);text-decoration:none}
 <header>
   <div>
     <h1>老师介绍 ♠</h1>
-    <div class="sub">自愿公开展示的教师资格证 · 每页最多 50 位 · 弹幕约每十秒一条</div>
+    <div class="sub">自愿公开展示的教师资格证 · 每页最多 20 位 · 弹幕约每十秒一条</div>
   </div>
   <div class="search">
     <input id="q" placeholder="输入教师编号 如 202600001" maxlength="12">
@@ -65,14 +65,16 @@ a{color:var(--accent);text-decoration:none}
 <script>
 const API = "https://school-auth.pyun3708.workers.dev";
 const ADMIN_NAMES = ["草莓酱", "strawberry", "admin"];
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 20;
 let list = [];
+let fullList = null;
 let danmakuPool = [];
 let page = 1;
 let searchCert = "";
+let lastFetchKey = null;
 function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
-function esc(s){ return String(s??"").replace(/[&<>"']/g, function(c){ return ({"&":"&","<":"<",">":">",'"':""","'":"&#39;"})[c]; }); }
+function esc(s){ return String(s??"").replace(/[&<>"']/g, function(c){ return ({"&":"&","<":"<",">":">","\"":""","'":"&#39;"})[c]; }); }
 function isAdmin(){ const u = me(); if (!u) return false; const name = (u.username || u.display_name || "").trim(); return ADMIN_NAMES.includes(name) || u.role === "admin"; }
 async function api(path, opts={}){
   const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers||{});
@@ -84,10 +86,23 @@ async function api(path, opts={}){
 }
 async function loadList(certNo, resetPage){
   const st = document.getElementById("status");
-  st.textContent = "加载中…";
   if (typeof certNo === "string") searchCert = certNo;
   if (resetPage !== false) page = 1;
+  const fetchKey = searchCert || "__all__";
   try {
+    if (fullList && lastFetchKey === fetchKey && resetPage === false) {
+      list = fullList;
+      var totalC = list.length;
+      var totalPagesC = Math.max(1, Math.ceil(totalC / PAGE_SIZE));
+      if (page > totalPagesC) page = totalPagesC;
+      var startC = (page - 1) * PAGE_SIZE;
+      st.textContent = totalC
+        ? ("共 " + totalC + " 位自愿展示的老师 · 第 " + page + " / " + totalPagesC + " 页（每页最多 " + PAGE_SIZE + " 人）")
+        : "暂无公开展示的教师资格证";
+      renderPage(list.slice(startC, startC + PAGE_SIZE), totalC, totalPagesC);
+      return;
+    }
+    st.textContent = "加载中…";
     let q = [];
     if (searchCert) q.push("cert_no=" + encodeURIComponent(searchCert));
     q.push("page=" + page);
@@ -100,23 +115,22 @@ async function loadList(certNo, resetPage){
       if (it && typeof it.public !== "undefined") return !!Number(it.public) || it.public === true || it.public === "1";
       return true;
     });
-    const serverPaged = (typeof data.total === "number") || (typeof data.page === "number");
+    const serverPaged = (typeof data.total === "number") && (typeof data.page === "number");
     if (serverPaged) {
-      list = items;
-      var total = typeof data.total === "number" ? data.total : items.length;
+      list = items; fullList = null; lastFetchKey = null;
+      var total = data.total;
       var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
       if (page > totalPages) page = totalPages;
       st.textContent = total ? ("共 " + total + " 位自愿展示的老师 · 第 " + page + " / " + totalPages + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
       renderPage(list, total, totalPages);
     } else {
-      list = items;
+      fullList = items; lastFetchKey = fetchKey; list = items;
       var total2 = list.length;
       var totalPages2 = Math.max(1, Math.ceil(total2 / PAGE_SIZE));
       if (page > totalPages2) page = totalPages2;
       var start = (page - 1) * PAGE_SIZE;
-      var slice = list.slice(start, start + PAGE_SIZE);
       st.textContent = total2 ? ("共 " + total2 + " 位自愿展示的老师 · 第 " + page + " / " + totalPages2 + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
-      renderPage(slice, total2, totalPages2);
+      renderPage(list.slice(start, start + PAGE_SIZE), total2, totalPages2);
     }
   } catch (e) {
     st.textContent = "加载失败：" + e.message;
@@ -190,7 +204,7 @@ function buildCard(item){
   const del = card.querySelector(".btn-admin-del");
   if (del) del.onclick = async () => {
     if (!confirm("确定下架该教师资格证展示？")) return;
-    try { await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) }); await loadList(searchCert, false); }
+    try { await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) }); fullList=null; lastFetchKey=null; await loadList(searchCert, false); }
     catch (e) { alert(e.message); }
   };
   const cbox = card.querySelector(".comments");
@@ -261,7 +275,7 @@ function spawnDanmaku(){
   layer.appendChild(el);
   setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, dur * 1000 + 200);
 }
-document.getElementById("btnSearch").onclick = () => { loadList(document.getElementById("q").value.trim(), true); };
+document.getElementById("btnSearch").onclick = () => { fullList=null; lastFetchKey=null; loadList(document.getElementById("q").value.trim(), true); };
 document.getElementById("q").onkeydown = e => { if (e.key === "Enter") document.getElementById("btnSearch").click(); };
 document.getElementById("btnPrev").onclick = () => { if (page > 1) { page -= 1; loadList(searchCert, false); } };
 document.getElementById("btnNext").onclick = () => { page += 1; loadList(searchCert, false); };
