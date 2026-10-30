@@ -17,12 +17,14 @@ a{color:var(--accent);text-decoration:none}
 .search button,.btn{padding:8px 14px;border:none;border-radius:8px;background:var(--accent);color:#fff;cursor:pointer;font:inherit}
 .btn.ghost{background:#fff;color:var(--accent);border:1px solid var(--accent)}
 .btn.danger{background:#b33}
+.btn:disabled{opacity:.4;cursor:not-allowed}
 .rail{display:flex;gap:20px;padding:20px 16px;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;position:relative;z-index:2}
 .card{flex:0 0 min(320px,85vw);scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;box-shadow:0 6px 20px rgba(0,0,0,.04)}
 .card .meta{font-size:12px;color:var(--muted);margin-bottom:8px;line-height:1.5}
 .card .meta a{font-weight:600}
-.cert-wrap{position:relative;width:100%;background:#1a1020;border-radius:8px;overflow:hidden;line-height:0}
-.cert-wrap img.cert{width:100%;height:auto;display:block;vertical-align:top;background:#1a1020;object-fit:contain}
+.cert-wrap{position:relative;width:100%;min-height:180px;background:#1a1020;border-radius:8px;overflow:hidden;line-height:0}
+.cert-wrap img.cert{width:100%;height:auto;display:block;background:#1a1020;object-fit:contain}
+.cert-wrap .cert-ph{color:#aaa;padding:48px 16px;text-align:center;line-height:1.5;font-size:13px}
 .cert-wrap canvas.draw{position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;cursor:crosshair;background:transparent}
 .tools{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center}
 .tools label{font-size:12px;color:var(--muted)}
@@ -34,11 +36,10 @@ a{color:var(--accent);text-decoration:none}
 .compose input{flex:1;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
 .empty{padding:40px;text-align:center;color:var(--muted)}
 .status{font-size:12px;color:var(--muted);padding:0 16px 12px;position:relative;z-index:2}
-#danmakuLayer{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 .pager{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;padding:12px 16px 28px;position:relative;z-index:2}
-.pager .btn:disabled{opacity:.4;cursor:not-allowed}
 .pager .info{font-size:13px;color:var(--muted)}
-.danmaku{position:absolute;white-space:nowrap;font-weight:700;color:var(--accent);text-shadow:0 0 4px #fff, 0 1px 2px rgba(0,0,0,.25);will-change:transform;pointer-events:none;animation: danmakuMove linear forwards;}
+#danmakuLayer{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
+.danmaku{position:absolute;white-space:nowrap;font-weight:700;color:var(--accent);text-shadow:0 0 4px #fff,0 1px 2px rgba(0,0,0,.25);will-change:transform;pointer-events:none;animation:danmakuMove linear forwards}
 @keyframes danmakuMove{from{transform:translateX(0)}to{transform:translateX(calc(-100vw - 100%))}}
 </style>
 </head>
@@ -47,7 +48,7 @@ a{color:var(--accent);text-decoration:none}
 <header>
   <div>
     <h1>老师介绍 ♠</h1>
-    <div class="sub">自愿公开展示的教师资格证 · 每页最多 20 位 · 弹幕约每十秒一条</div>
+    <div class="sub">自愿公开展示 · 每页 20 位 · 证书图按需加载</div>
   </div>
   <div class="search">
     <input id="q" placeholder="输入教师编号 如 202600001" maxlength="12">
@@ -66,79 +67,58 @@ a{color:var(--accent);text-decoration:none}
 const API = "https://school-auth.pyun3708.workers.dev";
 const ADMIN_NAMES = ["草莓酱", "strawberry", "admin"];
 const PAGE_SIZE = 20;
-let list = [];
-let fullList = null;
-let danmakuPool = [];
 let page = 1;
 let searchCert = "";
-let lastFetchKey = null;
+let totalCount = 0;
 function token(){ return localStorage.getItem("school_token") || ""; }
-function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch { return null; } }
-function esc(s){ return String(s??"").replace(/[&<>"']/g, function(c){ return ({"&":"&","<":"<",">":">","\"":""","'":"&#39;"})[c]; }); }
-function isAdmin(){ const u = me(); if (!u) return false; const name = (u.username || u.display_name || "").trim(); return ADMIN_NAMES.includes(name) || u.role === "admin"; }
-async function api(path, opts={}){
-  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers||{});
+function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch(e){ return null; } }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return ({"&":"&","<":"<",">":">","\"":""","'":"&#39;"})[c];
+  });
+}
+function isAdmin(){
+  const u = me();
+  if (!u) return false;
+  const name = (u.username || u.display_name || "").trim();
+  return ADMIN_NAMES.indexOf(name) >= 0 || u.role === "admin";
+}
+async function api(path, opts){
+  opts = opts || {};
+  const headers = Object.assign({ "Content-Type": "application/json" }, opts.headers || {});
   if (token()) headers.Authorization = "Bearer " + token();
-  const res = await fetch(API + path, Object.assign({}, opts, { headers }));
-  const data = await res.json().catch(()=>({}));
-  if (!res.ok) throw new Error(data.error || ("HTTP "+res.status));
+  const res = await fetch(API + path, Object.assign({}, opts, { headers: headers }));
+  const data = await res.json().catch(function(){ return {}; });
+  if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
   return data;
 }
 async function loadList(certNo, resetPage){
   const st = document.getElementById("status");
   if (typeof certNo === "string") searchCert = certNo;
   if (resetPage !== false) page = 1;
-  const fetchKey = searchCert || "__all__";
+  st.textContent = "加载中…";
   try {
-    if (fullList && lastFetchKey === fetchKey && resetPage === false) {
-      list = fullList;
-      var totalC = list.length;
-      var totalPagesC = Math.max(1, Math.ceil(totalC / PAGE_SIZE));
-      if (page > totalPagesC) page = totalPagesC;
-      var startC = (page - 1) * PAGE_SIZE;
-      st.textContent = totalC
-        ? ("共 " + totalC + " 位自愿展示的老师 · 第 " + page + " / " + totalPagesC + " 页（每页最多 " + PAGE_SIZE + " 人）")
-        : "暂无公开展示的教师资格证";
-      renderPage(list.slice(startC, startC + PAGE_SIZE), totalC, totalPagesC);
-      return;
-    }
-    st.textContent = "加载中…";
-    let q = [];
+    var q = [];
     if (searchCert) q.push("cert_no=" + encodeURIComponent(searchCert));
     q.push("page=" + page);
     q.push("limit=" + PAGE_SIZE);
+    q.push("light=1");
     const data = await api("/teachers/public?" + q.join("&"));
-    let items = data.items || [];
-    items = items.filter(function(it){
-      if (it && typeof it.is_public !== "undefined") return !!Number(it.is_public) || it.is_public === true || it.is_public === "1";
-      if (it && typeof it.show_public !== "undefined") return !!Number(it.show_public) || it.show_public === true || it.show_public === "1";
-      if (it && typeof it.public !== "undefined") return !!Number(it.public) || it.public === true || it.public === "1";
-      return true;
-    });
-    const serverPaged = (typeof data.total === "number") && (typeof data.page === "number");
-    if (serverPaged) {
-      list = items; fullList = null; lastFetchKey = null;
-      var total = data.total;
-      var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
-      if (page > totalPages) page = totalPages;
-      st.textContent = total ? ("共 " + total + " 位自愿展示的老师 · 第 " + page + " / " + totalPages + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
-      renderPage(list, total, totalPages);
-    } else {
-      fullList = items; lastFetchKey = fetchKey; list = items;
-      var total2 = list.length;
-      var totalPages2 = Math.max(1, Math.ceil(total2 / PAGE_SIZE));
-      if (page > totalPages2) page = totalPages2;
-      var start = (page - 1) * PAGE_SIZE;
-      st.textContent = total2 ? ("共 " + total2 + " 位自愿展示的老师 · 第 " + page + " / " + totalPages2 + " 页（每页最多 " + PAGE_SIZE + " 人）") : "暂无公开展示的教师资格证";
-      renderPage(list.slice(start, start + PAGE_SIZE), total2, totalPages2);
-    }
+    var items = data.items || [];
+    totalCount = (typeof data.total === "number") ? data.total : items.length;
+    var totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    if (page > totalPages) page = totalPages;
+    st.textContent = totalCount
+      ? ("共 " + totalCount + " 位自愿展示 · 第 " + page + " / " + totalPages + " 页")
+      : "暂无公开展示的教师资格证";
+    renderPage(items, totalPages);
   } catch (e) {
-    st.textContent = "加载失败：" + e.message;
-    document.getElementById("rail").innerHTML = "<div class='empty'>" + esc(e.message) + "</div>";
+    st.textContent = "加载失败：" + (e.message || e);
+    document.getElementById("rail").innerHTML = "<div class='empty'>" + esc(e.message || e) + "</div>";
     document.getElementById("pager").style.display = "none";
   }
 }
-function renderPage(pageItems, total, totalPages){
+function renderPage(pageItems, totalPages){
   const rail = document.getElementById("rail");
   const pager = document.getElementById("pager");
   const pageInfo = document.getElementById("pageInfo");
@@ -150,7 +130,7 @@ function renderPage(pageItems, total, totalPages){
     return;
   }
   rail.innerHTML = "";
-  pageItems.forEach(item => rail.appendChild(buildCard(item)));
+  for (var i = 0; i < pageItems.length; i++) rail.appendChild(buildCard(pageItems[i]));
   if (totalPages > 1) {
     pager.style.display = "flex";
     pageInfo.textContent = "第 " + page + " / " + totalPages + " 页";
@@ -166,14 +146,14 @@ function buildCard(item){
   card.className = "card";
   card.id = "cert-" + item.cert_no;
   const uname = item.username || item.display_name || "老师";
-  let profileHref = "#";
+  var profileHref = "#";
   if (item.username) profileHref = "profile.html?u=" + encodeURIComponent(item.username);
   else if (item.user_id) profileHref = "profile.html?id=" + encodeURIComponent(item.user_id);
   card.innerHTML =
     '<div class="meta">编号 <b>' + esc(item.cert_no) + '</b><br>账号 <a href="' + profileHref + '">' + esc(uname) + '</a>' +
     (item.course ? (' · 课程 ' + esc(item.course)) : '') + '</div>' +
     '<div class="cert-wrap" data-cert="' + esc(item.cert_no) + '">' +
-    (item.cert_image ? ('<img class="cert" src="' + item.cert_image + '" alt="资格证">') : '<div style="color:#aaa;padding:20px;text-align:center;line-height:1.4">暂无证书图</div>') +
+    '<div class="cert-ph">证书加载中…</div>' +
     '<canvas class="draw"></canvas></div>' +
     '<div class="tools">' +
     '<label>画笔 <input type="color" class="pen" value="#e91e63"></label>' +
@@ -181,104 +161,177 @@ function buildCard(item){
     '<button type="button" class="btn ghost btn-clear-local">清空本地</button>' +
     (isAdmin() ? '<button type="button" class="btn danger btn-admin-del">管理员下架</button>' : '') +
     '</div>' +
-    '<div class="comments"></div>' +
+    '<div class="comments"><div class="sub">评论加载中…</div></div>' +
     '<div class="compose"><input placeholder="说点什么…" maxlength="200"><button type="button" class="btn btn-cmt">评论</button></div>';
   const wrap = card.querySelector(".cert-wrap");
   const canvas = card.querySelector("canvas.draw");
-  const certImg = card.querySelector("img.cert");
-  function startDraw(){ setupCanvas(canvas, wrap, item.drawing); }
-  if (certImg) { if (certImg.complete && certImg.naturalHeight) startDraw(); else certImg.onload = startDraw; } else startDraw();
-  card.querySelector(".btn-save-draw").onclick = async () => {
+  function startDraw(drawing){ setupCanvas(canvas, wrap, drawing || ""); }
+  (async function(){
+    try {
+      var imgData = item.cert_image || "";
+      var drawing = item.drawing || "";
+      if (!imgData) {
+        var detail = await api("/teachers/public?cert_no=" + encodeURIComponent(item.cert_no));
+        var one = (detail.items || [])[0];
+        if (one) { imgData = one.cert_image || ""; drawing = one.drawing || ""; }
+      }
+      var ph = wrap.querySelector(".cert-ph");
+      if (imgData) {
+        var im = document.createElement("img");
+        im.className = "cert"; im.alt = "资格证"; im.decoding = "async";
+        im.onload = function(){ startDraw(drawing); };
+        im.onerror = function(){ if (ph) ph.textContent = "证书图损坏"; startDraw(drawing); };
+        if (ph) ph.replaceWith(im); else wrap.insertBefore(im, canvas);
+        im.src = imgData;
+      } else {
+        if (ph) ph.textContent = "暂无证书图";
+        startDraw(drawing);
+      }
+    } catch (e) {
+      var ph2 = wrap.querySelector(".cert-ph");
+      if (ph2) ph2.textContent = "证书加载失败";
+      startDraw("");
+    }
+  })();
+  card.querySelector(".btn-save-draw").onclick = async function(){
     try {
       if (!token()) { alert("请先登录再涂鸦"); return; }
-      const data = canvas.toDataURL("image/jpeg", 0.75);
-      await api("/teachers/draw", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, image: data }) });
+      var dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+      await api("/teachers/draw", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, image: dataUrl }) });
       alert("涂鸦已保存（约每周自动清理一次）");
     } catch (e) { alert(e.message); }
   };
-  card.querySelector(".btn-clear-local").onclick = () => {
-    const ctx = canvas.getContext("2d");
+  card.querySelector(".btn-clear-local").onclick = function(){
+    var ctx = canvas.getContext("2d");
     ctx.clearRect(0,0,canvas.width,canvas.height);
-    if (item.drawing) { const im = new Image(); im.onload = () => ctx.drawImage(im,0,0,canvas.width,canvas.height); im.src = item.drawing; }
   };
-  const del = card.querySelector(".btn-admin-del");
-  if (del) del.onclick = async () => {
+  var del = card.querySelector(".btn-admin-del");
+  if (del) del.onclick = async function(){
     if (!confirm("确定下架该教师资格证展示？")) return;
-    try { await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) }); fullList=null; lastFetchKey=null; await loadList(searchCert, false); }
-    catch (e) { alert(e.message); }
+    try {
+      await api("/teachers/unpublish", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no }) });
+      await loadList(searchCert, false);
+    } catch (e) { alert(e.message); }
   };
-  const cbox = card.querySelector(".comments");
-  loadComments(item.cert_no, cbox);
-  card.querySelector(".btn-cmt").onclick = async () => {
-    const inp = card.querySelector(".compose input");
-    const text = (inp.value || "").trim();
+  var cbox = card.querySelector(".comments");
+  setTimeout(function(){ loadComments(item.cert_no, cbox); }, 30);
+  card.querySelector(".btn-cmt").onclick = async function(){
+    var inp = card.querySelector(".compose input");
+    var text = (inp.value || "").trim();
     if (!text) return;
     try {
       if (!token()) { alert("请先登录再评论"); return; }
       await api("/teachers/comment", { method:"POST", body: JSON.stringify({ cert_no: item.cert_no, content: text }) });
-      inp.value = ""; loadComments(item.cert_no, cbox); refreshDanmakuPool();
+      inp.value = "";
+      loadComments(item.cert_no, cbox);
+      refreshDanmakuPool();
     } catch (e) { alert(e.message); }
   };
   return card;
 }
 function setupCanvas(canvas, wrap, drawingDataUrl){
   function fit(){
-    const r = wrap.getBoundingClientRect();
+    var r = wrap.getBoundingClientRect();
     if (r.width < 10 || r.height < 10) return;
-    const dpr = window.devicePixelRatio || 1;
+    var dpr = window.devicePixelRatio || 1;
     canvas.width = Math.max(1, Math.floor(r.width * dpr));
     canvas.height = Math.max(1, Math.floor(r.height * dpr));
-    canvas.style.width = r.width + "px"; canvas.style.height = r.height + "px";
-    const ctx = canvas.getContext("2d");
+    canvas.style.width = r.width + "px";
+    canvas.style.height = r.height + "px";
+    var ctx = canvas.getContext("2d");
     ctx.setTransform(dpr,0,0,dpr,0,0);
     ctx.clearRect(0,0,r.width,r.height);
-    if (drawingDataUrl) { const im = new Image(); im.onload = () => ctx.drawImage(im, 0, 0, r.width, r.height); im.src = drawingDataUrl; }
+    if (drawingDataUrl) {
+      var im = new Image();
+      im.onload = function(){ ctx.drawImage(im, 0, 0, r.width, r.height); };
+      im.src = drawingDataUrl;
+    }
   }
-  fit(); window.addEventListener("resize", fit);
-  let drawing = false, last = null;
-  const ctx = () => canvas.getContext("2d");
-  function pos(e){ const r = canvas.getBoundingClientRect(); const t = e.touches ? e.touches[0] : e; return { x: t.clientX - r.left, y: t.clientY - r.top }; }
+  fit();
+  window.addEventListener("resize", fit);
+  var drawing = false, last = null;
+  function pos(e){
+    var r = canvas.getBoundingClientRect();
+    var t = e.touches ? e.touches[0] : e;
+    return { x: t.clientX - r.left, y: t.clientY - r.top };
+  }
   function start(e){ drawing = true; last = pos(e); e.preventDefault(); }
   function move(e){
     if (!drawing) return;
-    const p = pos(e);
-    const pen = canvas.parentElement.parentElement.querySelector(".pen");
-    const c = ctx(); c.strokeStyle = pen ? pen.value : "#e91e63"; c.lineWidth = 2.5; c.lineCap = "round";
-    c.beginPath(); c.moveTo(last.x, last.y); c.lineTo(p.x, p.y); c.stroke(); last = p; e.preventDefault();
+    var p = pos(e);
+    var pen = canvas.parentElement.parentElement.querySelector(".pen");
+    var c = canvas.getContext("2d");
+    c.strokeStyle = pen ? pen.value : "#e91e63";
+    c.lineWidth = 2.5;
+    c.lineCap = "round";
+    c.beginPath();
+    c.moveTo(last.x, last.y);
+    c.lineTo(p.x, p.y);
+    c.stroke();
+    last = p;
+    e.preventDefault();
   }
   function end(){ drawing = false; }
-  canvas.addEventListener("mousedown", start); canvas.addEventListener("mousemove", move); window.addEventListener("mouseup", end);
-  canvas.addEventListener("touchstart", start, {passive:false}); canvas.addEventListener("touchmove", move, {passive:false}); canvas.addEventListener("touchend", end);
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start, {passive:false});
+  canvas.addEventListener("touchmove", move, {passive:false});
+  canvas.addEventListener("touchend", end);
 }
 async function loadComments(certNo, box){
   box.innerHTML = "加载评论…";
   try {
-    const data = await api("/teachers/comments?cert_no=" + encodeURIComponent(certNo));
-    const items = data.items || [];
+    var data = await api("/teachers/comments?cert_no=" + encodeURIComponent(certNo));
+    var items = data.items || [];
     if (!items.length) { box.innerHTML = "<div class='sub'>还没有评论</div>"; return; }
-    box.innerHTML = items.map(c => '<div class="comment"><span class="who">' + esc(c.username||"用户") + '</span><span class="when">' + esc(c.created_at||"") + '</span><div>' + esc(c.content) + '</div></div>').join("");
-  } catch (e) { box.innerHTML = "<div class='sub'>评论加载失败</div>"; }
+    box.innerHTML = items.map(function(c){
+      return '<div class="comment"><span class="who">' + esc(c.username||"用户") + '</span>' +
+        '<span class="when">' + esc(c.created_at||"") + '</span><div>' + esc(c.content) + '</div></div>';
+    }).join("");
+  } catch (e) {
+    box.innerHTML = "<div class='sub'>评论加载失败</div>";
+  }
 }
+var danmakuPool = [];
 async function refreshDanmakuPool(){
   try {
-    const data = await api("/teachers/danmaku");
-    danmakuPool = (data.items || []).map(function(x){ return (x.username ? (x.username + "：") : "") + (x.content || ""); }).filter(Boolean);
-  } catch (e) { danmakuPool = danmakuPool || []; }
+    var data = await api("/teachers/danmaku");
+    danmakuPool = (data.items || []).map(function(x){
+      return (x.username ? (x.username + "：") : "") + (x.content || "");
+    }).filter(Boolean);
+  } catch (e) {}
 }
 function spawnDanmaku(){
   if (!danmakuPool.length) return;
-  const text = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
-  const layer = document.getElementById("danmakuLayer"); if (!layer) return;
-  const el = document.createElement("div"); el.className = "danmaku"; el.textContent = text;
-  const size = 14 + Math.floor(Math.random() * 18); const top = 8 + Math.random() * 70; const dur = 8 + Math.random() * 8;
-  el.style.fontSize = size + "px"; el.style.top = top + "vh"; el.style.left = "100vw"; el.style.animationDuration = dur + "s";
+  var text = danmakuPool[Math.floor(Math.random() * danmakuPool.length)];
+  var layer = document.getElementById("danmakuLayer");
+  if (!layer) return;
+  var el = document.createElement("div");
+  el.className = "danmaku";
+  el.textContent = text;
+  var size = 14 + Math.floor(Math.random() * 18);
+  var top = 8 + Math.random() * 70;
+  var dur = 8 + Math.random() * 8;
+  el.style.fontSize = size + "px";
+  el.style.top = top + "vh";
+  el.style.left = "100vw";
+  el.style.animationDuration = dur + "s";
   layer.appendChild(el);
   setTimeout(function(){ if (el.parentNode) el.parentNode.removeChild(el); }, dur * 1000 + 200);
 }
-document.getElementById("btnSearch").onclick = () => { fullList=null; lastFetchKey=null; loadList(document.getElementById("q").value.trim(), true); };
-document.getElementById("q").onkeydown = e => { if (e.key === "Enter") document.getElementById("btnSearch").click(); };
-document.getElementById("btnPrev").onclick = () => { if (page > 1) { page -= 1; loadList(searchCert, false); } };
-document.getElementById("btnNext").onclick = () => { page += 1; loadList(searchCert, false); };
+document.getElementById("btnSearch").onclick = function(){
+  loadList(document.getElementById("q").value.trim(), true);
+};
+document.getElementById("q").onkeydown = function(e){
+  if (e.key === "Enter") document.getElementById("btnSearch").click();
+};
+document.getElementById("btnPrev").onclick = function(){
+  if (page > 1) { page -= 1; loadList(searchCert, false); }
+};
+document.getElementById("btnNext").onclick = function(){
+  page += 1; loadList(searchCert, false);
+};
 loadList("", true);
 refreshDanmakuPool();
 setInterval(spawnDanmaku, 10000);
