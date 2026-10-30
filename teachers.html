@@ -73,9 +73,12 @@ let totalCount = 0;
 function token(){ return localStorage.getItem("school_token") || ""; }
 function me(){ try { return JSON.parse(localStorage.getItem("school_user")||"null"); } catch(e){ return null; } }
 function esc(s){
-  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
-    return ({"&":"&","<":"<",">":">","\"":""","'":"&#39;"})[c];
-  });
+  return String(s == null ? "" : s)
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, """)
+    .replace(/'/g, "&#39;");
 }
 function isAdmin(){
   const u = me();
