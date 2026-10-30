@@ -33,55 +33,25 @@
       color: #e8d5ff;
     }
     .sub {
-      font-size: 12px;
+      font-size: 13px;
       color: #9a8ab0;
-      margin-bottom: 22px;
-      line-height: 1.5;
+      margin: 16px 0 8px;
+      line-height: 1.7;
     }
-    label {
-      display: block;
-      text-align: left;
-      font-size: 13px;
-      color: #c4b4d8;
-      margin-bottom: 8px;
-    }
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 10px;
-      border: 1.5px solid rgba(180, 140, 220, 0.35);
-      background: rgba(20, 12, 32, 0.8);
-      color: #f0e8ff;
-      font-size: 16px;
-      outline: none;
-      letter-spacing: 0.15em;
-      text-align: center;
-    }
-    input:focus { border-color: #b48de0; }
-    .btn {
-      width: 100%;
-      margin-top: 16px;
-      padding: 12px;
-      border: none;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #9b6bc9, #6b3fa0);
-      color: #fff;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
-      letter-spacing: 0.12em;
-    }
-    .btn:active { transform: scale(0.98); }
-    .err {
-      min-height: 1.3em;
-      margin-top: 12px;
-      font-size: 13px;
-      color: #f08090;
+    .badge {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      color: #f0c0c8;
+      background: rgba(160, 60, 80, 0.35);
+      border: 1px solid rgba(240, 128, 144, 0.35);
+      letter-spacing: 0.08em;
     }
     .back {
       display: inline-block;
-      margin-top: 18px;
+      margin-top: 22px;
       font-size: 13px;
       color: #9a8ab0;
       text-decoration: none;
@@ -92,49 +62,13 @@
 <body>
   <div class="card">
     <h1>隐蔽角落</h1>
-    <p class="sub">此处内容不对普通访客开放。<br>请输入通行密码继续。</p>
-    <label for="pwd">通行密码</label>
-    <input id="pwd" type="password" inputmode="numeric" autocomplete="off" placeholder="••••" maxlength="16">
-    <button class="btn" id="btn" type="button">进入</button>
-    <div class="err" id="err"></div>
+    <span class="badge">已封闭</span>
+    <p class="sub">此区域已关闭，暂不开放。<br>穷举密码也进不去哦。</p>
     <a class="back" href="school.html">← 返回学校官网</a>
   </div>
   <script>
-    (function () {
-      var TARGET = "ruofu/_____.html";
-      var PASS = "1314";
-      var input = document.getElementById("pwd");
-      var err = document.getElementById("err");
-      var btn = document.getElementById("btn");
-
-      function go() {
-        err.textContent = "";
-        var v = (input.value || "").trim();
-        if (v === PASS) {
-          // 可选：短时记住，避免反复输入
-          try { sessionStorage.setItem("hiddenCornerOk", "1"); } catch (e) {}
-          location.href = TARGET;
-          return;
-        }
-        err.textContent = "密码错误";
-        input.value = "";
-        input.focus();
-      }
-
-      // 本会话已通过则直接进入
-      try {
-        if (sessionStorage.getItem("hiddenCornerOk") === "1") {
-          location.replace(TARGET);
-          return;
-        }
-      } catch (e) {}
-
-      btn.onclick = go;
-      input.addEventListener("keydown", function (e) {
-        if (e.key === "Enter") go();
-      });
-      input.focus();
-    })();
+    // 清除旧会话里的通行标记，防止之前猜对的人还能直接进
+    try { sessionStorage.removeItem("hiddenCornerOk"); } catch (e) {}
   </script>
 </body>
 </html>
