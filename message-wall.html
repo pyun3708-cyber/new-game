@@ -114,6 +114,19 @@
       transition: opacity .2s, transform .2s; z-index: 60;
     }
     .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .msg-head { display:flex; align-items:flex-start; gap:10px; }
+    .msg-avatar {
+      width:36px; height:36px; border-radius:50%; flex-shrink:0;
+      object-fit:cover; background:#e8d5c4; border:1px solid rgba(139,118,93,.35);
+    }
+    .msg-avatar-ph {
+      width:36px; height:36px; border-radius:50%; flex-shrink:0;
+      display:flex; align-items:center; justify-content:center;
+      background:linear-gradient(135deg,#c45c7a,#8b765d); color:#fff;
+      font-size:14px; font-weight:700; border:1px solid rgba(139,118,93,.35);
+    }
+    .msg.reply .msg-avatar, .msg.reply .msg-avatar-ph { width:28px; height:28px; font-size:12px; }
+    .msg-main { flex:1; min-width:0; }
   </style>
 </head>
 <body>
@@ -237,6 +250,7 @@ function normalizeMsg(m) {
     nick_display: nick,
     is_anonymous: anon ? 1 : 0,
     anonymous: anon ? 1 : 0,
+    avatar: (!anon && (m.avatar || m.avatar_url || "")) || "",
     text: m.text || m.content || "",
     content: m.content || m.text || "",
     reply_to: m.reply_to || m.replyTo || null,
@@ -325,15 +339,20 @@ function render() {
         : (" · 回复 <a class=\"nick-link\" href=\"profile.html?u=" + encodeURIComponent(rUser) + "\">" + esc(rn) + "</a>");
     }
     var body = m.text || m.content || "";
+    var initial = (nick && nick !== "匿名") ? String(nick).charAt(0) : "?";
+    var avHtml = (m.avatar && !isAnon)
+      ? ('<img class="msg-avatar" src="' + String(m.avatar).replace(/"/g, "") + '" alt="">')
+      : ('<div class="msg-avatar-ph">' + esc(initial) + "</div>");
     return (
       '<div class="msg' + (isReply ? " reply" : "") + '" data-id="' + esc(m.id) + '">' +
+        '<div class="msg-head">' + avHtml + '<div class="msg-main">' +
         '<div class="meta">' + nickHtml + " · " + fmtTime(m.created_at) + replyHtml + "</div>" +
         '<div class="body">' + esc(body) + "</div>" +
         '<div class="actions">' +
           '<button type="button" class="btn-like" data-act="like">' + (liked ? "已赞 " : "点赞 ") + likes + "</button>" +
           (token() ? '<button type="button" class="btn-reply" data-act="reply">回复</button>' : "") +
           (isOwn ? '<button type="button" class="btn-del" data-act="del">删除</button>' : "") +
-        "</div></div>"
+        "</div></div></div></div>"
     );
   }
   var html = "";
@@ -354,12 +373,50 @@ function render() {
     if (delBtn) delBtn.onclick = function () { delOwn(m.id); };
   });
 }
+
+var avatarCache = {};
+function enrichAvatars() {
+  var need = {};
+  messages.forEach(function (m) {
+    if (!m || m.is_anonymous || m.avatar) return;
+    var u = m.username;
+    if (!u || u === "匿名" || u === "用户") return;
+    if (avatarCache[u] !== undefined) {
+      if (avatarCache[u]) m.avatar = avatarCache[u];
+      return;
+    }
+    need[u] = true;
+  });
+  var names = Object.keys(need);
+  if (!names.length) {
+    messages.forEach(function (m) {
+      if (m && m.username && avatarCache[m.username]) m.avatar = avatarCache[m.username];
+    });
+    return Promise.resolve();
+  }
+  names = names.slice(0, 20);
+  return Promise.all(names.map(function (u) {
+    return api("/profile/" + encodeURIComponent(u)).then(function (data) {
+      var p = data.profile || data.user || data;
+      var av = (p && (p.avatar || p.avatar_url)) || "";
+      avatarCache[u] = av;
+    }).catch(function () {
+      avatarCache[u] = "";
+    });
+  })).then(function () {
+    messages.forEach(function (m) {
+      if (m && m.username && avatarCache[m.username]) m.avatar = avatarCache[m.username];
+    });
+  });
+}
+
 function pull() {
   var box = document.getElementById("list");
   var sync = document.getElementById("sync");
   return api("/wall/messages").then(function (data) {
     var raw = data.messages || data.items || data.data || [];
     messages = (Array.isArray(raw) ? raw : []).map(normalizeMsg).filter(Boolean);
+    enrichAvatars().then(function(){ render(); }).catch(function(){});
     if (sync) { sync.textContent = "● 已同步 " + messages.length + " 条"; sync.className = "sync ok"; }
     render();
   }).catch(function (e) {
